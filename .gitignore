@@ -1,0 +1,18 @@
+# dependencies
+/node_modules
+
+# app
+/dist
+
+# testing
+/.nyc_output
+/coverage
+
+# local env files
+.env
+
+# misc
+.DS_Store
+
+# typescript
+*.tsbuildinfo

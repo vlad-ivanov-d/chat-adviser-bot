@@ -1,0 +1,25 @@
+name: "chat-adviser-bot"
+
+services:
+  app:
+    build: .
+    depends_on:
+      - db
+    environment:
+      BOT_TOKEN: ${BOT_TOKEN}
+      DATABASE_URL: postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@db/${DATABASE_USER}
+    restart: unless-stopped
+
+  db:
+    environment:
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_USER: ${DATABASE_USER}
+    image: postgres:15.3
+    ports:
+      - ${DATABASE_PORT:-}:5432
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

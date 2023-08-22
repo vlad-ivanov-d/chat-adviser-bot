@@ -1,0 +1,150 @@
+generator client {
+  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-arm64-openssl-3.0.x"]
+  provider      = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AddingBotsRule {
+  restricted
+  restrictedAndBan
+}
+
+enum ChatSettingName {
+  addingBots
+  language
+  timeZone
+  votebanLimit
+}
+
+enum ChatType {
+  channel
+  group
+  private
+  supergroup
+}
+
+enum LanguageCode {
+  en
+  ru
+}
+
+model Chat {
+  addingBots   AddingBotsRule?
+  admins       User[]          @relation("ChatAdmins")
+  authorId     Float
+  createdAt    DateTime        @default(now())
+  editorId     Float
+  id           Float           @id
+  language     LanguageCode
+  membersCount Int
+  timeZone     String
+  title        String
+  type         ChatType
+  updatedAt    DateTime        @updatedAt
+  votebanLimit Int?
+
+  author              User                  @relation("ChatAuthor", fields: [authorId], references: [id])
+  chatSettingsHistory ChatSettingsHistory[]
+  editor              User                  @relation("ChatEditor", fields: [editorId], references: [id])
+  votebans            Voteban[]
+}
+
+model ChatSettingsHistory {
+  authorId    Float
+  chatId      Float
+  createdAt   DateTime        @default(now())
+  editorId    Float
+  id          BigInt          @id @default(autoincrement())
+  settingName ChatSettingName
+  updatedAt   DateTime        @updatedAt
+
+  author User @relation("ChatSettingsHistoryAuthor", fields: [authorId], references: [id])
+  chat   Chat @relation(fields: [chatId], references: [id])
+  editor User @relation("ChatSettingsHistoryEditor", fields: [editorId], references: [id])
+
+  @@unique([chatId, settingName])
+}
+
+model User {
+  authorId  Float
+  createdAt DateTime @default(now())
+  editorId  Float
+  firstName String
+  id        Float    @id
+  lastName  String?
+  updatedAt DateTime @updatedAt
+  username  String?
+
+  author                     User                  @relation("UserAuthor", fields: [authorId], references: [id])
+  chatAdmins                 Chat[]                @relation("ChatAdmins")
+  chatAuthors                Chat[]                @relation("ChatAuthor")
+  chatEditors                Chat[]                @relation("ChatEditor")
+  chatSettingsHistoryAuthors ChatSettingsHistory[] @relation("ChatSettingsHistoryAuthor")
+  chatSettingsHistoryEditors ChatSettingsHistory[] @relation("ChatSettingsHistoryEditor")
+  editor                     User                  @relation("UserEditor", fields: [editorId], references: [id])
+  userAuthors                User[]                @relation("UserAuthor")
+  userEditors                User[]                @relation("UserEditor")
+  votebanAuthors             Voteban[]             @relation("VotebanAuthor")
+  votebanCandidates          Voteban[]             @relation("VotebanCandidate")
+  votebanEditors             Voteban[]             @relation("VotebanEditor")
+  votebanBanVoterAuthors     VotebanBanVoter[]     @relation("VotebanBanVoterAuthor")
+  votebanBanVoterEditors     VotebanBanVoter[]     @relation("VotebanBanVoterEditor")
+  votebanNoBanVoterAuthors   VotebanNoBanVoter[]   @relation("VotebanNoBanVoterAuthor")
+  votebanNoBanVoterEditors   VotebanNoBanVoter[]   @relation("VotebanNoBanVoterEditor")
+}
+
+model Voteban {
+  authorId    Float
+  banVoters   VotebanBanVoter[]
+  candidateId Float
+  chatId      Float
+  completed   Boolean?
+  createdAt   DateTime            @default(now())
+  editorId    Float
+  id          BigInt              @id @default(autoincrement())
+  messageId   Float
+  noBanVoters VotebanNoBanVoter[]
+  updatedAt   DateTime            @updatedAt
+
+  author    User @relation("VotebanAuthor", fields: [authorId], references: [id])
+  candidate User @relation("VotebanCandidate", fields: [candidateId], references: [id])
+  chat      Chat @relation(fields: [chatId], references: [id])
+  editor    User @relation("VotebanEditor", fields: [editorId], references: [id])
+
+  @@unique([chatId, messageId])
+  @@index([createdAt])
+}
+
+model VotebanBanVoter {
+  authorId  Float
+  createdAt DateTime @default(now())
+  editorId  Float
+  id        BigInt   @id @default(autoincrement())
+  updatedAt DateTime @updatedAt
+  votebanId BigInt
+
+  author  User    @relation("VotebanBanVoterAuthor", fields: [authorId], references: [id])
+  editor  User    @relation("VotebanBanVoterEditor", fields: [editorId], references: [id])
+  voteban Voteban @relation(fields: [votebanId], onDelete: Cascade, references: [id])
+
+  @@unique([authorId, votebanId])
+}
+
+model VotebanNoBanVoter {
+  authorId  Float
+  createdAt DateTime @default(now())
+  editorId  Float
+  id        BigInt   @id @default(autoincrement())
+  updatedAt DateTime @updatedAt
+  votebanId BigInt
+
+  author  User    @relation("VotebanNoBanVoterAuthor", fields: [authorId], references: [id])
+  editor  User    @relation("VotebanNoBanVoterEditor", fields: [editorId], references: [id])
+  voteban Voteban @relation(fields: [votebanId], onDelete: Cascade, references: [id])
+
+  @@unique([authorId, votebanId])
+}

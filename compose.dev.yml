@@ -1,0 +1,16 @@
+name: "chat-adviser-bot"
+
+services:
+  db:
+    environment:
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_USER: ${DATABASE_USER}
+    image: postgres:15.3
+    ports:
+      - ${DATABASE_PORT:-}:5432
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

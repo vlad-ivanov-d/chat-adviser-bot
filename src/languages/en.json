@@ -1,0 +1,67 @@
+{
+  "addingBots": {
+    "allow": "Allow",
+    "allowed": "allowed",
+    "featureName": "Restriction On Adding Bots",
+    "help": "- <i>Restriction On Adding Bots</i>\nI can prevent users from adding bots to chat.",
+    "restrict": "Restrict",
+    "restricted": "restricted",
+    "restrictAndBan": "Restrict + ban",
+    "restrictedAndBan": "restricted + ban",
+    "set": "<b>Restriction On Adding Bots</b>\nI can prevent users from adding bots to chat. Additionally, you can configure the ban of the violator. The user who tried to add the bot will be banned. I need administrator permissions for this feature.\n\nRestrict adding bots to <b>{{CHAT_TITLE}}</b> chat?\n\nCurrent value: <b>{{VALUE}}</b>",
+    "userBanned": "User {{USER}} has been banned for adding a bot to the chat."
+  },
+  "common": {
+    "commandForPrivateChat": "Send this command to me in <a href=\"{{BOT_LINK}}\">private messages</a> and I'll help you to configure your chats.",
+    "commandNotForPrivateChats": "This command is not for private chats.",
+    "featureDisabled": "This feature has been disabled by the administrator.",
+    "needAdminPermissions": "I need administrator permissions for this feature to work."
+  },
+  "help": {
+    "greeting": "Hello! I'm a bot that helps to moderate chats.\n\n<b>Getting started:</b>\n1. add me to chat\n2. give me administrator permissions\n3. send a <a href=\"{{BOT_LINK}}\">private message</a> command /mychats and I will help you set up your chat\n\n<b>Feature list:</b>",
+    "ending": "I will tell you more about each feature at the time of setting.\n\n<b>Help:</b>\nYou can call this message again at any time.\n/help - information about functions and commands"
+  },
+  "language": {
+    "featureName": "Language",
+    "help": "- <i>Language</i>\nI can chat in multiple languages.",
+    "select": "<b>Language</b>\nI can chat in multiple languages.\n\nSelect a language for <b>{{CHAT_TITLE}}</b> chat.\n\nCurrent language: <b>{{VALUE}}</b>"
+  },
+  "settings": {
+    "backToChats": "Back to chats",
+    "backToFeatures": "Back to features",
+    "changesSaved": "Changes saved",
+    "forbidden": "Unfortunately, this action is no longer available to you.",
+    "modified": "Modified at {{DATE}} by {{USER}}",
+    "save": "Save",
+    "selectChat": "Select the chat for which you want to change the settings:",
+    "selectFeature": "Select the feature you want to configure for the <b>{{CHAT_TITLE}}</b> chat. The list of features depends on the type of chat (channel, group, etc.):",
+    "updateInfoHint": "If the required chat is not in the list, try writing the /help command in it so that I can update the list. You must be a chat administrator."
+  },
+  "timeZone": {
+    "featureName": "Time Zone",
+    "select": "<b>Time Zone</b>\nI can work in different time zones and display dates in the appropriate format.\n\nSelect a time zone for <b>{{CHAT_TITLE}}</b> chat.\n\nCurrent time zone: <b>{{VALUE}}</b>"
+  },
+  "voteban": {
+    "alreadyVoted": "You have already voted",
+    "banResults": "Decided: <b>ban</b>.\n\nVoted for ban: {{USERS}}.",
+    "banWithCounter": "Ban ({{VOTES}}/{{LIMIT}})",
+    "cancelledBotNotAdmin": "<b>Voting has been cancelled.</b> I need administrator permissions for this feature to work.",
+    "cancelledFeatureDisabled": "<b>Voting has been cancelled.</b> Ban Voting feature is disabled.",
+    "cancelledVotingAgainstAdmin": "<b>Voting has been cancelled.</b> It is not possible to vote against an administrator.",
+    "cannotVoteAgainstAdmin": "I can't start voting to ban the administrator. This would be incorrect.",
+    "cannotVoteAgainstMyself": "I can't start voting to ban myself. This would be weird.",
+    "completed": "Voting completed.",
+    "expired": "Voting has expired",
+    "featureName": "Ban Voting",
+    "help": "- <i>Ban Voting</i>\nI can run votes to ban a user in a chat.\n/voteban - start voting (can be used without the slash)",
+    "mustBeChatMember": "You must be a member of the chat",
+    "noBanResults": "Decided: <b>keep</b>.\n\nVoted for keep: {{USERS}}.",
+    "noBanWithCounter": "Keep ({{VOTES}}/{{LIMIT}})",
+    "question": "{{AUTHOR}} offers to ban {{CANDIDATE}}. Do you want to ban {{CANDIDATE}}?",
+    "replyToSomeonesMessage": "You need to reply to someone's message with this command to start voting to ban the user.",
+    "setLimit": "<b>Ban Voting</b>\nI can run votes to ban a user in a chat. The user will be banned and their message deleted if the appropriate number of votes is reached. I need administrator permissions for this feature.\n/voteban - start voting (can be used without the slash)\n\nSet the vote limit for making a decision in <b>{{CHAT_TITLE}}</b> chat. If set a value less than 2, the feature will be disabled.\n\nCurrent value: <b>{{count}}</b>",
+    "setLimit_zero": "<b>Ban Voting</b>\nI can run votes to ban a user in a chat. The user will be banned and their message deleted if the appropriate number of votes is reached. I need administrator permissions for this feature.\n/voteban - start voting (can be used without the slash)\n\nSet the vote limit for making a decision in <b>{{CHAT_TITLE}}</b> chat. If set a value less than 2, the feature will be disabled.\n\nCurrent state: <b>disabled</b>",
+    "trimmedUsers": "{{USERS}} and others",
+    "voteCounted": "Your vote has been counted"
+  }
+}
