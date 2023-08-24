@@ -1,7 +1,7 @@
 import { t } from "i18next";
 import { MessageCtx } from "types/context";
 import { upsertChat } from "utils/prisma";
-import { isCleanCommand } from "utils/telegram";
+import { isCleanCommand } from "utils/telegraf";
 
 export class Help {
   /**
@@ -25,5 +25,4 @@ export class Help {
   }
 }
 
-const help = new Help();
-export default help;
+export const help = new Help();

@@ -1,13 +1,16 @@
-import { ChatSettingName, LanguageCode, Prisma, User } from "@prisma/client";
+import { ChatSettingName, LanguageCode, Prisma, PrismaClient, User } from "@prisma/client";
 import { DefaultArgs } from "@prisma/client/runtime/library";
 import { formatInTimeZone } from "date-fns-tz";
 import { t } from "i18next";
-import { prisma } from "index";
 import { Chat as TelegramChat, User as TelegramUser } from "telegraf/typings/core/types/typegram";
 import { UpsertedChat } from "types/chat";
-import { bot } from "utils/bot";
 import { DATE_FORMAT, DATE_LOCALES, GROUP_ANONYMOUS_BOT_ID } from "utils/consts";
-import { getUserHtmlLink, getUserTitle } from "utils/telegram";
+import { bot, getUserHtmlLink, getUserTitle } from "utils/telegraf";
+
+/**
+ * Database client
+ */
+export const prisma = new PrismaClient();
 
 /**
  * Resolves language based on Telegram language code

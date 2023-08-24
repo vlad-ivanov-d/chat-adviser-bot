@@ -1,19 +1,19 @@
 import { User } from "@prisma/client";
 import { CronJob } from "cron";
-import settings, { SettingsActions } from "features/settings";
+import { settings, SettingsActions } from "features/settings";
 import { t, TOptions } from "i18next";
-import { prisma } from "index";
 import { Chat, Message, User as TelegramUser } from "telegraf/typings/core/types/typegram";
 import { CallbackCtx, MessageCtx } from "types/context";
 import { MAX_INT } from "utils/consts";
 import {
   isChatAdmin as isPrismaChatAdmin,
   joinModifiedInfo,
+  prisma,
   upsertChat,
   upsertChatSettingsHistory,
   upsertUser,
 } from "utils/prisma";
-import { getUserHtmlLink, isChatAdmin, isChatMember, isCleanCommand } from "utils/telegram";
+import { getUserHtmlLink, isChatAdmin, isChatMember, isCleanCommand } from "utils/telegraf";
 
 export enum VotebanAction {
   Ban = "voteban-ban",
@@ -388,5 +388,4 @@ export class Voteban {
   }
 }
 
-const voteban = new Voteban();
-export default voteban;
+export const voteban = new Voteban();

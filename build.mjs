@@ -1,10 +1,10 @@
-import copyPlugin from "@sprout2000/esbuild-copy-plugin";
-import * as esbuild from "esbuild";
+import { build } from "esbuild";
+import copyStaticFiles from "esbuild-copy-static-files";
 import { rimraf } from "rimraf";
 
 await rimraf("dist/*", { glob: true });
 
-await esbuild.build({
+await build({
   bundle: true,
   entryPoints: [{ in: "src/index.ts", out: "node/index" }],
   minifyIdentifiers: false,
@@ -13,17 +13,17 @@ await esbuild.build({
   outdir: "dist",
   platform: "node",
   plugins: [
-    copyPlugin.copyPlugin({
+    copyStaticFiles({
       dest: "./dist/node/libquery_engine-debian-openssl-3.0.x.so.node",
       src: "./node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node",
     }),
-    copyPlugin.copyPlugin({
+    copyStaticFiles({
       dest: "./dist/node/libquery_engine-linux-arm64-openssl-3.0.x.so.node",
       src: "./node_modules/.prisma/client/libquery_engine-linux-arm64-openssl-3.0.x.so.node",
     }),
-    copyPlugin.copyPlugin({ dest: "./dist/prisma/", src: "./prisma/" }),
-    copyPlugin.copyPlugin({ dest: "./dist/compose.yml", src: "./compose.yml" }),
-    copyPlugin.copyPlugin({ dest: "./dist/Dockerfile", src: "./Dockerfile" }),
+    copyStaticFiles({ dest: "./dist/prisma/", src: "./prisma/" }),
+    copyStaticFiles({ dest: "./dist/compose.yml", src: "./compose.yml" }),
+    copyStaticFiles({ dest: "./dist/Dockerfile", src: "./Dockerfile" }),
   ],
   target: "esnext",
 });

@@ -1,7 +1,17 @@
 import { Chat, User } from "@prisma/client";
+import dotenv from "dotenv";
+import { Telegraf } from "telegraf";
 import { Chat as TelegramChat, InlineKeyboardButton, User as TelegramUser } from "telegraf/typings/core/types/typegram";
-import { bot } from "utils/bot";
 import { GROUP_ANONYMOUS_BOT_ID } from "utils/consts";
+
+// Get env variables
+dotenv.config();
+if (!process.env.BOT_TOKEN) throw Error("Required environment variable BOT_TOKEN is not provided");
+
+/**
+ * Telegram bot client
+ */
+export const bot = new Telegraf(process.env.BOT_TOKEN);
 
 export interface PaginationParams {
   /**

@@ -1,12 +1,11 @@
 import { format, getTimezoneOffset } from "date-fns-tz";
-import settings, { SettingsActions } from "features/settings";
+import { settings, SettingsActions } from "features/settings";
 import { t } from "i18next";
-import { prisma } from "index";
 import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 import { CallbackCtx } from "types/context";
 import { PAGE_SIZE } from "utils/consts";
-import { joinModifiedInfo, upsertChat, upsertChatSettingsHistory } from "utils/prisma";
-import { getPagination } from "utils/telegram";
+import { joinModifiedInfo, prisma, upsertChat, upsertChatSettingsHistory } from "utils/prisma";
+import { getPagination } from "utils/telegraf";
 
 export class TimeZone {
   /**
@@ -99,5 +98,4 @@ export class TimeZone {
   }
 }
 
-const timeZone = new TimeZone();
-export default timeZone;
+export const timeZone = new TimeZone();

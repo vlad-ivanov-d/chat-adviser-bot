@@ -1,23 +1,19 @@
-import { PrismaClient } from "@prisma/client";
-import addingBots from "features/addingBots";
-import help from "features/help";
-import language from "features/language";
-import settings, { SettingsActions } from "features/settings";
-import timeZone from "features/timeZone";
-import voteban, { VotebanAction } from "features/voteban";
+import { addingBots } from "features/addingBots";
+import { help } from "features/help";
+import { language } from "features/language";
+import { settings, SettingsActions } from "features/settings";
+import { timeZone } from "features/timeZone";
+import { voteban, VotebanAction } from "features/voteban";
 import { init } from "i18next";
 import en from "languages/en.json";
 import ru from "languages/ru.json";
 import { callbackQuery, message } from "telegraf/filters";
-import { bot } from "utils/bot";
-import { upsertChat } from "utils/prisma";
+import { prisma, upsertChat } from "utils/prisma";
+import { bot } from "utils/telegraf";
 
 // Init localization
 export const defaultNS = "common";
 void init({ defaultNS, fallbackLng: "en", interpolation: { escapeValue: false }, resources: { en, ru } });
-
-// Init database client
-export const prisma = new PrismaClient();
 
 // Bot commands
 bot.start((ctx) => help.command(ctx));

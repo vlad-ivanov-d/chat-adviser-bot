@@ -1,11 +1,10 @@
 import { t } from "i18next";
-import { prisma } from "index";
 import { Chat, InlineKeyboardButton, InlineKeyboardMarkup } from "telegraf/typings/core/types/typegram";
 import { UpsertedChat } from "types/chat";
 import { CallbackCtx, MessageCtx } from "types/context";
 import { PAGE_SIZE } from "utils/consts";
-import { isChatAdmin, upsertChat } from "utils/prisma";
-import { getPagination, isCleanCommand } from "utils/telegram";
+import { isChatAdmin, prisma, upsertChat } from "utils/prisma";
+import { getPagination, isCleanCommand } from "utils/telegraf";
 
 export enum SettingsActions {
   AddingBots = "cfg-addng-bts",
@@ -168,5 +167,4 @@ export class Settings {
   }
 }
 
-const settings = new Settings();
-export default settings;
+export const settings = new Settings();

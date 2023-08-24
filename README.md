@@ -12,7 +12,7 @@ The bot can run votes to ban a user in a chat. The user will be banned and their
 
 ### Language
 
-The bot can chat in multiple languages. Right now it supports English and Russian.
+The bot can chat in multiple languages.
 
 ### Restriction On Adding Bots
 

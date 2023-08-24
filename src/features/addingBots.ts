@@ -1,10 +1,9 @@
 import { AddingBotsRule } from "@prisma/client";
-import settings, { SettingsActions } from "features/settings";
+import { settings, SettingsActions } from "features/settings";
 import { t } from "i18next";
-import { prisma } from "index";
 import { CallbackCtx, NewMembersCtx } from "types/context";
-import { isChatAdmin, joinModifiedInfo, upsertChat, upsertChatSettingsHistory } from "utils/prisma";
-import { getUserHtmlLink, kickChatMember } from "utils/telegram";
+import { isChatAdmin, joinModifiedInfo, prisma, upsertChat, upsertChatSettingsHistory } from "utils/prisma";
+import { getUserHtmlLink, kickChatMember } from "utils/telegraf";
 
 export class AddingBots {
   /**
@@ -125,5 +124,4 @@ export class AddingBots {
   }
 }
 
-const addingBots = new AddingBots();
-export default addingBots;
+export const addingBots = new AddingBots();

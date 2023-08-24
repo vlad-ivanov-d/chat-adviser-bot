@@ -1,9 +1,8 @@
 import { LanguageCode } from "@prisma/client";
-import settings, { SettingsActions } from "features/settings";
+import { settings, SettingsActions } from "features/settings";
 import { t } from "i18next";
-import { prisma } from "index";
 import { CallbackCtx } from "types/context";
-import { joinModifiedInfo, upsertChat, upsertChatSettingsHistory } from "utils/prisma";
+import { joinModifiedInfo, prisma, upsertChat, upsertChatSettingsHistory } from "utils/prisma";
 
 export class Language {
   /**
@@ -76,5 +75,4 @@ export class Language {
   }
 }
 
-const language = new Language();
-export default language;
+export const language = new Language();
