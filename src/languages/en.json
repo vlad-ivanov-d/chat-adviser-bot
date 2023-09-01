@@ -14,7 +14,6 @@
   "common": {
     "commandForPrivateChat": "Send this command to me in <a href=\"{{BOT_LINK}}\">private messages</a> and I'll help you to configure your chats.",
     "commandNotForPrivateChats": "This command is not for private chats.",
-    "featureDisabled": "This feature has been disabled by the administrator.",
     "needAdminPermissions": "I need administrator permissions for this feature to work."
   },
   "help": {

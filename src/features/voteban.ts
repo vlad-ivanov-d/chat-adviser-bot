@@ -45,7 +45,6 @@ export class Voteban {
       return; // Private chat, return.
     }
     if (!votebanLimit) {
-      await ctx.reply(t("common:featureDisabled", { lng }), { reply_to_message_id: messageId });
       return; // The feature is disabled, return.
     }
     if (!isPrismaChatAdmin(chat, ctx.botInfo.id)) {
