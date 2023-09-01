@@ -25,7 +25,9 @@ export class AddingBots {
    * @param chatId Id of the chat which is edited
    */
   public async renderSettings(ctx: CallbackCtx, chatId: number): Promise<void> {
-    if (!ctx.chat || isNaN(chatId)) return; // Something went wrong
+    if (!ctx.chat || isNaN(chatId)) {
+      return; // Something went wrong
+    }
 
     const [{ language: lng }, upsertedChat] = await Promise.all([
       upsertChat(ctx.chat, ctx.callbackQuery.from),
@@ -33,7 +35,9 @@ export class AddingBots {
     ]);
 
     const isAdmin = await settings.validateAdminPermissions(ctx, upsertedChat, lng);
-    if (!isAdmin) return; // User is not an admin anymore, redirect to chat list.
+    if (!isAdmin) {
+      return; // User is not an admin anymore, redirect to chat list.
+    }
 
     const allowedCbData = `${SettingsActions.AddingBotsSave}?chatId=${chatId}`;
     const restrictedCbData = `${SettingsActions.AddingBotsSave}?chatId=${chatId}&v=${AddingBotsRule.restricted}`;
@@ -63,14 +67,22 @@ export class AddingBots {
    * @param ctx NewMembers context
    */
   public async validate(ctx: NewMembersCtx): Promise<void> {
-    const { from, new_chat_members } = ctx.update.message;
-    const newChatBots = new_chat_members.filter((m) => m.is_bot);
-    if (newChatBots.length === 0) return; // No bots were added, return.
-    if (newChatBots.length === 1 && newChatBots[0].id === ctx.botInfo.id) return; // The bot itself was added, return.
+    const { from, new_chat_members: newChatMembers } = ctx.update.message;
+    const newChatBots = newChatMembers.filter((m) => m.is_bot);
+    if (newChatBots.length === 0) {
+      return; // No bots were added, return.
+    }
+    if (newChatBots.length === 1 && newChatBots[0].id === ctx.botInfo.id) {
+      return; // The bot itself was added, return.
+    }
 
     const chat = await upsertChat(ctx.chat, from);
-    if (isChatAdmin(chat, from.id)) return; // Current user is an admin, return.
-    if (!isChatAdmin(chat, ctx.botInfo.id)) return; // Bot is not an admin, return.
+    if (isChatAdmin(chat, from.id)) {
+      return; // Current user is an admin, return.
+    }
+    if (!isChatAdmin(chat, ctx.botInfo.id)) {
+      return; // Bot is not an admin, return.
+    }
 
     const { addingBots, language: lng } = chat;
     if (addingBots === AddingBotsRule.restricted || addingBots === AddingBotsRule.restrictedAndBan) {
@@ -92,13 +104,17 @@ export class AddingBots {
    * @param value Restrict bots state
    */
   public async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
-    if (!ctx.chat || isNaN(chatId)) return; // Something went wrong
+    if (!ctx.chat || isNaN(chatId)) {
+      return; // Something went wrong
+    }
 
     const { from } = ctx.callbackQuery;
     const [{ language: lng }, upsertedChat] = await Promise.all([upsertChat(ctx.chat, from), upsertChat(chatId, from)]);
 
     const isAdmin = await settings.validateAdminPermissions(ctx, upsertedChat, lng);
-    if (!isAdmin) return; // User is not an admin anymore, return.
+    if (!isAdmin) {
+      return; // User is not an admin anymore, return.
+    }
 
     const addingBots = this.sanitizeValue(value);
     await prisma.$transaction([

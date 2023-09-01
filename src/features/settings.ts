@@ -26,7 +26,9 @@ export class Settings {
    * @param cleanCommand Clean command name
    */
   public async command(ctx: MessageCtx, cleanCommand: string): Promise<void> {
-    if (!isCleanCommand(cleanCommand, ctx.message.text)) return; // Not clean command, ignore.
+    if (!isCleanCommand(cleanCommand, ctx.message.text)) {
+      return; // Not clean command, ignore.
+    }
     if (ctx.chat.type !== "private") {
       const { language: lng } = await upsertChat(ctx.chat, ctx.message.from);
       await ctx.reply(t("common:commandForPrivateChat", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}`, lng }), {
@@ -45,7 +47,9 @@ export class Settings {
    */
   public async renderChats(ctx: CallbackCtx | MessageCtx, skip: number): Promise<void> {
     const from = (ctx as CallbackCtx).callbackQuery?.from ?? ctx.message?.from;
-    if (!ctx.chat || !from || isNaN(skip)) return; // Something went wrong
+    if (!ctx.chat || !from || isNaN(skip)) {
+      return; // Something went wrong
+    }
 
     const patchedTake = skip === 0 ? PAGE_SIZE - 1 : PAGE_SIZE;
     const [chat, [chats, count]] = await Promise.all([
@@ -61,7 +65,9 @@ export class Settings {
         prisma.chat.count({ where: { admins: { some: { id: from.id } } } }),
       ]),
     ]);
-    if (skip === 0) chats.unshift(chat);
+    if (skip === 0) {
+      chats.unshift(chat);
+    }
 
     const { language: lng } = chat;
     const inlineKeyboardMarkup: InlineKeyboardMarkup = {
@@ -83,7 +89,9 @@ export class Settings {
    * @param skip Skip count
    */
   public async renderFeatures(ctx: CallbackCtx, chatId: number, skip: number): Promise<void> {
-    if (!ctx.chat || isNaN(chatId) || isNaN(skip)) return; // Something went wrong
+    if (!ctx.chat || isNaN(chatId) || isNaN(skip)) {
+      return; // Something went wrong
+    }
 
     const [{ language: lng }, { title, type }] = await Promise.all([
       upsertChat(ctx.chat, ctx.callbackQuery.from),
@@ -158,7 +166,9 @@ export class Settings {
    * @returns True if validation is successfully passed
    */
   public async validateAdminPermissions(ctx: CallbackCtx, chat: UpsertedChat, lng: string): Promise<boolean> {
-    if (isChatAdmin(chat, ctx.callbackQuery.from.id)) return true;
+    if (isChatAdmin(chat, ctx.callbackQuery.from.id)) {
+      return true;
+    }
     await Promise.all([
       ctx.answerCbQuery(t("settings:forbidden", { lng }), { show_alert: true }),
       this.renderChats(ctx, 0),

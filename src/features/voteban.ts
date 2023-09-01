@@ -27,10 +27,12 @@ export class Voteban {
    * @param cleanCommand Clean command name
    */
   public async command(ctx: MessageCtx, cleanCommand: string): Promise<void> {
-    if (!isCleanCommand(cleanCommand, ctx.message.text)) return; // Not clean command, ignore.
+    if (!isCleanCommand(cleanCommand, ctx.message.text)) {
+      return; // Not clean command, ignore.
+    }
 
-    const { from, message_id, reply_to_message } = ctx.message;
-    const candidate = reply_to_message?.from;
+    const { from, message_id: messageId, reply_to_message: replyToMessageId } = ctx.message;
+    const candidate = replyToMessageId?.from;
     const [chat, isCandidateAdmin] = await Promise.all([
       upsertChat(ctx.chat.id, from),
       // Check it seperately, because other admin bots are not included in the chat admin list.
@@ -43,23 +45,23 @@ export class Voteban {
       return; // Private chat, return.
     }
     if (!votebanLimit) {
-      await ctx.reply(t("common:featureDisabled", { lng }), { reply_to_message_id: message_id });
+      await ctx.reply(t("common:featureDisabled", { lng }), { reply_to_message_id: messageId });
       return; // The feature is disabled, return.
     }
     if (!isPrismaChatAdmin(chat, ctx.botInfo.id)) {
-      await ctx.reply(t("common:needAdminPermissions", { lng }), { reply_to_message_id: message_id });
+      await ctx.reply(t("common:needAdminPermissions", { lng }), { reply_to_message_id: messageId });
       return; // Bot is not an admin, return.
     }
     if (!candidate) {
-      await ctx.reply(t("voteban:replyToSomeonesMessage", { lng }), { reply_to_message_id: message_id });
+      await ctx.reply(t("voteban:replyToSomeonesMessage", { lng }), { reply_to_message_id: messageId });
       return; // No candidate, return.
     }
     if (candidate.id === ctx.botInfo.id) {
-      await ctx.reply(t("voteban:cannotVoteAgainstMyself", { lng }), { reply_to_message_id: message_id });
+      await ctx.reply(t("voteban:cannotVoteAgainstMyself", { lng }), { reply_to_message_id: messageId });
       return; // Candidate is the bot itself, return.
     }
     if (isCandidateAdmin) {
-      await ctx.reply(t("voteban:cannotVoteAgainstAdmin", { lng }), { reply_to_message_id: message_id });
+      await ctx.reply(t("voteban:cannotVoteAgainstAdmin", { lng }), { reply_to_message_id: messageId });
       return; // Candidate is an admin, return.
     }
 
@@ -83,7 +85,7 @@ export class Voteban {
           ],
         ],
       },
-      reply_to_message_id: reply_to_message?.message_id,
+      reply_to_message_id: replyToMessageId?.message_id,
     });
     await prisma.$transaction([
       upsertUser(candidate, from),
@@ -128,7 +130,9 @@ export class Voteban {
    * @param value Voteban limit value
    */
   public async renderSettings(ctx: CallbackCtx, chatId: number, value?: number): Promise<void> {
-    if (!ctx.chat || isNaN(chatId)) return; // Something went wrong
+    if (!ctx.chat || isNaN(chatId)) {
+      return; // Something went wrong
+    }
 
     const [{ language: lng }, upsertedChat] = await Promise.all([
       upsertChat(ctx.chat, ctx.callbackQuery.from),
@@ -136,7 +140,9 @@ export class Voteban {
     ]);
 
     const isAdmin = await settings.validateAdminPermissions(ctx, upsertedChat, lng);
-    if (!isAdmin) return; // User is not an admin anymore, redirect to chat list.
+    if (!isAdmin) {
+      return; // User is not an admin anymore, redirect to chat list.
+    }
 
     const { title, votebanLimit } = upsertedChat;
     const newValue = this.sanitizeValue(typeof value === "undefined" || isNaN(value) ? votebanLimit : value);
@@ -179,13 +185,17 @@ export class Voteban {
    * @param value Voteban limit value
    */
   public async saveSettings(ctx: CallbackCtx, chatId: number, value: number): Promise<void> {
-    if (!ctx.chat || isNaN(chatId)) return; // Something went wrong
+    if (!ctx.chat || isNaN(chatId)) {
+      return; // Something went wrong
+    }
 
     const { from } = ctx.callbackQuery;
     const [{ language: lng }, upsertedChat] = await Promise.all([upsertChat(ctx.chat, from), upsertChat(chatId, from)]);
 
     const isAdmin = await settings.validateAdminPermissions(ctx, upsertedChat, lng);
-    if (!isAdmin) return; // User is not an admin anymore, redirect to chat list.
+    if (!isAdmin) {
+      return; // User is not an admin anymore, redirect to chat list.
+    }
 
     const votebanLimit = this.sanitizeValue(value) || null;
     await prisma.$transaction([
@@ -202,7 +212,9 @@ export class Voteban {
    */
   public async vote(ctx: CallbackCtx, action: VotebanAction): Promise<void> {
     const { from, message } = ctx.update.callback_query;
-    if (!message) return; // No message, something went wrong.
+    if (!message) {
+      return; // No message, something went wrong.
+    }
 
     const [chat, isUserChatMember, results] = await Promise.all([
       upsertChat(message.chat, from),
@@ -238,7 +250,7 @@ export class Voteban {
       return; // User is not a chat member, return.
     }
 
-    if (action === VotebanAction.Ban)
+    if (action === VotebanAction.Ban) {
       await prisma.$transaction([
         prisma.votebanBanVoter.create({
           data: { authorId: editorId, editorId, votebanId: id },
@@ -246,7 +258,8 @@ export class Voteban {
         }),
         prisma.votebanNoBanVoter.deleteMany({ where: { authorId: editorId, votebanId: id } }),
       ]);
-    if (action === VotebanAction.NoBan)
+    }
+    if (action === VotebanAction.NoBan) {
       await prisma.$transaction([
         prisma.votebanNoBanVoter.create({
           data: { authorId: editorId, editorId, votebanId: id },
@@ -254,6 +267,7 @@ export class Voteban {
         }),
         prisma.votebanBanVoter.deleteMany({ where: { authorId: editorId, votebanId: id } }),
       ]);
+    }
     await Promise.all([
       ctx.answerCbQuery(t("voteban:voteCounted", { lng })),
       // An expected error may happen when bot was removed from the chat or there are no enough permissions
@@ -294,7 +308,9 @@ export class Voteban {
    * @returns Sanitized value
    */
   private sanitizeValue(value: number | null): number {
-    if (value === null || isNaN(value) || value === 1) return 0;
+    if (value === null || isNaN(value) || value === 1) {
+      return 0;
+    }
     return Math.max(0, Math.min(MAX_INT, value));
   }
 
@@ -304,7 +320,9 @@ export class Voteban {
    */
   private async updateResults(ctx: CallbackCtx): Promise<void> {
     const { from, message } = ctx.update.callback_query;
-    if (!message) return; // No message, something went wrong.
+    if (!message) {
+      return; // No message, something went wrong.
+    }
 
     const [chat, results] = await Promise.all([
       upsertChat(message.chat, from),
@@ -318,7 +336,9 @@ export class Voteban {
         where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
       }),
     ]);
-    if (!results) return; // Something went wrong with database
+    if (!results) {
+      return; // Something went wrong with database
+    }
 
     const { author, banVoters, candidate, noBanVoters } = results;
     const { language: lng, votebanLimit } = chat;

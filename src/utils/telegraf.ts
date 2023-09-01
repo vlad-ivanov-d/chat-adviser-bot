@@ -1,17 +1,13 @@
 import { Chat, User } from "@prisma/client";
-import dotenv from "dotenv";
 import { Telegraf } from "telegraf";
 import { Chat as TelegramChat, InlineKeyboardButton, User as TelegramUser } from "telegraf/typings/core/types/typegram";
 import { GROUP_ANONYMOUS_BOT_ID } from "utils/consts";
-
-// Get env variables
-dotenv.config();
-if (!process.env.BOT_TOKEN) throw Error("Required environment variable BOT_TOKEN is not provided");
+import { BOT_TOKEN } from "utils/envs";
 
 /**
  * Telegram bot client
  */
-export const bot = new Telegraf(process.env.BOT_TOKEN);
+export const bot = new Telegraf(BOT_TOKEN);
 
 export interface PaginationParams {
   /**
@@ -49,14 +45,14 @@ export const getPagination = (action: string, { count, skip, take }: PaginationP
 
 export interface GetUserTitleParams {
   /**
-   * Encodes user title for HTML
-   */
-  encode?: boolean;
-  /**
    * Title format
    * @default full
    */
   format?: "short" | "full";
+  /**
+   * Encodes user title for HTML
+   */
+  shouldEncode?: boolean;
 }
 
 /**
@@ -71,7 +67,7 @@ export const getUserTitle = (
   chat: Chat | TelegramChat.AbstractChat | undefined,
   params: GetUserTitleParams = {},
 ): string => {
-  const { encode, format = "full" } = params;
+  const { format = "full", shouldEncode } = params;
   const isAnonym = user.id === GROUP_ANONYMOUS_BOT_ID;
   const firstName = (user as User).firstName ?? (user as TelegramUser).first_name;
   const lastName = (user as User).lastName ?? (user as TelegramUser).last_name;
@@ -82,7 +78,7 @@ export const getUserTitle = (
       .filter((p) => p)
       .slice(0, format === "short" ? 1 : undefined)
       .join(" ");
-  return encode ? title.replaceAll("<", "&lt;").replaceAll(">", "&gt;") : title;
+  return shouldEncode ? title.replaceAll("<", "&lt;").replaceAll(">", "&gt;") : title;
 };
 
 /**
@@ -95,7 +91,7 @@ export const getUserHtmlLink = (
   user: TelegramUser | User,
   chat: Chat | TelegramChat.AbstractChat | undefined,
 ): string => {
-  const title = getUserTitle(user, chat, { encode: true, format: "short" });
+  const title = getUserTitle(user, chat, { format: "short", shouldEncode: true });
   return user.id === GROUP_ANONYMOUS_BOT_ID && chat
     ? `<b>${title}</b>`
     : `<a href="tg:user?id=${user.id}">${title}</a>`;

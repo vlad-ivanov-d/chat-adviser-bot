@@ -15,13 +15,17 @@ export class TimeZone {
    * @param skip Skip count
    */
   public async renderSettings(ctx: CallbackCtx, chatId: number, skip: number): Promise<void> {
-    if (!ctx.chat || isNaN(chatId)) return; // Something went wrong
+    if (!ctx.chat || isNaN(chatId)) {
+      return; // Something went wrong
+    }
 
     const { from } = ctx.callbackQuery;
     const [{ language: lng }, upsertedChat] = await Promise.all([upsertChat(ctx.chat, from), upsertChat(chatId, from)]);
 
     const isAdmin = await settings.validateAdminPermissions(ctx, upsertedChat, lng);
-    if (!isAdmin) return; // User is not an admin anymore, return.
+    if (!isAdmin) {
+      return; // User is not an admin anymore, return.
+    }
 
     const timeZones = this.getAllTimeZones();
     const count = timeZones.length;
@@ -55,13 +59,17 @@ export class TimeZone {
    * @param value Restrict bots state
    */
   public async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
-    if (!ctx.chat || isNaN(chatId)) return; // Something went wrong
+    if (!ctx.chat || isNaN(chatId)) {
+      return; // Something went wrong
+    }
 
     const { from } = ctx.callbackQuery;
     const [{ language: lng }, upsertedChat] = await Promise.all([upsertChat(ctx.chat, from), upsertChat(chatId, from)]);
 
     const isAdmin = await settings.validateAdminPermissions(ctx, upsertedChat, lng);
-    if (!isAdmin) return; // User is not an admin anymore, return.
+    if (!isAdmin) {
+      return; // User is not an admin anymore, return.
+    }
 
     const timeZone = this.sanitizeValue(value);
     await prisma.$transaction([
@@ -80,10 +88,17 @@ export class TimeZone {
     return Intl.supportedValuesOf("timeZone").sort((a, b) => {
       const aOffset = getTimezoneOffset(a) ?? 0;
       const bOffset = getTimezoneOffset(b) ?? 0;
-      // Sort by offset first and then by name
-      if (aOffset < bOffset) return -1;
-      if (aOffset > bOffset) return 1;
-      if (a < b) return -1;
+      // Sort by offset
+      if (aOffset < bOffset) {
+        return -1;
+      }
+      if (aOffset > bOffset) {
+        return 1;
+      }
+      // Then sort by name
+      if (a < b) {
+        return -1;
+      }
       return a > b ? 1 : 0;
     });
   }

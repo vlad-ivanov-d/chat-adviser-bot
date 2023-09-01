@@ -12,8 +12,8 @@ import { prisma, upsertChat } from "utils/prisma";
 import { bot } from "utils/telegraf";
 
 // Init localization
-export const defaultNS = "common";
-void init({ defaultNS, fallbackLng: "en", interpolation: { escapeValue: false }, resources: { en, ru } });
+export const defaultNs = "common";
+void init({ defaultNS: defaultNs, fallbackLng: "en", interpolation: { escapeValue: false }, resources: { en, ru } });
 
 // Bot commands
 bot.start((ctx) => help.command(ctx));
@@ -59,8 +59,9 @@ bot.on(callbackQuery("data"), async (ctx) => {
 });
 bot.on(message("group_chat_created"), (ctx) => upsertChat(ctx.chat, ctx.update.message.from));
 bot.on(message("new_chat_members"), async (ctx) => {
-  if (ctx.update.message.new_chat_members.some((m) => m.id === ctx.botInfo.id))
+  if (ctx.update.message.new_chat_members.some((m) => m.id === ctx.botInfo.id)) {
     return upsertChat(ctx.chat, ctx.update.message.from); // The bot itself was added, upsert chat admins and return.
+  }
   await addingBots.validate(ctx);
 });
 bot.on(message("supergroup_chat_created"), (ctx) => upsertChat(ctx.chat, ctx.update.message.from));
