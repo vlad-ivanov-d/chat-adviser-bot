@@ -95,8 +95,12 @@ export const joinModifiedInfo = (
  * @returns True if admin
  */
 export const isChatAdmin = (chat: UpsertedChat, userId: number): boolean => {
-  if (userId === GROUP_ANONYMOUS_BOT_ID) return true;
-  if (userId === chat.id) return true; // Private chat with bot
+  if (userId === GROUP_ANONYMOUS_BOT_ID) {
+    return true;
+  }
+  if (userId === chat.id) {
+    return true; // Private chat with bot
+  }
   return chat.admins.some((a) => a.id === userId);
 };
 
@@ -109,7 +113,7 @@ export const isChatAdmin = (chat: UpsertedChat, userId: number): boolean => {
 export const upsertChat = async (chat: TelegramChat | number, editor: TelegramUser): Promise<UpsertedChat> => {
   const chatId = typeof chat === "number" ? chat : chat.id;
   const isPrivate = typeof chat === "number" ? undefined : chat.type === "private";
-  const [_chat, admins, membersCount] = await Promise.all([
+  const [chatFromGet, admins, membersCount] = await Promise.all([
     // An expected error may happen when bot was removed from the chat
     typeof chat === "number" ? bot.telegram.getChat(chatId).catch(() => undefined) : chat,
     // An expected error may happen when bot was removed from the chat or chat is private
@@ -130,16 +134,16 @@ export const upsertChat = async (chat: TelegramChat | number, editor: TelegramUs
         language: resolveLanguage(editor.language_code),
         membersCount: membersCount ?? 0,
         timeZone: resolveTimeZone(editor.language_code),
-        title: _chat?.type === "private" ? getUserTitle(editor, _chat) : _chat?.title ?? "",
-        type: _chat?.type ?? "private",
+        title: chatFromGet?.type === "private" ? getUserTitle(editor, chatFromGet) : chatFromGet?.title ?? "",
+        type: chatFromGet?.type ?? "private",
       },
       include: { admins: true, chatSettingsHistory: { include: { editor: true } } },
       update: {
         admins: { set: admins.map((a) => ({ id: a.user.id })) },
         editorId: editor.id,
         membersCount,
-        title: _chat?.type === "private" ? getUserTitle(editor, _chat) : _chat?.title,
-        type: _chat?.type,
+        title: chatFromGet?.type === "private" ? getUserTitle(editor, chatFromGet) : chatFromGet?.title,
+        type: chatFromGet?.type,
       },
       where: { id: chatId },
     }),
@@ -148,7 +152,7 @@ export const upsertChat = async (chat: TelegramChat | number, editor: TelegramUs
   return {
     ...upsertedChat,
     // Mutate bot private chat title
-    title: upsertedChat.id === editor.id && bot.botInfo ? getUserTitle(bot.botInfo, _chat) : upsertedChat.title,
+    title: upsertedChat.id === editor.id && bot.botInfo ? getUserTitle(bot.botInfo, chatFromGet) : upsertedChat.title,
   };
 };
 

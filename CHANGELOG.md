@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0 (2023-09-01)
+
+- Other: /voteban command will be silently ignored if Ban Voting feature is disabled
+
 ## 1.3.1 (2023-08-22)
 
 - Fix: an error during the execution of a cron job in which obsolete ban votings were cleared

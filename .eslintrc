@@ -59,8 +59,25 @@
         "allowTypedFunctionExpressions": true
       }
     ],
+    "@typescript-eslint/explicit-member-accessibility": "error",
+    "@typescript-eslint/naming-convention": [
+      "error",
+      { "format": ["UPPER_CASE", "strictCamelCase"], "selector": "default" },
+      { "format": ["StrictPascalCase"], "selector": "enumMember" },
+      // Ignore properties because of i18next, prisma and telegraf typings
+      { "format": null, "selector": "property" },
+      { "format": ["StrictPascalCase"], "selector": "typeLike" },
+      { "format": ["UPPER_CASE", "strictCamelCase"], "selector": "variableLike" },
+      {
+        "format": ["StrictPascalCase"],
+        "prefix": ["can", "did", "has", "is", "should", "will"],
+        "selector": "variable",
+        "types": ["boolean"]
+      }
+    ],
     "@typescript-eslint/no-explicit-any": "error",
     "@typescript-eslint/no-unused-vars": "error",
+    "curly": "error",
     "eqeqeq": "error",
     "import/no-cycle": "error",
     "import/no-default-export": "error",
@@ -84,17 +101,24 @@
     "jsdoc/require-param-type": "off",
     "jsdoc/require-returns-type": "off",
     "max-params": "error",
+    "multiline-comment-style": ["error", "starred-block"],
     "no-alert": "error",
     "no-console": "error",
+    "no-invalid-this": "error",
+    "no-multi-str": "error",
+    "no-new": "error",
+    "no-restricted-syntax": ["error", {
+      "message": "Must not use this in a static context.",
+      "selector": "MethodDefinition[static = true] ThisExpression"
+    }],
+    "no-throw-literal": "error",
     "one-var": ["error", "never"],
+    "radix": "error",
     "simple-import-sort/exports": "error",
     "simple-import-sort/imports": "error",
     "sort-keys": "error"
   },
   "settings": {
-    "import/resolver": {
-      "node": true,
-      "typescript": true
-    }
+    "import/resolver": { "node": true, "typescript": true }
   }
 }

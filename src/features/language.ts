@@ -22,7 +22,9 @@ export class Language {
    * @param chatId Id of the chat which is edited
    */
   public async renderSettings(ctx: CallbackCtx, chatId: number): Promise<void> {
-    if (!ctx.chat || isNaN(chatId)) return; // Something went wrong
+    if (!ctx.chat || isNaN(chatId)) {
+      return; // Something went wrong
+    }
 
     const [{ language: lng }, upsertedChat] = await Promise.all([
       upsertChat(ctx.chat, ctx.callbackQuery.from),
@@ -30,7 +32,9 @@ export class Language {
     ]);
 
     const isAdmin = await settings.validateAdminPermissions(ctx, upsertedChat, lng);
-    if (!isAdmin) return; // User is not an admin anymore, return.
+    if (!isAdmin) {
+      return; // User is not an admin anymore, return.
+    }
 
     const enText = this.getOptions().find((l) => l.code === LanguageCode.en)?.title ?? "";
     const ruText = this.getOptions().find((l) => l.code === LanguageCode.ru)?.title ?? "";
@@ -58,13 +62,17 @@ export class Language {
    * @param value Language code
    */
   public async saveSettings(ctx: CallbackCtx, chatId: number, value: string): Promise<void> {
-    if (!ctx.chat || isNaN(chatId)) return; // Something went wrong
+    if (!ctx.chat || isNaN(chatId)) {
+      return; // Something went wrong
+    }
 
     const { from } = ctx.callbackQuery;
     const [{ language: lng }, upsertedChat] = await Promise.all([upsertChat(ctx.chat, from), upsertChat(chatId, from)]);
 
     const isAdmin = await settings.validateAdminPermissions(ctx, upsertedChat, lng);
-    if (!isAdmin) return; // User is not an admin anymore, return.
+    if (!isAdmin) {
+      return; // User is not an admin anymore, return.
+    }
 
     const language = this.getOptions().find((l) => l.code === value)?.code ?? "en";
     await prisma.$transaction([
