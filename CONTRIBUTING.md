@@ -43,17 +43,6 @@ npm run dev
 
 The command starts the local `dev` server, compiles and reloads changes.
 
-## Code Style Agreement
-
-The project follows the usual practices for modern development.
-
-Some of the practices defined by the stack and chosen tools, such as:
-
-- Node.js
-- TypeScript
-
-Follow configured ESLint and Prettier rules.
-
 ## Git Flow
 
 - `dev` and `main` branches are protected
