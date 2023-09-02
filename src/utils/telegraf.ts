@@ -104,6 +104,9 @@ export const getUserHtmlLink = (
  * @returns Returns true if the user is an admin. Returns undefined if the member list is not available.
  */
 export const isChatAdmin = async (chatId: number, userId: number): Promise<boolean | undefined> => {
+  if (userId === GROUP_ANONYMOUS_BOT_ID) {
+    return true;
+  }
   const member = await bot.telegram.getChatMember(chatId, userId).catch((e) => {
     const errorCode = (e as { response?: { error_code?: number } })?.response?.error_code;
     switch (errorCode) {
