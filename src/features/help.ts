@@ -1,6 +1,6 @@
 import { t } from "i18next";
 import { MessageCtx } from "types/context";
-import { upsertChat } from "utils/prisma";
+import { upsertPrismaChat } from "utils/prisma";
 import { isCleanCommand } from "utils/telegraf";
 
 export class Help {
@@ -12,7 +12,7 @@ export class Help {
     if (!isCleanCommand("help", ctx.message.text) && !isCleanCommand("start", ctx.message.text)) {
       return; // Not clean command, ignore.
     }
-    const { language: lng } = await upsertChat(ctx.chat, ctx.message.from);
+    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.message.from);
     const msg = [
       t("help:greeting", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}`, lng }),
       ...[t("language:help", { lng }), t("addingBots:help", { lng }), t("voteban:help", { lng })].sort((a, b) =>

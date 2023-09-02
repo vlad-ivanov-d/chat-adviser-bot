@@ -1,8 +1,14 @@
 import { AddingBotsRule } from "@prisma/client";
-import { settings, SettingsActions } from "features/settings";
+import { settings, SettingsAction } from "features/settings";
 import { t } from "i18next";
 import { CallbackCtx, NewMembersCtx } from "types/context";
-import { isChatAdmin, joinModifiedInfo, prisma, upsertChat, upsertChatSettingsHistory } from "utils/prisma";
+import {
+  isPrismaChatAdmin,
+  joinModifiedInfo,
+  prisma,
+  upsertPrismaChat,
+  upsertPrismaChatSettingsHistory,
+} from "utils/prisma";
 import { getUserHtmlLink, kickChatMember } from "utils/telegraf";
 
 export class AddingBots {
@@ -29,26 +35,26 @@ export class AddingBots {
       return; // Something went wrong
     }
 
-    const [{ language: lng }, upsertedChat] = await Promise.all([
-      upsertChat(ctx.chat, ctx.callbackQuery.from),
-      upsertChat(chatId, ctx.callbackQuery.from),
+    const [{ language: lng }, prismaChat] = await Promise.all([
+      upsertPrismaChat(ctx.chat, ctx.callbackQuery.from),
+      upsertPrismaChat(chatId, ctx.callbackQuery.from),
     ]);
 
-    const isAdmin = await settings.validateAdminPermissions(ctx, upsertedChat, lng);
+    const isAdmin = await settings.validateAdminPermissions(ctx, prismaChat, lng);
     if (!isAdmin) {
       return; // User is not an admin anymore, redirect to chat list.
     }
 
-    const allowedCbData = `${SettingsActions.AddingBotsSave}?chatId=${chatId}`;
-    const restrictedCbData = `${SettingsActions.AddingBotsSave}?chatId=${chatId}&v=${AddingBotsRule.restricted}`;
-    const restrictedAndBanCbData = `${SettingsActions.AddingBotsSave}?chatId=${chatId}&v=${AddingBotsRule.restrictedAndBan}`;
+    const allowedCbData = `${SettingsAction.AddingBotsSave}?chatId=${chatId}`;
+    const restrictedCbData = `${SettingsAction.AddingBotsSave}?chatId=${chatId}&v=${AddingBotsRule.restricted}`;
+    const restrictedAndBanCbData = `${SettingsAction.AddingBotsSave}?chatId=${chatId}&v=${AddingBotsRule.restrictedAndBan}`;
 
-    const sanitizedValue = this.sanitizeValue(upsertedChat.addingBots);
+    const sanitizedValue = this.sanitizeValue(prismaChat.addingBots);
     const value = this.getOptions(lng).find((o) => o.id === sanitizedValue)?.title ?? "";
-    const msg = t("addingBots:set", { CHAT_TITLE: upsertedChat.title, VALUE: value, lng });
+    const msg = t("addingBots:set", { CHAT_TITLE: prismaChat.title, VALUE: value, lng });
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(joinModifiedInfo(msg, { lng, settingName: "addingBots", upsertedChat }), {
+      ctx.editMessageText(joinModifiedInfo(msg, { lng, prismaChat, settingName: "addingBots" }), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
@@ -76,15 +82,15 @@ export class AddingBots {
       return; // The bot itself was added, return.
     }
 
-    const chat = await upsertChat(ctx.chat, from);
-    if (isChatAdmin(chat, from.id)) {
+    const prismaChat = await upsertPrismaChat(ctx.chat, from);
+    if (isPrismaChatAdmin(prismaChat, from.id)) {
       return; // Current user is an admin, return.
     }
-    if (!isChatAdmin(chat, ctx.botInfo.id)) {
+    if (!isPrismaChatAdmin(prismaChat, ctx.botInfo.id)) {
       return; // Bot is not an admin, return.
     }
 
-    const { addingBots, language: lng } = chat;
+    const { addingBots, language: lng } = prismaChat;
     if (addingBots === AddingBotsRule.restricted || addingBots === AddingBotsRule.restrictedAndBan) {
       const msg = t("addingBots:userBanned", { USER: getUserHtmlLink(from, ctx.chat), lng });
       await Promise.all([
@@ -109,9 +115,12 @@ export class AddingBots {
     }
 
     const { from } = ctx.callbackQuery;
-    const [{ language: lng }, upsertedChat] = await Promise.all([upsertChat(ctx.chat, from), upsertChat(chatId, from)]);
+    const [{ language: lng }, prismaChat] = await Promise.all([
+      upsertPrismaChat(ctx.chat, from),
+      upsertPrismaChat(chatId, from),
+    ]);
 
-    const isAdmin = await settings.validateAdminPermissions(ctx, upsertedChat, lng);
+    const isAdmin = await settings.validateAdminPermissions(ctx, prismaChat, lng);
     if (!isAdmin) {
       return; // User is not an admin anymore, return.
     }
@@ -119,7 +128,7 @@ export class AddingBots {
     const addingBots = this.sanitizeValue(value);
     await prisma.$transaction([
       prisma.chat.update({ data: { addingBots }, select: { id: true }, where: { id: chatId } }),
-      upsertChatSettingsHistory(chatId, from.id, "addingBots"),
+      upsertPrismaChatSettingsHistory(chatId, from.id, "addingBots"),
     ]);
     await Promise.all([settings.notifyChangesSaved(ctx, lng), this.renderSettings(ctx, chatId)]);
   }

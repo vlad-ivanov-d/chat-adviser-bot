@@ -1,12 +1,12 @@
 import { t } from "i18next";
 import { Chat, InlineKeyboardButton, InlineKeyboardMarkup } from "telegraf/typings/core/types/typegram";
-import { UpsertedChat } from "types/chat";
 import { CallbackCtx, MessageCtx } from "types/context";
+import { PrismaChat } from "types/prismaChat";
 import { PAGE_SIZE } from "utils/consts";
-import { isChatAdmin, prisma, upsertChat } from "utils/prisma";
+import { isPrismaChatAdmin, prisma, upsertPrismaChat } from "utils/prisma";
 import { getPagination, isCleanCommand } from "utils/telegraf";
 
-export enum SettingsActions {
+export enum SettingsAction {
   AddingBots = "cfg-addng-bts",
   AddingBotsSave = "cfg-addng-bts-sv",
   Chats = "cfg-chats",
@@ -30,7 +30,7 @@ export class Settings {
       return; // Not clean command, ignore.
     }
     if (ctx.chat.type !== "private") {
-      const { language: lng } = await upsertChat(ctx.chat, ctx.message.from);
+      const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.message.from);
       await ctx.reply(t("common:commandForPrivateChat", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}`, lng }), {
         parse_mode: "HTML",
         reply_to_message_id: ctx.message.message_id,
@@ -52,9 +52,10 @@ export class Settings {
     }
 
     const patchedTake = skip === 0 ? PAGE_SIZE - 1 : PAGE_SIZE;
-    const [chat, [chats, count]] = await Promise.all([
-      upsertChat(ctx.chat, from),
+    const [prismaChat, [count, prismaChats]] = await Promise.all([
+      upsertPrismaChat(ctx.chat, from),
       prisma.$transaction([
+        prisma.chat.count({ where: { admins: { some: { id: from.id } } } }),
         prisma.chat.findMany({
           orderBy: { title: "asc" },
           select: { id: true, title: true },
@@ -62,18 +63,17 @@ export class Settings {
           take: patchedTake,
           where: { admins: { some: { id: from.id } } },
         }),
-        prisma.chat.count({ where: { admins: { some: { id: from.id } } } }),
       ]),
     ]);
     if (skip === 0) {
-      chats.unshift(chat);
+      prismaChats.unshift(prismaChat);
     }
 
-    const { language: lng } = chat;
+    const { language: lng } = prismaChat;
     const inlineKeyboardMarkup: InlineKeyboardMarkup = {
       inline_keyboard: [
-        ...chats.map((c) => [{ callback_data: `${SettingsActions.Features}?chatId=${c.id}`, text: c.title }]),
-        getPagination(SettingsActions.Chats, { count, skip, take: patchedTake }),
+        ...prismaChats.map((c) => [{ callback_data: `${SettingsAction.Features}?chatId=${c.id}`, text: c.title }]),
+        getPagination(SettingsAction.Chats, { count, skip, take: patchedTake }),
       ],
     };
     const msg = [t("settings:selectChat", { lng }), t("settings:updateInfoHint", { lng })].join("\n\n");
@@ -94,21 +94,21 @@ export class Settings {
     }
 
     const [{ language: lng }, { title, type }] = await Promise.all([
-      upsertChat(ctx.chat, ctx.callbackQuery.from),
-      upsertChat(chatId, ctx.callbackQuery.from),
+      upsertPrismaChat(ctx.chat, ctx.callbackQuery.from),
+      upsertPrismaChat(chatId, ctx.callbackQuery.from),
     ]);
 
     const addingBotsButton: InlineKeyboardButton[] = [
-      { callback_data: `${SettingsActions.AddingBots}?chatId=${chatId}`, text: t("addingBots:featureName", { lng }) },
+      { callback_data: `${SettingsAction.AddingBots}?chatId=${chatId}`, text: t("addingBots:featureName", { lng }) },
     ];
     const languageButton: InlineKeyboardButton[] = [
-      { callback_data: `${SettingsActions.Language}?chatId=${chatId}`, text: t("language:featureName", { lng }) },
+      { callback_data: `${SettingsAction.Language}?chatId=${chatId}`, text: t("language:featureName", { lng }) },
     ];
     const timeZoneButton: InlineKeyboardButton[] = [
-      { callback_data: `${SettingsActions.TimeZone}?chatId=${chatId}`, text: t("timeZone:featureName", { lng }) },
+      { callback_data: `${SettingsAction.TimeZone}?chatId=${chatId}`, text: t("timeZone:featureName", { lng }) },
     ];
     const votebanButton: InlineKeyboardButton[] = [
-      { callback_data: `${SettingsActions.Voteban}?chatId=${chatId}`, text: t("voteban:featureName", { lng }) },
+      { callback_data: `${SettingsAction.Voteban}?chatId=${chatId}`, text: t("voteban:featureName", { lng }) },
     ];
     const allFeatures: Record<Chat["type"], InlineKeyboardButton[][]> = {
       channel: [languageButton, timeZoneButton],
@@ -126,8 +126,8 @@ export class Settings {
         reply_markup: {
           inline_keyboard: [
             ...features.slice(skip, skip + PAGE_SIZE),
-            getPagination(`${SettingsActions.Features}?chatId=${chatId}`, { count, skip, take: PAGE_SIZE }),
-            [{ callback_data: SettingsActions.Chats, text: `« ${t("settings:backToChats", { lng })}` }],
+            getPagination(`${SettingsAction.Features}?chatId=${chatId}`, { count, skip, take: PAGE_SIZE }),
+            [{ callback_data: SettingsAction.Chats, text: `« ${t("settings:backToChats", { lng })}` }],
           ],
         },
       }),
@@ -143,7 +143,7 @@ export class Settings {
   public getBackToFeaturesButton(chatId: number, lng: string): InlineKeyboardButton[] {
     return [
       {
-        callback_data: `${SettingsActions.Features}?chatId=${chatId}`,
+        callback_data: `${SettingsAction.Features}?chatId=${chatId}`,
         text: `« ${t("settings:backToFeatures", { lng })}`,
       },
     ];
@@ -161,12 +161,12 @@ export class Settings {
   /**
    * Validates admin permissions and redirects to chat list with alert
    * @param ctx Callback context
-   * @param chat Upserted chat
+   * @param prismaChat Prisma chat
    * @param lng Language code
    * @returns True if validation is successfully passed
    */
-  public async validateAdminPermissions(ctx: CallbackCtx, chat: UpsertedChat, lng: string): Promise<boolean> {
-    if (isChatAdmin(chat, ctx.callbackQuery.from.id)) {
+  public async validateAdminPermissions(ctx: CallbackCtx, prismaChat: PrismaChat, lng: string): Promise<boolean> {
+    if (isPrismaChatAdmin(prismaChat, ctx.callbackQuery.from.id)) {
       return true;
     }
     await Promise.all([

@@ -1,8 +1,8 @@
 import { LanguageCode } from "@prisma/client";
-import { settings, SettingsActions } from "features/settings";
+import { settings, SettingsAction } from "features/settings";
 import { t } from "i18next";
 import { CallbackCtx } from "types/context";
-import { joinModifiedInfo, prisma, upsertChat, upsertChatSettingsHistory } from "utils/prisma";
+import { joinModifiedInfo, prisma, upsertPrismaChat, upsertPrismaChatSettingsHistory } from "utils/prisma";
 
 export class Language {
   /**
@@ -26,33 +26,42 @@ export class Language {
       return; // Something went wrong
     }
 
-    const [{ language: lng }, upsertedChat] = await Promise.all([
-      upsertChat(ctx.chat, ctx.callbackQuery.from),
-      upsertChat(chatId, ctx.callbackQuery.from),
+    const [{ language: lng }, prismaChat] = await Promise.all([
+      upsertPrismaChat(ctx.chat, ctx.callbackQuery.from),
+      upsertPrismaChat(chatId, ctx.callbackQuery.from),
     ]);
 
-    const isAdmin = await settings.validateAdminPermissions(ctx, upsertedChat, lng);
+    const isAdmin = await settings.validateAdminPermissions(ctx, prismaChat, lng);
     if (!isAdmin) {
       return; // User is not an admin anymore, return.
     }
 
     const enText = this.getOptions().find((l) => l.code === LanguageCode.en)?.title ?? "";
     const ruText = this.getOptions().find((l) => l.code === LanguageCode.ru)?.title ?? "";
-    const value = this.getOptions().find((l) => l.code === upsertedChat.language)?.title ?? "";
-    const msg = t("language:select", { CHAT_TITLE: upsertedChat.title, VALUE: value, lng });
+    const value = this.getOptions().find((l) => l.code === prismaChat.language)?.title ?? "";
+    const msg = t("language:select", { CHAT_TITLE: prismaChat.title, VALUE: value, lng });
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(joinModifiedInfo(msg, { lng, settingName: "language", upsertedChat }), {
+      ctx.editMessageText(joinModifiedInfo(msg, { lng, prismaChat, settingName: "language" }), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
-            [{ callback_data: `${SettingsActions.LanguageSave}?chatId=${chatId}&v=${LanguageCode.en}`, text: enText }],
-            [{ callback_data: `${SettingsActions.LanguageSave}?chatId=${chatId}&v=${LanguageCode.ru}`, text: ruText }],
+            [{ callback_data: `${SettingsAction.LanguageSave}?chatId=${chatId}&v=${LanguageCode.en}`, text: enText }],
+            [{ callback_data: `${SettingsAction.LanguageSave}?chatId=${chatId}&v=${LanguageCode.ru}`, text: ruText }],
             settings.getBackToFeaturesButton(chatId, lng),
           ],
         },
       }),
     ]).catch(() => undefined); // An expected error may happen if the message won't change during edit
+  }
+
+  /**
+   * Sanitizes language code
+   * @param value Value
+   * @returns Sanitized value
+   */
+  public sanitizeValue(value: string | null | undefined): LanguageCode {
+    return this.getOptions().find((l) => l.code === value)?.code ?? "en";
   }
 
   /**
@@ -65,19 +74,19 @@ export class Language {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }
-
     const { from } = ctx.callbackQuery;
-    const [{ language: lng }, upsertedChat] = await Promise.all([upsertChat(ctx.chat, from), upsertChat(chatId, from)]);
-
-    const isAdmin = await settings.validateAdminPermissions(ctx, upsertedChat, lng);
+    const [{ language: lng }, prismaChat] = await Promise.all([
+      upsertPrismaChat(ctx.chat, from),
+      upsertPrismaChat(chatId, from),
+    ]);
+    const isAdmin = await settings.validateAdminPermissions(ctx, prismaChat, lng);
     if (!isAdmin) {
       return; // User is not an admin anymore, return.
     }
-
-    const language = this.getOptions().find((l) => l.code === value)?.code ?? "en";
+    const language = this.sanitizeValue(value);
     await prisma.$transaction([
       prisma.chat.update({ data: { language }, select: { id: true }, where: { id: chatId } }),
-      upsertChatSettingsHistory(chatId, from.id, "language"),
+      upsertPrismaChatSettingsHistory(chatId, from.id, "language"),
     ]);
     await Promise.all([settings.notifyChangesSaved(ctx, lng), this.renderSettings(ctx, chatId)]);
   }
