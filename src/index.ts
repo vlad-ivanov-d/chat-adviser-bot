@@ -55,6 +55,8 @@ bot.on(callbackQuery("data"), async (ctx) => {
       return voteban.vote(ctx, VotebanAction.Ban);
     case VotebanAction.NoBan:
       return voteban.vote(ctx, VotebanAction.NoBan);
+    default:
+      return;
   }
 });
 bot.on(message("group_chat_created"), (ctx) => upsertChat(ctx.chat, ctx.update.message.from));
