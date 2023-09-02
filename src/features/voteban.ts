@@ -1,17 +1,19 @@
 import { User } from "@prisma/client";
 import { CronJob } from "cron";
-import { settings, SettingsActions } from "features/settings";
+import { language } from "features/language";
+import { settings, SettingsAction } from "features/settings";
 import { t, TOptions } from "i18next";
 import { Chat, Message, User as TelegramUser } from "telegraf/typings/core/types/typegram";
 import { CallbackCtx, MessageCtx } from "types/context";
 import { MAX_INT } from "utils/consts";
 import {
-  isChatAdmin as isPrismaChatAdmin,
+  isPrismaChatAdmin,
+  isPrismaChatExists,
   joinModifiedInfo,
   prisma,
-  upsertChat,
-  upsertChatSettingsHistory,
-  upsertUser,
+  upsertPrismaChat,
+  upsertPrismaChatSettingsHistory,
+  upsertPrismaUser,
 } from "utils/prisma";
 import { getUserHtmlLink, isChatAdmin, isChatMember, isCleanCommand } from "utils/telegraf";
 
@@ -33,12 +35,12 @@ export class Voteban {
 
     const { from, message_id: messageId, reply_to_message: replyToMessageId } = ctx.message;
     const candidate = replyToMessageId?.from;
-    const [chat, isCandidateAdmin] = await Promise.all([
-      upsertChat(ctx.chat.id, from),
+    const [prismaChat, isCandidateAdmin] = await Promise.all([
+      upsertPrismaChat(ctx.chat.id, from),
       // Check it seperately, because other admin bots are not included in the chat admin list.
       typeof candidate?.id === "number" ? isChatAdmin(ctx.chat.id, candidate.id) : undefined,
     ]);
-    const { language: lng, votebanLimit } = chat;
+    const { language: lng, votebanLimit } = prismaChat;
 
     if (ctx.chat.type === "private") {
       await ctx.reply(t("common:commandNotForPrivateChats", { lng }));
@@ -47,7 +49,7 @@ export class Voteban {
     if (!votebanLimit) {
       return; // The feature is disabled, return.
     }
-    if (!isPrismaChatAdmin(chat, ctx.botInfo.id)) {
+    if (!isPrismaChatAdmin(prismaChat, ctx.botInfo.id)) {
       await ctx.reply(t("common:needAdminPermissions", { lng }), { reply_to_message_id: messageId });
       return; // Bot is not an admin, return.
     }
@@ -87,7 +89,7 @@ export class Voteban {
       reply_to_message_id: replyToMessageId?.message_id,
     });
     await prisma.$transaction([
-      upsertUser(candidate, from),
+      upsertPrismaUser(candidate, from),
       prisma.voteban.create({
         data: {
           authorId: from.id,
@@ -133,40 +135,40 @@ export class Voteban {
       return; // Something went wrong
     }
 
-    const [{ language: lng }, upsertedChat] = await Promise.all([
-      upsertChat(ctx.chat, ctx.callbackQuery.from),
-      upsertChat(chatId, ctx.callbackQuery.from),
+    const [{ language: lng }, prismaChat] = await Promise.all([
+      upsertPrismaChat(ctx.chat, ctx.callbackQuery.from),
+      upsertPrismaChat(chatId, ctx.callbackQuery.from),
     ]);
 
-    const isAdmin = await settings.validateAdminPermissions(ctx, upsertedChat, lng);
+    const isAdmin = await settings.validateAdminPermissions(ctx, prismaChat, lng);
     if (!isAdmin) {
       return; // User is not an admin anymore, redirect to chat list.
     }
 
-    const { title, votebanLimit } = upsertedChat;
+    const { title, votebanLimit } = prismaChat;
     const newValue = this.sanitizeValue(typeof value === "undefined" || isNaN(value) ? votebanLimit : value);
     const msg = t("voteban:setLimit", { CHAT_TITLE: title, count: newValue, lng });
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(joinModifiedInfo(msg, { lng, settingName: "votebanLimit", upsertedChat }), {
+      ctx.editMessageText(joinModifiedInfo(msg, { lng, prismaChat, settingName: "votebanLimit" }), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
             [
-              { callback_data: `${SettingsActions.Voteban}?chatId=${chatId}&v=${newValue - 1}`, text: "-1" },
+              { callback_data: `${SettingsAction.Voteban}?chatId=${chatId}&v=${newValue - 1}`, text: "-1" },
               {
                 // Value can't be equal to 1
-                callback_data: `${SettingsActions.Voteban}?chatId=${chatId}&v=${Math.max(2, newValue + 1)}`,
+                callback_data: `${SettingsAction.Voteban}?chatId=${chatId}&v=${Math.max(2, newValue + 1)}`,
                 text: "+1",
               },
             ],
             [
-              { callback_data: `${SettingsActions.Voteban}?chatId=${chatId}&v=${newValue - 50}`, text: "-50" },
-              { callback_data: `${SettingsActions.Voteban}?chatId=${chatId}&v=${newValue + 50}`, text: "+50" },
+              { callback_data: `${SettingsAction.Voteban}?chatId=${chatId}&v=${newValue - 50}`, text: "-50" },
+              { callback_data: `${SettingsAction.Voteban}?chatId=${chatId}&v=${newValue + 50}`, text: "+50" },
             ],
             [
               {
-                callback_data: `${SettingsActions.VotebanSave}?chatId=${chatId}&v=${newValue}`,
+                callback_data: `${SettingsAction.VotebanSave}?chatId=${chatId}&v=${newValue}`,
                 text: t("settings:save", { lng }),
               },
             ],
@@ -187,19 +189,19 @@ export class Voteban {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }
-
     const { from } = ctx.callbackQuery;
-    const [{ language: lng }, upsertedChat] = await Promise.all([upsertChat(ctx.chat, from), upsertChat(chatId, from)]);
-
-    const isAdmin = await settings.validateAdminPermissions(ctx, upsertedChat, lng);
+    const [{ language: lng }, prismaChat] = await Promise.all([
+      upsertPrismaChat(ctx.chat, from),
+      upsertPrismaChat(chatId, from),
+    ]);
+    const isAdmin = await settings.validateAdminPermissions(ctx, prismaChat, lng);
     if (!isAdmin) {
       return; // User is not an admin anymore, redirect to chat list.
     }
-
     const votebanLimit = this.sanitizeValue(value) || null;
     await prisma.$transaction([
       prisma.chat.update({ data: { votebanLimit }, select: { id: true }, where: { id: chatId } }),
-      upsertChatSettingsHistory(chatId, from.id, "votebanLimit"),
+      upsertPrismaChatSettingsHistory(chatId, from.id, "votebanLimit"),
     ]);
     await Promise.all([settings.notifyChangesSaved(ctx, lng), this.renderSettings(ctx, chatId)]);
   }
@@ -215,8 +217,8 @@ export class Voteban {
       return; // No message, something went wrong.
     }
 
-    const [chat, isUserChatMember, results] = await Promise.all([
-      upsertChat(message.chat, from),
+    const [isChatExists, isVoterChatMember, results] = await Promise.all([
+      isPrismaChatExists(message.chat.id),
       isChatMember(message.chat.id, from.id),
       prisma.voteban.findUnique({
         select: {
@@ -227,26 +229,30 @@ export class Voteban {
         where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
       }),
     ]);
+    // Do not upsert chat if it's not found. It means that bot was removed from the chat.
+    const prismaChat = isChatExists ? await upsertPrismaChat(message.chat, from) : undefined;
+    const lng = prismaChat?.language ?? language.sanitizeValue(from.language_code);
 
-    const { editorId, language: lng } = chat;
-    if (!results) {
+    if (!prismaChat || !results) {
       await ctx.answerCbQuery(t("voteban:expired", { lng }), { show_alert: true });
-      return; // Results not found. Looks like voting has expired and has been deleted, return.
+      return; // Results not found. Looks like voting has been deleted.
     }
+
+    const { editorId } = prismaChat;
     const { banVoters, id, noBanVoters } = results;
     if ((action === VotebanAction.Ban ? banVoters : noBanVoters).map((v) => v.authorId).includes(from.id)) {
       await ctx.answerCbQuery(t("voteban:alreadyVoted", { lng }), { show_alert: true });
       return; // User has already voted, return.
     }
-    if (!isPrismaChatAdmin(chat, ctx.botInfo.id)) {
+    if (!isPrismaChatAdmin(prismaChat, ctx.botInfo.id)) {
       const msg = t("common:needAdminPermissions", { lng });
       // An expected error may happen when bot was removed from the chat or there are no enough permissions
       await Promise.all([ctx.answerCbQuery(msg, { show_alert: true }), this.updateResults(ctx).catch(() => undefined)]);
       return; // Bot is not an admin, return.
     }
-    if (!isUserChatMember) {
+    if (!isVoterChatMember) {
       await ctx.answerCbQuery(t("voteban:mustBeChatMember", { lng }), { show_alert: true });
-      return; // User is not a chat member, return.
+      return; // Voter is not a chat member, return.
     }
 
     if (action === VotebanAction.Ban) {
@@ -323,8 +329,8 @@ export class Voteban {
       return; // No message, something went wrong.
     }
 
-    const [chat, results] = await Promise.all([
-      upsertChat(message.chat, from),
+    const [prismaChat, results] = await Promise.all([
+      upsertPrismaChat(message.chat, from),
       prisma.voteban.findUnique({
         select: {
           author: true,
@@ -340,7 +346,7 @@ export class Voteban {
     }
 
     const { author, banVoters, candidate, noBanVoters } = results;
-    const { language: lng, votebanLimit } = chat;
+    const { language: lng, votebanLimit } = prismaChat;
     const authorLink = getUserHtmlLink(author, message.chat);
     const candidateLink = getUserHtmlLink(candidate, message.chat);
     const isBan = banVoters.length > noBanVoters.length;
@@ -354,7 +360,7 @@ export class Voteban {
       await ctx.editMessageText([questionMsg, cancelledMsg].join("\n\n"), { parse_mode: "HTML" });
       return; // The feature is disabled, return.
     }
-    if (!isPrismaChatAdmin(chat, ctx.botInfo.id)) {
+    if (!isPrismaChatAdmin(prismaChat, ctx.botInfo.id)) {
       const cancelledMsg = t("voteban:cancelledBotNotAdmin", { lng });
       await ctx.editMessageText([questionMsg, cancelledMsg].join("\n\n"), { parse_mode: "HTML" });
       return; // Bot is not an admin, return.

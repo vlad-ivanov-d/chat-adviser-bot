@@ -63,7 +63,7 @@ model ChatSettingsHistory {
   updatedAt   DateTime        @updatedAt
 
   author User @relation("ChatSettingsHistoryAuthor", fields: [authorId], references: [id])
-  chat   Chat @relation(fields: [chatId], references: [id])
+  chat   Chat @relation(fields: [chatId], onDelete: Cascade, references: [id])
   editor User @relation("ChatSettingsHistoryEditor", fields: [editorId], references: [id])
 
   @@unique([chatId, settingName])
@@ -112,7 +112,7 @@ model Voteban {
 
   author    User @relation("VotebanAuthor", fields: [authorId], references: [id])
   candidate User @relation("VotebanCandidate", fields: [candidateId], references: [id])
-  chat      Chat @relation(fields: [chatId], references: [id])
+  chat      Chat @relation(fields: [chatId], onDelete: Cascade, references: [id])
   editor    User @relation("VotebanEditor", fields: [editorId], references: [id])
 
   @@unique([chatId, messageId])

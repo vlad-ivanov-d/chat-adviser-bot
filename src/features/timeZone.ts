@@ -1,10 +1,10 @@
 import { format, getTimezoneOffset } from "date-fns-tz";
-import { settings, SettingsActions } from "features/settings";
+import { settings, SettingsAction } from "features/settings";
 import { t } from "i18next";
 import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 import { CallbackCtx } from "types/context";
 import { PAGE_SIZE } from "utils/consts";
-import { joinModifiedInfo, prisma, upsertChat, upsertChatSettingsHistory } from "utils/prisma";
+import { joinModifiedInfo, prisma, upsertPrismaChat, upsertPrismaChatSettingsHistory } from "utils/prisma";
 import { getPagination } from "utils/telegraf";
 
 export class TimeZone {
@@ -20,9 +20,12 @@ export class TimeZone {
     }
 
     const { from } = ctx.callbackQuery;
-    const [{ language: lng }, upsertedChat] = await Promise.all([upsertChat(ctx.chat, from), upsertChat(chatId, from)]);
+    const [{ language: lng }, prismaChat] = await Promise.all([
+      upsertPrismaChat(ctx.chat, from),
+      upsertPrismaChat(chatId, from),
+    ]);
 
-    const isAdmin = await settings.validateAdminPermissions(ctx, upsertedChat, lng);
+    const isAdmin = await settings.validateAdminPermissions(ctx, prismaChat, lng);
     if (!isAdmin) {
       return; // User is not an admin anymore, return.
     }
@@ -30,21 +33,21 @@ export class TimeZone {
     const timeZones = this.getAllTimeZones();
     const count = timeZones.length;
 
-    const value = `${format(new Date(), "O", { timeZone: upsertedChat.timeZone })} ${upsertedChat.timeZone}`;
-    const msg = t("timeZone:select", { CHAT_TITLE: upsertedChat.title, VALUE: value, lng });
+    const value = `${format(new Date(), "O", { timeZone: prismaChat.timeZone })} ${prismaChat.timeZone}`;
+    const msg = t("timeZone:select", { CHAT_TITLE: prismaChat.title, VALUE: value, lng });
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(joinModifiedInfo(msg, { lng, settingName: "timeZone", upsertedChat }), {
+      ctx.editMessageText(joinModifiedInfo(msg, { lng, prismaChat, settingName: "timeZone" }), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
             ...timeZones.slice(skip, skip + PAGE_SIZE).map((tz): InlineKeyboardButton[] => [
               {
-                callback_data: `${SettingsActions.TimeZoneSave}?chatId=${chatId}&v=${tz}`,
+                callback_data: `${SettingsAction.TimeZoneSave}?chatId=${chatId}&v=${tz}`,
                 text: `${format(new Date(), "O", { timeZone: tz })} ${tz}`,
               },
             ]),
-            getPagination(`${SettingsActions.TimeZone}?chatId=${chatId}`, { count, skip, take: PAGE_SIZE }),
+            getPagination(`${SettingsAction.TimeZone}?chatId=${chatId}`, { count, skip, take: PAGE_SIZE }),
             settings.getBackToFeaturesButton(chatId, lng),
           ],
         },
@@ -62,19 +65,19 @@ export class TimeZone {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }
-
     const { from } = ctx.callbackQuery;
-    const [{ language: lng }, upsertedChat] = await Promise.all([upsertChat(ctx.chat, from), upsertChat(chatId, from)]);
-
-    const isAdmin = await settings.validateAdminPermissions(ctx, upsertedChat, lng);
+    const [{ language: lng }, prismaChat] = await Promise.all([
+      upsertPrismaChat(ctx.chat, from),
+      upsertPrismaChat(chatId, from),
+    ]);
+    const isAdmin = await settings.validateAdminPermissions(ctx, prismaChat, lng);
     if (!isAdmin) {
       return; // User is not an admin anymore, return.
     }
-
     const timeZone = this.sanitizeValue(value);
     await prisma.$transaction([
       prisma.chat.update({ data: { timeZone }, select: { id: true }, where: { id: chatId } }),
-      upsertChatSettingsHistory(chatId, from.id, "timeZone"),
+      upsertPrismaChatSettingsHistory(chatId, from.id, "timeZone"),
     ]);
     const skip = Math.max(0, Math.floor(this.getAllTimeZones().indexOf(timeZone) / PAGE_SIZE) * PAGE_SIZE);
     await Promise.all([settings.notifyChangesSaved(ctx, lng), this.renderSettings(ctx, chatId, skip)]);

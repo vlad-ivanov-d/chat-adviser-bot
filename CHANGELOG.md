@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0 (2023-09-02)
+
+- Improvement: all information about the chat will be deleted from the bot database if the bot is kicked
+
 ## 1.4.0 (2023-09-01)
 
 - Other: /voteban command will be silently ignored if Ban Voting feature is disabled
