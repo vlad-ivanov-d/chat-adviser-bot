@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.5.1 (2023-09-10)
+
+- Fix: incorrect voting for a ban against a message sent on behalf of a channel/group
+- Other: cleanup cron job now removes more garbage from database
+
 ## 1.5.0 (2023-09-02)
 
 - Improvement: all information about the chat will be deleted from the bot database if the bot is kicked

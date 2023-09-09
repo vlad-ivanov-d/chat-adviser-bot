@@ -113,10 +113,10 @@ model User {
   userAuthors                User[]                @relation("UserAuthor")
   userEditors                User[]                @relation("UserEditor")
   votebanAuthors             Voteban[]             @relation("VotebanAuthor")
-  votebanCandidates          Voteban[]             @relation("VotebanCandidate")
-  votebanEditors             Voteban[]             @relation("VotebanEditor")
   votebanBanVoterAuthors     VotebanBanVoter[]     @relation("VotebanBanVoterAuthor")
   votebanBanVoterEditors     VotebanBanVoter[]     @relation("VotebanBanVoterEditor")
+  votebanCandidates          Voteban[]             @relation("VotebanCandidate")
+  votebanEditors             Voteban[]             @relation("VotebanEditor")
   votebanNoBanVoterAuthors   VotebanNoBanVoter[]   @relation("VotebanNoBanVoterAuthor")
   votebanNoBanVoterEditors   VotebanNoBanVoter[]   @relation("VotebanNoBanVoterEditor")
 }

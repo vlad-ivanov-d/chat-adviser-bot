@@ -1,5 +1,4 @@
 import { User } from "@prisma/client";
-import { CronJob } from "cron";
 import { language } from "features/language";
 import { settings, SettingsAction } from "features/settings";
 import { t, TOptions } from "i18next";
@@ -109,26 +108,6 @@ export class Voteban {
         select: { id: true },
       }),
     ]);
-  }
-
-  /**
-   * Removes old votings from database
-   * @returns Cron job
-   */
-  public cronJob(): CronJob {
-    return new CronJob({
-      cronTime: "0 0 0 * * *", // Every day at 00:00:00
-      /**
-       * The function to fire at the specified time.
-       */
-      onTick: () => {
-        void (async () => {
-          const date = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
-          await prisma.voteban.deleteMany({ where: { createdAt: { lt: date } } });
-        })();
-      },
-      start: true,
-    });
   }
 
   /**
