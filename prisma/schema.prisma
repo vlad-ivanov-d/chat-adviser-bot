@@ -37,14 +37,18 @@ model Chat {
   admins       User[]          @relation("ChatAdmins")
   authorId     Float
   createdAt    DateTime        @default(now())
+  displayTitle String
   editorId     Float
+  firstName    String?
   id           Float           @id
   language     LanguageCode
+  lastName     String?
   membersCount Int
   timeZone     String
-  title        String
+  title        String?
   type         ChatType
   updatedAt    DateTime        @updatedAt
+  username     String?
   votebanLimit Int?
 
   author              User                  @relation("ChatAuthor", fields: [authorId], references: [id])
@@ -69,6 +73,24 @@ model ChatSettingsHistory {
   @@unique([chatId, settingName])
 }
 
+model SenderChat {
+  authorId  Float
+  createdAt DateTime @default(now())
+  editorId  Float
+  firstName String?
+  id        Float    @id
+  lastName  String?
+  title     String?
+  type      ChatType
+  updatedAt DateTime @updatedAt
+  username  String?
+
+  author                      User      @relation("SenderChatAuthor", fields: [authorId], references: [id])
+  editor                      User      @relation("SenderChatEditor", fields: [editorId], references: [id])
+  votebanAuthorSenderChats    Voteban[] @relation("VotebanAuthorSenderChat")
+  votebanCandidateSenderChats Voteban[] @relation("VotebanCandidateSenderChat")
+}
+
 model User {
   authorId  Float
   createdAt DateTime @default(now())
@@ -86,34 +108,40 @@ model User {
   chatSettingsHistoryAuthors ChatSettingsHistory[] @relation("ChatSettingsHistoryAuthor")
   chatSettingsHistoryEditors ChatSettingsHistory[] @relation("ChatSettingsHistoryEditor")
   editor                     User                  @relation("UserEditor", fields: [editorId], references: [id])
+  senderChatAuthors          SenderChat[]          @relation("SenderChatAuthor")
+  senderChatEditors          SenderChat[]          @relation("SenderChatEditor")
   userAuthors                User[]                @relation("UserAuthor")
   userEditors                User[]                @relation("UserEditor")
   votebanAuthors             Voteban[]             @relation("VotebanAuthor")
-  votebanCandidates          Voteban[]             @relation("VotebanCandidate")
-  votebanEditors             Voteban[]             @relation("VotebanEditor")
   votebanBanVoterAuthors     VotebanBanVoter[]     @relation("VotebanBanVoterAuthor")
   votebanBanVoterEditors     VotebanBanVoter[]     @relation("VotebanBanVoterEditor")
+  votebanCandidates          Voteban[]             @relation("VotebanCandidate")
+  votebanEditors             Voteban[]             @relation("VotebanEditor")
   votebanNoBanVoterAuthors   VotebanNoBanVoter[]   @relation("VotebanNoBanVoterAuthor")
   votebanNoBanVoterEditors   VotebanNoBanVoter[]   @relation("VotebanNoBanVoterEditor")
 }
 
 model Voteban {
-  authorId    Float
-  banVoters   VotebanBanVoter[]
-  candidateId Float
-  chatId      Float
-  completed   Boolean?
-  createdAt   DateTime            @default(now())
-  editorId    Float
-  id          BigInt              @id @default(autoincrement())
-  messageId   Float
-  noBanVoters VotebanNoBanVoter[]
-  updatedAt   DateTime            @updatedAt
+  authorId              Float
+  authorSenderChatId    Float?
+  banVoters             VotebanBanVoter[]
+  candidateId           Float
+  candidateSenderChatId Float?
+  chatId                Float
+  completed             Boolean?
+  createdAt             DateTime            @default(now())
+  editorId              Float
+  id                    BigInt              @id @default(autoincrement())
+  messageId             Float
+  noBanVoters           VotebanNoBanVoter[]
+  updatedAt             DateTime            @updatedAt
 
-  author    User @relation("VotebanAuthor", fields: [authorId], references: [id])
-  candidate User @relation("VotebanCandidate", fields: [candidateId], references: [id])
-  chat      Chat @relation(fields: [chatId], onDelete: Cascade, references: [id])
-  editor    User @relation("VotebanEditor", fields: [editorId], references: [id])
+  author              User        @relation("VotebanAuthor", fields: [authorId], references: [id])
+  authorSenderChat    SenderChat? @relation("VotebanAuthorSenderChat", fields: [authorSenderChatId], references: [id])
+  candidate           User        @relation("VotebanCandidate", fields: [candidateId], references: [id])
+  candidateSenderChat SenderChat? @relation("VotebanCandidateSenderChat", fields: [candidateSenderChatId], references: [id])
+  chat                Chat        @relation(fields: [chatId], onDelete: Cascade, references: [id])
+  editor              User        @relation("VotebanEditor", fields: [editorId], references: [id])
 
   @@unique([chatId, messageId])
   @@index([createdAt])

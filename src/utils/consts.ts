@@ -16,11 +16,6 @@ export const DATE_LOCALES: Record<LanguageCode, Locale> = {
 };
 
 /**
- * \@GroupAnonymousBot id. This is a builtin Telegram bot which is used for anonymous feature.
- */
-export const GROUP_ANONYMOUS_BOT_ID = 1087968824;
-
-/**
  * Database maximum integer limit
  */
 export const MAX_INT = 2147483647;

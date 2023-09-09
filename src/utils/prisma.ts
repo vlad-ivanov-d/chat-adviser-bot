@@ -4,18 +4,13 @@ import { formatInTimeZone } from "date-fns-tz";
 import { t } from "i18next";
 import { Chat as TelegramChat, User as TelegramUser } from "telegraf/typings/core/types/typegram";
 import { PrismaChat } from "types/prismaChat";
-import { DATE_FORMAT, DATE_LOCALES, GROUP_ANONYMOUS_BOT_ID } from "utils/consts";
-import { bot, getUserHtmlLink, getUserTitle } from "utils/telegraf";
-
-/**
- * Database client
- */
-export const prisma = new PrismaClient();
+import { DATE_FORMAT, DATE_LOCALES } from "utils/consts";
+import { bot, getChatDisplayTitle, getUserHtmlLink, getUserTitle } from "utils/telegraf";
 
 /**
  * Resolves language based on Telegram language code
  * @param languageCode Telegram lanugage code
- * @returns Language
+ * @returns Language code which is supported by the bot
  */
 const resolveLanguage = (languageCode: string | undefined): LanguageCode => {
   switch (languageCode) {
@@ -43,20 +38,9 @@ const resolveTimeZone = (languageCode: string | undefined): string => {
 };
 
 /**
- * Converts Telegram user to Prisma user
- * @param user Telegram user
- * @returns Prisma user
+ * Database client
  */
-const telegramToPrismaUser = (user: TelegramUser): User => ({
-  authorId: user.id,
-  createdAt: new Date(),
-  editorId: user.id,
-  firstName: user.first_name,
-  id: user.id,
-  lastName: user.last_name ?? null,
-  updatedAt: new Date(),
-  username: user.username ?? null,
-});
+export const prisma = new PrismaClient();
 
 /**
  * Adds modified info to the text
@@ -79,7 +63,7 @@ export const joinModifiedInfo = (
     historyItem
       ? t("settings:modified", {
           DATE: formatInTimeZone(historyItem.updatedAt, timeZone, DATE_FORMAT, { locale: DATE_LOCALES[lng] }),
-          USER: getUserHtmlLink(historyItem.editor, prismaChat),
+          USER: getUserHtmlLink(historyItem.editor),
           lng,
         })
       : "",
@@ -94,15 +78,9 @@ export const joinModifiedInfo = (
  * @param userId User id
  * @returns True if admin
  */
-export const isPrismaChatAdmin = (prismaChat: PrismaChat, userId: number): boolean => {
-  if (userId === GROUP_ANONYMOUS_BOT_ID) {
-    return true;
-  }
-  if (userId === prismaChat.id) {
-    return true; // Private chat with bot
-  }
-  return prismaChat.admins.some((a) => a.id === userId);
-};
+export const isPrismaChatAdmin = (prismaChat: PrismaChat, userId: number): boolean =>
+  // Private chat has the same id as a user
+  userId === prismaChat.id || prismaChat.admins.some((a) => a.id === userId);
 
 /**
  * Checks if chat exists in database
@@ -120,17 +98,19 @@ export const isPrismaChatExists = async (chatId: number): Promise<boolean> => {
  * @param editor Telegram user who makes upsert
  * @returns Prisma chat
  */
-export const upsertPrismaChat = async (chat: TelegramChat | number, editor: TelegramUser): Promise<PrismaChat> => {
-  const chatId = typeof chat === "number" ? chat : chat.id;
-  const isPrivate = typeof chat === "number" ? undefined : chat.type === "private";
-  const [resolvedChat, admins, membersCount] = await Promise.all([
-    // An expected error may happen when bot was removed from the chat
-    typeof chat === "number" ? bot.telegram.getChat(chatId).catch(() => undefined) : chat,
-    // An expected error may happen when bot was removed from the chat or chat is private
-    isPrivate ? [] : bot.telegram.getChatAdministrators(chatId).catch(() => []),
-    // An expected error may happen when bot was removed from the chat
-    bot.telegram.getChatMembersCount(chatId).catch(() => undefined),
+export const upsertPrismaChat = async (chat: TelegramChat, editor: TelegramUser): Promise<PrismaChat> => {
+  const [admins, membersCount] = await Promise.all([
+    // An expected error may happen if administrators are hidden
+    chat.type === "private" ? [] : bot.telegram.getChatAdministrators(chat.id).catch(() => []),
+    bot.telegram.getChatMembersCount(chat.id),
   ]);
+
+  const displayTitle = getChatDisplayTitle(chat);
+  const firstName = "first_name" in chat ? chat.first_name : null;
+  const lastName = "last_name" in chat ? chat.last_name : null;
+  const title = "title" in chat ? chat.title : null;
+  const username = "username" in chat ? chat.username : null;
+
   const transaction = await prisma.$transaction([
     ...[editor, ...admins.map((a) => a.user)]
       .filter((u, i, arr) => arr.indexOf(u) === i) // Trim duplicates
@@ -139,29 +119,45 @@ export const upsertPrismaChat = async (chat: TelegramChat | number, editor: Tele
       create: {
         admins: { connect: admins.map((a) => ({ id: a.user.id })) },
         authorId: editor.id,
+        displayTitle,
         editorId: editor.id,
-        id: chatId,
+        firstName,
+        id: chat.id,
         language: resolveLanguage(editor.language_code),
+        lastName,
         membersCount: membersCount ?? 0,
         timeZone: resolveTimeZone(editor.language_code),
-        title: resolvedChat?.type === "private" ? getUserTitle(editor, resolvedChat) : resolvedChat?.title ?? "",
-        type: resolvedChat?.type ?? "private",
+        title,
+        type: chat.type,
+        username,
       },
       include: { admins: true, chatSettingsHistory: { include: { editor: true } } },
       update: {
         admins: { set: admins.map((a) => ({ id: a.user.id })) },
+        displayTitle,
         editorId: editor.id,
+        firstName,
+        lastName,
         membersCount,
-        title: resolvedChat?.type === "private" ? getUserTitle(editor, resolvedChat) : resolvedChat?.title,
-        type: resolvedChat?.type,
+        title,
+        type: chat.type,
+        username,
       },
-      where: { id: chatId },
+      where: { id: chat.id },
     }),
   ]);
-  const prismaChat = transaction.pop() as PrismaChat;
-  // Mutate bot private chat title
-  const title = prismaChat.id === editor.id && bot.botInfo ? getUserTitle(bot.botInfo, resolvedChat) : prismaChat.title;
-  return { ...prismaChat, title };
+
+  const prismaChat = transaction[transaction.length - 1];
+  if (!("admins" in prismaChat)) {
+    throw new Error("Something went wrong during chat upsertion");
+  }
+
+  return {
+    ...prismaChat,
+    // Patch bot private chat title
+    displayTitle:
+      prismaChat.id === editor.id && bot.botInfo ? getUserTitle(bot.botInfo, "full") : prismaChat.displayTitle,
+  };
 };
 
 /**
@@ -184,6 +180,38 @@ export const upsertPrismaChatSettingsHistory = (
   });
 
 /**
+ * Creates or updates (if still not exist) sender chat in database
+ * @param chat Telegram chat
+ * @param editor Telegram user who makes upsert
+ * @returns Prisma sender chat id
+ */
+export const upsertPrismaSenderChat = async (chat: TelegramChat, editor: TelegramUser): Promise<number> => {
+  const firstName = "first_name" in chat ? chat.first_name : null;
+  const lastName = "last_name" in chat ? chat.last_name : null;
+  const title = "title" in chat ? chat.title : null;
+  const username = "username" in chat ? chat.username : null;
+  const [, prismaSenderChat] = await prisma.$transaction([
+    upsertPrismaUser(editor, editor),
+    prisma.senderChat.upsert({
+      create: {
+        authorId: editor.id,
+        editorId: editor.id,
+        firstName,
+        id: chat.id,
+        lastName,
+        title,
+        type: chat.type,
+        username,
+      },
+      select: { id: true },
+      update: { editorId: editor.id, firstName, lastName, title, type: chat.type, username },
+      where: { id: chat.id },
+    }),
+  ]);
+  return prismaSenderChat.id;
+};
+
+/**
  * Gets user from database. User will be created if it's not exists.
  * @param user Telegram user
  * @param editor Telegram user who makes upsert
@@ -194,12 +222,19 @@ export const upsertPrismaUser = (
   editor: TelegramUser,
 ): Prisma.Prisma__UserClient<User, never, DefaultArgs> =>
   prisma.user.upsert({
-    create: { ...telegramToPrismaUser(user), authorId: editor.id, editorId: editor.id },
+    create: {
+      authorId: editor.id,
+      editorId: editor.id,
+      firstName: user.first_name,
+      id: user.id,
+      lastName: user.last_name ?? null,
+      username: user.username ?? null,
+    },
     update: {
       editorId: editor.id,
       firstName: user.first_name,
-      lastName: user.last_name,
-      username: user.username,
+      lastName: user.last_name ?? null,
+      username: user.username ?? null,
     },
     where: { id: user.id },
   });

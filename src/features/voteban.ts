@@ -1,9 +1,8 @@
 import { User } from "@prisma/client";
-import { CronJob } from "cron";
 import { language } from "features/language";
 import { settings, SettingsAction } from "features/settings";
 import { t, TOptions } from "i18next";
-import { Chat, Message, User as TelegramUser } from "telegraf/typings/core/types/typegram";
+import { User as TelegramUser } from "telegraf/typings/core/types/typegram";
 import { CallbackCtx, MessageCtx } from "types/context";
 import { MAX_INT } from "utils/consts";
 import {
@@ -13,9 +12,10 @@ import {
   prisma,
   upsertPrismaChat,
   upsertPrismaChatSettingsHistory,
+  upsertPrismaSenderChat,
   upsertPrismaUser,
 } from "utils/prisma";
-import { getUserHtmlLink, isChatAdmin, isChatMember, isCleanCommand } from "utils/telegraf";
+import { getChatHtmlLink, getUserHtmlLink, isChatAdmin, isChatMember, isCleanCommand } from "utils/telegraf";
 
 export enum VotebanAction {
   Ban = "voteban-ban",
@@ -33,23 +33,26 @@ export class Voteban {
       return; // Not clean command, ignore.
     }
 
-    const { from, message_id: messageId, reply_to_message: replyToMessageId } = ctx.message;
-    const candidate = replyToMessageId?.from;
-    const [prismaChat, isCandidateAdmin] = await Promise.all([
-      upsertPrismaChat(ctx.chat.id, from),
-      // Check it seperately, because other admin bots are not included in the chat admin list.
-      typeof candidate?.id === "number" ? isChatAdmin(ctx.chat.id, candidate.id) : undefined,
-    ]);
-    const { language: lng, votebanLimit } = prismaChat;
+    const { from, message_id: messageId, sender_chat: fromSenderChat } = ctx.message;
+    const candidate = ctx.message.reply_to_message?.from;
+    const candidateSenderChat = ctx.message.reply_to_message?.sender_chat;
 
-    if (ctx.chat.type === "private") {
+    const [chat, isCandidateAdmin] = await Promise.all([
+      upsertPrismaChat(ctx.chat, from),
+      typeof candidate?.id === "number" && !candidateSenderChat
+        ? isChatAdmin(ctx.chat.id, candidate.id) // Check seperately, because other bots are not included in admin list.
+        : candidateSenderChat?.id === ctx.chat.id,
+    ]);
+
+    const { language: lng, votebanLimit } = chat;
+    if (chat.type === "private") {
       await ctx.reply(t("common:commandNotForPrivateChats", { lng }));
       return; // Private chat, return.
     }
     if (!votebanLimit) {
       return; // The feature is disabled, return.
     }
-    if (!isPrismaChatAdmin(prismaChat, ctx.botInfo.id)) {
+    if (!isPrismaChatAdmin(chat, ctx.botInfo.id)) {
       await ctx.reply(t("common:needAdminPermissions", { lng }), { reply_to_message_id: messageId });
       return; // Bot is not an admin, return.
     }
@@ -66,62 +69,45 @@ export class Voteban {
       return; // Candidate is an admin, return.
     }
 
-    const authorLink = getUserHtmlLink(from, ctx.chat);
-    const candidateLink = getUserHtmlLink(candidate, ctx.chat);
-    const reply = await ctx.reply(t("voteban:question", { AUTHOR: authorLink, CANDIDATE: candidateLink, lng }), {
-      parse_mode: "HTML",
-      reply_markup: {
-        inline_keyboard: [
-          [
-            {
-              callback_data: VotebanAction.Ban,
-              text: t("voteban:banWithCounter", { LIMIT: votebanLimit, VOTES: 1, lng }),
-            },
+    const authorLink = fromSenderChat ? getChatHtmlLink(fromSenderChat) : getUserHtmlLink(from);
+    const candidateLink = candidateSenderChat ? getChatHtmlLink(candidateSenderChat) : getUserHtmlLink(candidate);
+    // Do not accept vote from sender chat
+    const banVotesCount = fromSenderChat ? 0 : 1;
+    const banButtonText = t("voteban:banWithCounter", { LIMIT: votebanLimit, VOTES: banVotesCount, lng });
+    const noBanButtonText = t("voteban:noBanWithCounter", { LIMIT: votebanLimit, VOTES: 0, lng });
+
+    const [reply] = await Promise.all([
+      ctx.reply(t("voteban:question", { AUTHOR: authorLink, CANDIDATE: candidateLink, lng }), {
+        parse_mode: "HTML",
+        reply_markup: {
+          inline_keyboard: [
+            [{ callback_data: VotebanAction.Ban, text: banButtonText }],
+            [{ callback_data: VotebanAction.NoBan, text: noBanButtonText }],
           ],
-          [
-            {
-              callback_data: VotebanAction.NoBan,
-              text: t("voteban:noBanWithCounter", { LIMIT: votebanLimit, VOTES: 0, lng }),
-            },
-          ],
-        ],
-      },
-      reply_to_message_id: replyToMessageId?.message_id,
-    });
+        },
+        reply_to_message_id: ctx.message.reply_to_message?.message_id,
+      }),
+      candidateSenderChat && upsertPrismaSenderChat(candidateSenderChat, from),
+      fromSenderChat && upsertPrismaSenderChat(fromSenderChat, from),
+    ]);
+
     await prisma.$transaction([
       upsertPrismaUser(candidate, from),
       prisma.voteban.create({
         data: {
           authorId: from.id,
-          banVoters: { create: { authorId: from.id, editorId: from.id } },
+          authorSenderChatId: fromSenderChat?.id,
+          // Do not accept vote from sender chat
+          banVoters: fromSenderChat ? undefined : { create: { authorId: from.id, editorId: from.id } },
           candidateId: candidate.id,
-          chatId: ctx.chat.id,
+          candidateSenderChatId: candidateSenderChat?.id,
+          chatId: chat.id,
           editorId: from.id,
           messageId: reply.message_id,
         },
         select: { id: true },
       }),
     ]);
-  }
-
-  /**
-   * Removes old votings from database
-   * @returns Cron job
-   */
-  public cronJob(): CronJob {
-    return new CronJob({
-      cronTime: "0 0 0 * * *", // Every day at 00:00:00
-      /**
-       * The function to fire at the specified time.
-       */
-      onTick: () => {
-        void (async () => {
-          const date = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
-          await prisma.voteban.deleteMany({ where: { createdAt: { lt: date } } });
-        })();
-      },
-      start: true,
-    });
   }
 
   /**
@@ -135,19 +121,16 @@ export class Voteban {
       return; // Something went wrong
     }
 
-    const [{ language: lng }, prismaChat] = await Promise.all([
-      upsertPrismaChat(ctx.chat, ctx.callbackQuery.from),
-      upsertPrismaChat(chatId, ctx.callbackQuery.from),
-    ]);
-
-    const isAdmin = await settings.validateAdminPermissions(ctx, prismaChat, lng);
-    if (!isAdmin) {
-      return; // User is not an admin anymore, redirect to chat list.
+    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    if (!prismaChat) {
+      return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
-    const { title, votebanLimit } = prismaChat;
+    const { displayTitle, votebanLimit } = prismaChat;
     const newValue = this.sanitizeValue(typeof value === "undefined" || isNaN(value) ? votebanLimit : value);
-    const msg = t("voteban:setLimit", { CHAT_TITLE: title, count: newValue, lng });
+    const msg = t("voteban:setLimit", { CHAT_TITLE: displayTitle, count: newValue, lng });
+
     await Promise.all([
       ctx.answerCbQuery(),
       ctx.editMessageText(joinModifiedInfo(msg, { lng, prismaChat, settingName: "votebanLimit" }), {
@@ -189,19 +172,17 @@ export class Voteban {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }
-    const { from } = ctx.callbackQuery;
-    const [{ language: lng }, prismaChat] = await Promise.all([
-      upsertPrismaChat(ctx.chat, from),
-      upsertPrismaChat(chatId, from),
-    ]);
-    const isAdmin = await settings.validateAdminPermissions(ctx, prismaChat, lng);
-    if (!isAdmin) {
-      return; // User is not an admin anymore, redirect to chat list.
+
+    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    if (!prismaChat) {
+      return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
+
     const votebanLimit = this.sanitizeValue(value) || null;
     await prisma.$transaction([
       prisma.chat.update({ data: { votebanLimit }, select: { id: true }, where: { id: chatId } }),
-      upsertPrismaChatSettingsHistory(chatId, from.id, "votebanLimit"),
+      upsertPrismaChatSettingsHistory(chatId, ctx.callbackQuery.from.id, "votebanLimit"),
     ]);
     await Promise.all([settings.notifyChangesSaved(ctx, lng), this.renderSettings(ctx, chatId)]);
   }
@@ -217,7 +198,7 @@ export class Voteban {
       return; // No message, something went wrong.
     }
 
-    const [isChatExists, isVoterChatMember, results] = await Promise.all([
+    const [isChatExists, isVoterChatMember, voting] = await Promise.all([
       isPrismaChatExists(message.chat.id),
       isChatMember(message.chat.id, from.id),
       prisma.voteban.findUnique({
@@ -229,22 +210,22 @@ export class Voteban {
         where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
       }),
     ]);
-    // Do not upsert chat if it's not found. It means that bot was removed from the chat.
-    const prismaChat = isChatExists ? await upsertPrismaChat(message.chat, from) : undefined;
-    const lng = prismaChat?.language ?? language.sanitizeValue(from.language_code);
 
-    if (!prismaChat || !results) {
+    // Do not upsert chat if it's not found. It means that bot was removed from the chat.
+    const chat = isChatExists ? await upsertPrismaChat(message.chat, from) : undefined;
+    const lng = chat?.language ?? language.sanitizeValue(from.language_code);
+    if (!chat || !voting) {
       await ctx.answerCbQuery(t("voteban:expired", { lng }), { show_alert: true });
-      return; // Results not found. Looks like voting has been deleted.
+      return; // Voting not found. It has been deleted.
     }
 
-    const { editorId } = prismaChat;
-    const { banVoters, id, noBanVoters } = results;
+    const { banVoters, id, noBanVoters } = voting;
+    const { editorId } = chat;
     if ((action === VotebanAction.Ban ? banVoters : noBanVoters).map((v) => v.authorId).includes(from.id)) {
       await ctx.answerCbQuery(t("voteban:alreadyVoted", { lng }), { show_alert: true });
       return; // User has already voted, return.
     }
-    if (!isPrismaChatAdmin(prismaChat, ctx.botInfo.id)) {
+    if (!isPrismaChatAdmin(chat, ctx.botInfo.id)) {
       const msg = t("common:needAdminPermissions", { lng });
       // An expected error may happen when bot was removed from the chat or there are no enough permissions
       await Promise.all([ctx.answerCbQuery(msg, { show_alert: true }), this.updateResults(ctx).catch(() => undefined)]);
@@ -254,13 +235,9 @@ export class Voteban {
       await ctx.answerCbQuery(t("voteban:mustBeChatMember", { lng }), { show_alert: true });
       return; // Voter is not a chat member, return.
     }
-
     if (action === VotebanAction.Ban) {
       await prisma.$transaction([
-        prisma.votebanBanVoter.create({
-          data: { authorId: editorId, editorId, votebanId: id },
-          select: { id: true },
-        }),
+        prisma.votebanBanVoter.create({ data: { authorId: editorId, editorId, votebanId: id }, select: { id: true } }),
         prisma.votebanNoBanVoter.deleteMany({ where: { authorId: editorId, votebanId: id } }),
       ]);
     }
@@ -283,26 +260,22 @@ export class Voteban {
   /**
    * Gets user links as HTML
    * @param users Users
-   * @param chat Chat. It's important to handle Telegram anonymous admins and show chat title instead of admin.
-   * @param params User link parameters
-   * @param params.lng Language code
-   * @param params.maxLength Max length of the result. Includes separators, but excludes the text which is
-   * at the trimmed ending.
+   * @param lng Language code
    * @returns User links
    */
-  private getUserLinks(users: (User | TelegramUser)[], chat: Chat, params: { lng: string; maxLength: number }): string {
+  private getUserLinks(users: (User | TelegramUser)[], lng: string): string {
     let result = "";
     for (const user of users) {
-      const link = getUserHtmlLink(user, chat);
+      const link = getUserHtmlLink(user);
       if (!result) {
         result += link;
         continue;
       }
-      if (`${result}, ${link}`.length <= params.maxLength) {
+      if (`${result}, ${link}`.length <= 2500) {
         result += `, ${link}`;
         continue;
       }
-      return t("voteban:trimmedUsers", { USERS: result, lng: params.lng });
+      return t("voteban:trimmedUsers", { USERS: result, lng });
     }
     return result;
   }
@@ -329,29 +302,28 @@ export class Voteban {
       return; // No message, something went wrong.
     }
 
-    const [prismaChat, results] = await Promise.all([
+    const [chat, voting] = await Promise.all([
       upsertPrismaChat(message.chat, from),
-      prisma.voteban.findUnique({
+      prisma.voteban.findUniqueOrThrow({
         select: {
           author: true,
+          authorSenderChat: true,
           banVoters: { select: { author: true } },
           candidate: true,
+          candidateSenderChat: true,
           noBanVoters: { select: { author: true } },
         },
         where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
       }),
     ]);
-    if (!results) {
-      return; // Something went wrong with database
-    }
 
-    const { author, banVoters, candidate, noBanVoters } = results;
-    const { language: lng, votebanLimit } = prismaChat;
-    const authorLink = getUserHtmlLink(author, message.chat);
-    const candidateLink = getUserHtmlLink(candidate, message.chat);
+    const { author, authorSenderChat, banVoters, candidate, candidateSenderChat, noBanVoters } = voting;
+    const { language: lng, votebanLimit } = chat;
+    const authorLink = authorSenderChat ? getChatHtmlLink(authorSenderChat) : getUserHtmlLink(author);
+    const candidateLink = candidateSenderChat ? getChatHtmlLink(candidateSenderChat) : getUserHtmlLink(candidate);
     const isBan = banVoters.length > noBanVoters.length;
     const voteUsers = (isBan ? banVoters : noBanVoters).map((v) => v.author);
-    const voteUserLinks = this.getUserLinks(voteUsers, message.chat, { lng, maxLength: 2500 });
+    const voteUserLinks = this.getUserLinks(voteUsers, lng);
     const lngOptions: TOptions = { AUTHOR: authorLink, CANDIDATE: candidateLink, USERS: voteUserLinks, lng };
     const questionMsg = t("voteban:question", lngOptions);
 
@@ -360,7 +332,7 @@ export class Voteban {
       await ctx.editMessageText([questionMsg, cancelledMsg].join("\n\n"), { parse_mode: "HTML" });
       return; // The feature is disabled, return.
     }
-    if (!isPrismaChatAdmin(prismaChat, ctx.botInfo.id)) {
+    if (!isPrismaChatAdmin(chat, ctx.botInfo.id)) {
       const cancelledMsg = t("voteban:cancelledBotNotAdmin", { lng });
       await ctx.editMessageText([questionMsg, cancelledMsg].join("\n\n"), { parse_mode: "HTML" });
       return; // Bot is not an admin, return.
@@ -372,8 +344,8 @@ export class Voteban {
       await ctx.editMessageText([questionMsg, cancelledMsg].join("\n\n"), { parse_mode: "HTML" });
       return; // Candidate is an admin, return.
     }
-    if (banVoters.length >= votebanLimit || noBanVoters.length >= votebanLimit) {
-      const deletedMessageId = (message as Message.TextMessage).reply_to_message?.message_id;
+    if (voteUsers.length >= votebanLimit) {
+      const candidateMessageId = "reply_to_message" in message ? message.reply_to_message?.message_id : undefined;
       const resultsMsg = isBan ? t("voteban:banResults", lngOptions) : t("voteban:noBanResults", lngOptions);
       await Promise.all([
         prisma.voteban.update({
@@ -383,30 +355,22 @@ export class Voteban {
         }),
         ctx.editMessageText([questionMsg, resultsMsg].join("\n\n"), { parse_mode: "HTML" }),
         ctx.reply(t("voteban:completed", { lng }), { reply_to_message_id: message.message_id }),
-        // An expected error may happen if bot has no enough permissions
-        typeof deletedMessageId === "number" && isBan && ctx.deleteMessage(deletedMessageId).catch(() => undefined),
-        // An expected error may happen if bot has no enough permissions
-        isBan && ctx.banChatMember(candidate.id).catch(() => undefined),
+        // An expected errors may happen if bot has no enough permissions, so catch below requests.
+        isBan && typeof candidateMessageId === "number" && ctx.deleteMessage(candidateMessageId).catch(() => undefined),
+        isBan && candidateSenderChat && ctx.banChatSenderChat(candidateSenderChat.id).catch(() => undefined),
+        isBan && !candidateSenderChat && ctx.banChatMember(candidate.id).catch(() => undefined),
       ]);
       return; // Voting completed, return.
     }
 
+    const banButtonText = t("voteban:banWithCounter", { LIMIT: votebanLimit, VOTES: banVoters.length, lng });
+    const noBanButtonText = t("voteban:noBanWithCounter", { LIMIT: votebanLimit, VOTES: noBanVoters.length, lng });
     await ctx.editMessageText(questionMsg, {
       parse_mode: "HTML",
       reply_markup: {
         inline_keyboard: [
-          [
-            {
-              callback_data: "voteban-ban",
-              text: t("voteban:banWithCounter", { LIMIT: votebanLimit, VOTES: banVoters.length, lng }),
-            },
-          ],
-          [
-            {
-              callback_data: "voteban-no-ban",
-              text: t("voteban:noBanWithCounter", { LIMIT: votebanLimit, VOTES: noBanVoters.length, lng }),
-            },
-          ],
+          [{ callback_data: "voteban-ban", text: banButtonText }],
+          [{ callback_data: "voteban-no-ban", text: noBanButtonText }],
         ],
       },
     });

@@ -1,4 +1,5 @@
 import { addingBots } from "features/addingBots";
+import { cleanup } from "features/cleanup";
 import { help } from "features/help";
 import { language } from "features/language";
 import { settings, SettingsAction } from "features/settings";
@@ -77,14 +78,14 @@ bot.on(message("text"), (ctx) => voteban.command(ctx, "voteban"));
 void bot.launch();
 
 // Cron jobs
-const votebanCronJob = voteban.cronJob();
+cleanup.startCronJob();
 
 /**
  * Shuts down the bot and all related services
  * @param event Event name
  */
 const shutdown = (event: NodeJS.Signals): void => {
-  votebanCronJob.stop();
+  cleanup.stopCronJob();
   bot.stop(event);
   void prisma.$disconnect();
 };

@@ -29,14 +29,14 @@ export class Settings {
     if (!isCleanCommand(cleanCommand, ctx.message.text)) {
       return; // Not clean command, ignore.
     }
+
     if (ctx.chat.type !== "private") {
       const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.message.from);
-      await ctx.reply(t("common:commandForPrivateChat", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}`, lng }), {
-        parse_mode: "HTML",
-        reply_to_message_id: ctx.message.message_id,
-      });
+      const msg = t("common:commandForPrivateChat", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}`, lng });
+      await ctx.reply(msg, { parse_mode: "HTML", reply_to_message_id: ctx.message.message_id });
       return;
     }
+
     await this.renderChats(ctx, 0);
   }
 
@@ -46,7 +46,7 @@ export class Settings {
    * @param skip Skip count
    */
   public async renderChats(ctx: CallbackCtx | MessageCtx, skip: number): Promise<void> {
-    const from = (ctx as CallbackCtx).callbackQuery?.from ?? ctx.message?.from;
+    const from = ctx.callbackQuery?.from ?? ctx.message?.from;
     if (!ctx.chat || !from || isNaN(skip)) {
       return; // Something went wrong
     }
@@ -57,22 +57,24 @@ export class Settings {
       prisma.$transaction([
         prisma.chat.count({ where: { admins: { some: { id: from.id } } } }),
         prisma.chat.findMany({
-          orderBy: { title: "asc" },
-          select: { id: true, title: true },
+          orderBy: { displayTitle: "asc" },
+          select: { displayTitle: true, id: true },
           skip,
           take: patchedTake,
           where: { admins: { some: { id: from.id } } },
         }),
       ]),
     ]);
+
     if (skip === 0) {
       prismaChats.unshift(prismaChat);
     }
-
     const { language: lng } = prismaChat;
     const inlineKeyboardMarkup: InlineKeyboardMarkup = {
       inline_keyboard: [
-        ...prismaChats.map((c) => [{ callback_data: `${SettingsAction.Features}?chatId=${c.id}`, text: c.title }]),
+        ...prismaChats.map((c) => [
+          { callback_data: `${SettingsAction.Features}?chatId=${c.id}`, text: c.displayTitle },
+        ]),
         getPagination(SettingsAction.Chats, { count, skip, take: patchedTake }),
       ],
     };
@@ -93,10 +95,11 @@ export class Settings {
       return; // Something went wrong
     }
 
-    const [{ language: lng }, { title, type }] = await Promise.all([
-      upsertPrismaChat(ctx.chat, ctx.callbackQuery.from),
-      upsertPrismaChat(chatId, ctx.callbackQuery.from),
-    ]);
+    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    if (!prismaChat) {
+      return; // The user is no longer an administrator, or the bot has been banned from the chat.
+    }
 
     const addingBotsButton: InlineKeyboardButton[] = [
       { callback_data: `${SettingsAction.AddingBots}?chatId=${chatId}`, text: t("addingBots:featureName", { lng }) },
@@ -116,12 +119,12 @@ export class Settings {
       private: [languageButton, timeZoneButton],
       supergroup: [addingBotsButton, languageButton, timeZoneButton, votebanButton],
     };
-
-    const features = [...allFeatures[type as Chat["type"]]].sort((a, b) => a[0]?.text.localeCompare(b[0]?.text));
+    const features = [...allFeatures[prismaChat.type]].sort((a, b) => a[0]?.text.localeCompare(b[0]?.text));
     const count = features.length;
+
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(t("settings:selectFeature", { CHAT_TITLE: title, lng }), {
+      ctx.editMessageText(t("settings:selectFeature", { CHAT_TITLE: prismaChat.displayTitle, lng }), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
@@ -159,21 +162,28 @@ export class Settings {
   }
 
   /**
-   * Validates admin permissions and redirects to chat list with alert
+   * Upserts chat by id and validates admin permissions for current user.
+   * Redirects to chat list with alert if there is no enough permissions.
    * @param ctx Callback context
-   * @param prismaChat Prisma chat
+   * @param chatId Chat id
    * @param lng Language code
    * @returns True if validation is successfully passed
    */
-  public async validateAdminPermissions(ctx: CallbackCtx, prismaChat: PrismaChat, lng: string): Promise<boolean> {
-    if (isPrismaChatAdmin(prismaChat, ctx.callbackQuery.from.id)) {
-      return true;
+  public async resolvePrismaChat(ctx: CallbackCtx, chatId: number, lng: string): Promise<PrismaChat | undefined> {
+    try {
+      const chat = await ctx.telegram.getChat(chatId);
+      const prismaChat = await upsertPrismaChat(chat, ctx.callbackQuery.from);
+      if (isPrismaChatAdmin(prismaChat, ctx.callbackQuery.from.id)) {
+        return prismaChat;
+      }
+    } catch {
+      // An error may happen if the bot was banned from the chat.
     }
     await Promise.all([
       ctx.answerCbQuery(t("settings:forbidden", { lng }), { show_alert: true }),
       this.renderChats(ctx, 0),
     ]);
-    return false;
+    return undefined;
   }
 }
 

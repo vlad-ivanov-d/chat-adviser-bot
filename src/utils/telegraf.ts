@@ -1,7 +1,7 @@
-import { Chat, User } from "@prisma/client";
+import { SenderChat as PrismaSenderChat, User as PrismaUser } from "@prisma/client";
 import { Telegraf } from "telegraf";
-import { Chat as TelegramChat, InlineKeyboardButton, User as TelegramUser } from "telegraf/typings/core/types/typegram";
-import { GROUP_ANONYMOUS_BOT_ID } from "utils/consts";
+import { Chat, InlineKeyboardButton, User } from "telegraf/typings/core/types/typegram";
+import { encodeText } from "utils/encode";
 import { BOT_TOKEN } from "utils/envs";
 
 /**
@@ -43,58 +43,73 @@ export const getPagination = (action: string, { count, skip, take }: PaginationP
   ];
 };
 
-export interface GetUserTitleParams {
-  /**
-   * Title format
-   * @default full
-   */
-  format?: "short" | "full";
-  /**
-   * Encodes user title for HTML
-   */
-  shouldEncode?: boolean;
-}
-
 /**
  * Gets user title
- * @param user User object
- * @param chat Chat. It's important to handle Telegram anonymous admins and show chat title instead of admin.
- * @param params Params for user title formatting
+ * @param user Telegram or Prisma user
+ * @param format Title format
  * @returns User title
  */
-export const getUserTitle = (
-  user: User | TelegramUser,
-  chat: Chat | TelegramChat.AbstractChat | undefined,
-  params: GetUserTitleParams = {},
-): string => {
-  const { format = "full", shouldEncode } = params;
-  const isAnonym = user.id === GROUP_ANONYMOUS_BOT_ID;
-  const firstName = (user as User).firstName ?? (user as TelegramUser).first_name;
-  const lastName = (user as User).lastName ?? (user as TelegramUser).last_name;
-  const title =
-    (isAnonym && chat && chat.type !== "private" && (chat as Chat | TelegramChat.TitleChat).title) ||
-    (user.username && `@${user.username}`) ||
-    [firstName, lastName]
-      .filter((p) => p)
-      .slice(0, format === "short" ? 1 : undefined)
-      .join(" ");
-  return shouldEncode ? title.replaceAll("<", "&lt;").replaceAll(">", "&gt;") : title;
+export const getUserTitle = (user: User | PrismaUser, format: "full" | "short"): string => {
+  if (user.username) {
+    return `@${user.username}`;
+  }
+  const firstName = "firstName" in user ? user.firstName : user.first_name;
+  const lastName = "lastName" in user ? user.lastName : user.last_name;
+  return [firstName, lastName]
+    .filter((p) => p)
+    .slice(0, format === "short" ? 1 : undefined)
+    .join(" ");
 };
 
 /**
  * Gets the link to user
- * @param user User object
- * @param chat Chat. It's important to handle Telegram anonymous admins and show chat title instead of admin.
+ * @param user Telegram or Prisma user
  * @returns Returns user link HTML
  */
-export const getUserHtmlLink = (
-  user: TelegramUser | User,
-  chat: Chat | TelegramChat.AbstractChat | undefined,
-): string => {
-  const title = getUserTitle(user, chat, { format: "short", shouldEncode: true });
-  return user.id === GROUP_ANONYMOUS_BOT_ID && chat
-    ? `<b>${title}</b>`
-    : `<a href="tg:user?id=${user.id}">${title}</a>`;
+export const getUserHtmlLink = (user: User | PrismaUser): string => {
+  if (user.username) {
+    return `@${user.username}`;
+  }
+  const title = getUserTitle(user, "short");
+  return `<a href="tg:user?id=${user.id}">${encodeText(title)}</a>`;
+};
+
+/**
+ * Gets chat display title
+ * @param chat Telegram chat or Prisma sender chat
+ * @returns Returns display title
+ */
+export const getChatDisplayTitle = (chat: Chat | PrismaSenderChat): string => {
+  switch (chat.type) {
+    case "channel":
+    case "supergroup":
+      return chat.username ? `@${chat.username}` : chat.title ?? "";
+    case "private": {
+      const privateChatAsUser: User = {
+        first_name: "firstName" in chat ? chat.firstName ?? "" : chat.first_name,
+        id: chat.id,
+        is_bot: false,
+        last_name: "lastName" in chat ? chat.lastName ?? "" : chat.last_name,
+        username: chat.username ?? undefined,
+      };
+      return getUserTitle(privateChatAsUser, "full");
+    }
+    default:
+      return chat.title ?? "";
+  }
+};
+
+/**
+ * Gets chat link
+ * @param chat Telegram chat or Prisma sender chat
+ * @returns Returns link
+ */
+export const getChatHtmlLink = (chat: Chat | PrismaSenderChat): string => {
+  if ("username" in chat && chat.username) {
+    return `@${chat.username}`;
+  }
+  const displayTitle = getChatDisplayTitle(chat);
+  return `<b>${encodeText(displayTitle)}</b>`;
 };
 
 /**
@@ -105,6 +120,8 @@ export const getUserHtmlLink = (
  */
 export const isChatAdmin = async (chatId: number, userId: number): Promise<boolean | undefined> => {
   const member = await bot.telegram.getChatMember(chatId, userId).catch((e) => {
+    // Carefully try to get error code
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     const errorCode = (e as { response?: { error_code?: number } })?.response?.error_code;
     switch (errorCode) {
       // User have never been in the chat
@@ -127,6 +144,8 @@ export const isChatAdmin = async (chatId: number, userId: number): Promise<boole
  */
 export const isChatMember = async (chatId: number, userId: number): Promise<boolean | undefined> => {
   const member = await bot.telegram.getChatMember(chatId, userId).catch((e) => {
+    // Carefully try to get error code
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
     const errorCode = (e as { response?: { error_code?: number } })?.response?.error_code;
     switch (errorCode) {
       // User have never been in the chat

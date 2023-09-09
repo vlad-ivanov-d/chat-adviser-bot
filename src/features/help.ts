@@ -12,7 +12,9 @@ export class Help {
     if (!isCleanCommand("help", ctx.message.text) && !isCleanCommand("start", ctx.message.text)) {
       return; // Not clean command, ignore.
     }
+
     const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.message.from);
+
     const msg = [
       t("help:greeting", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}`, lng }),
       ...[t("language:help", { lng }), t("addingBots:help", { lng }), t("voteban:help", { lng })].sort((a, b) =>
@@ -21,6 +23,7 @@ export class Help {
       `\n${t("help:ending", { lng })}`,
     ].join("\n");
     const replyToMessageId = ctx.chat.type === "private" ? undefined : ctx.message.message_id;
+
     await ctx.reply(msg, { parse_mode: "HTML", reply_to_message_id: replyToMessageId });
   }
 }
