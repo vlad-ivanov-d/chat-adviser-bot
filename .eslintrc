@@ -43,6 +43,7 @@
   },
   "plugins": [
     "@typescript-eslint",
+    "jest",
     "jsdoc",
     "optimize-regex",
     "promise",
@@ -51,6 +52,7 @@
     "typescript-sort-keys"
   ],
   "rules": {
+    "@typescript-eslint/consistent-type-assertions": ["error", { "assertionStyle": "never" }],
     "@typescript-eslint/explicit-function-return-type": [
       "error",
       {
@@ -85,9 +87,12 @@
     "import/no-cycle": "error",
     "import/no-default-export": "error",
     "import/no-deprecated": "error",
+    "import/no-mutable-exports": "error",
     "import/no-named-as-default": "error",
     "import/no-named-as-default-member": "error",
     "import/no-unresolved": "off",
+    "jest/consistent-test-it": "error",
+    "jest/max-nested-describe": ["error", { "max": 2 }],
     "jsdoc/require-jsdoc": [
       "error",
       {

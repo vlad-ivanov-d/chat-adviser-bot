@@ -9,7 +9,7 @@ import {
   upsertPrismaChat,
   upsertPrismaChatSettingsHistory,
 } from "utils/prisma";
-import { getUserHtmlLink, kickChatMember } from "utils/telegraf";
+import { getChatHtmlLink, getUserHtmlLink, kickChatMember } from "utils/telegraf";
 
 export class AddingBots {
   /**
@@ -35,26 +35,22 @@ export class AddingBots {
       return; // Something went wrong
     }
 
-    const [{ language: lng }, prismaChat] = await Promise.all([
-      upsertPrismaChat(ctx.chat, ctx.callbackQuery.from),
-      upsertPrismaChat(chatId, ctx.callbackQuery.from),
-    ]);
-
-    const isAdmin = await settings.validateAdminPermissions(ctx, prismaChat, lng);
-    if (!isAdmin) {
-      return; // User is not an admin anymore, redirect to chat list.
+    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    if (!prismaChat) {
+      return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
     const allowedCbData = `${SettingsAction.AddingBotsSave}?chatId=${chatId}`;
     const restrictedCbData = `${SettingsAction.AddingBotsSave}?chatId=${chatId}&v=${AddingBotsRule.restricted}`;
     const restrictedAndBanCbData = `${SettingsAction.AddingBotsSave}?chatId=${chatId}&v=${AddingBotsRule.restrictedAndBan}`;
-
     const sanitizedValue = this.sanitizeValue(prismaChat.addingBots);
     const value = this.getOptions(lng).find((o) => o.id === sanitizedValue)?.title ?? "";
-    const msg = t("addingBots:set", { CHAT_TITLE: prismaChat.title, VALUE: value, lng });
+    const msg = t("addingBots:set", { CHAT_TITLE: prismaChat.displayTitle, VALUE: value, lng });
+
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(joinModifiedInfo(msg, { lng, prismaChat, settingName: "addingBots" }), {
+      ctx.editMessageText(joinModifiedInfo(msg, { lng, prismaChat: prismaChat, settingName: "addingBots" }), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
@@ -69,41 +65,6 @@ export class AddingBots {
   }
 
   /**
-   * Validates new chat members
-   * @param ctx NewMembers context
-   */
-  public async validate(ctx: NewMembersCtx): Promise<void> {
-    const { from, new_chat_members: newChatMembers } = ctx.update.message;
-    const newChatBots = newChatMembers.filter((m) => m.is_bot);
-    if (newChatBots.length === 0) {
-      return; // No bots were added, return.
-    }
-    if (newChatBots.length === 1 && newChatBots[0].id === ctx.botInfo.id) {
-      return; // The bot itself was added, return.
-    }
-
-    const prismaChat = await upsertPrismaChat(ctx.chat, from);
-    if (isPrismaChatAdmin(prismaChat, from.id)) {
-      return; // Current user is an admin, return.
-    }
-    if (!isPrismaChatAdmin(prismaChat, ctx.botInfo.id)) {
-      return; // Bot is not an admin, return.
-    }
-
-    const { addingBots, language: lng } = prismaChat;
-    if (addingBots === AddingBotsRule.restricted || addingBots === AddingBotsRule.restrictedAndBan) {
-      const msg = t("addingBots:userBanned", { USER: getUserHtmlLink(from, ctx.chat), lng });
-      await Promise.all([
-        ...newChatBots.map((b) => kickChatMember(ctx.chat.id, b.id)),
-        addingBots === AddingBotsRule.restrictedAndBan &&
-          ctx.banChatMember(from.id).then(() => ctx.reply(msg, { parse_mode: "HTML" })),
-      ])
-        // An expected error may happen when bot was removed from the chat or there are no enough permissions
-        .catch(() => undefined);
-    }
-  }
-
-  /**
    * Saves settings
    * @param ctx Callback context
    * @param chatId Id of the chat which is edited
@@ -114,23 +75,58 @@ export class AddingBots {
       return; // Something went wrong
     }
 
-    const { from } = ctx.callbackQuery;
-    const [{ language: lng }, prismaChat] = await Promise.all([
-      upsertPrismaChat(ctx.chat, from),
-      upsertPrismaChat(chatId, from),
-    ]);
-
-    const isAdmin = await settings.validateAdminPermissions(ctx, prismaChat, lng);
-    if (!isAdmin) {
-      return; // User is not an admin anymore, return.
+    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    if (!prismaChat) {
+      return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
     const addingBots = this.sanitizeValue(value);
+
     await prisma.$transaction([
       prisma.chat.update({ data: { addingBots }, select: { id: true }, where: { id: chatId } }),
-      upsertPrismaChatSettingsHistory(chatId, from.id, "addingBots"),
+      upsertPrismaChatSettingsHistory(chatId, ctx.callbackQuery.from.id, "addingBots"),
     ]);
     await Promise.all([settings.notifyChangesSaved(ctx, lng), this.renderSettings(ctx, chatId)]);
+  }
+
+  /**
+   * Validates new chat members
+   * @param ctx NewMembers context
+   */
+  public async validate(ctx: NewMembersCtx): Promise<void> {
+    const { chat, from, new_chat_members: newChatMembers, sender_chat: senderChat } = ctx.update.message;
+    const newBots = newChatMembers.filter((m) => m.is_bot && m.id !== ctx.botInfo.id);
+    if (newBots.length === 0) {
+      return; // No bots were added, return.
+    }
+
+    const prismaChat = await upsertPrismaChat(chat, from);
+
+    const { addingBots, language: lng } = prismaChat;
+    if (isPrismaChatAdmin(prismaChat, from.id) || senderChat?.id === chat.id) {
+      return; // Current user is an admin, return.
+    }
+    if (!isPrismaChatAdmin(prismaChat, ctx.botInfo.id)) {
+      return; // Bot is not an admin, return.
+    }
+    try {
+      if (addingBots === AddingBotsRule.restricted) {
+        await Promise.all(newBots.map((b) => kickChatMember(chat.id, b.id)));
+      }
+      if (addingBots === AddingBotsRule.restrictedAndBan && senderChat) {
+        const msg = t("addingBots:userBanned", { USER: getChatHtmlLink(senderChat), lng });
+        await ctx.banChatSenderChat(senderChat.id);
+        await ctx.reply(msg, { parse_mode: "HTML" });
+      }
+      if (addingBots === AddingBotsRule.restrictedAndBan && !senderChat) {
+        const msg = t("addingBots:userBanned", { USER: getUserHtmlLink(from), lng });
+        await ctx.banChatMember(from.id);
+        await ctx.reply(msg, { parse_mode: "HTML" });
+      }
+    } catch {
+      // An expected error may happen when bot have no enough permissions
+    }
   }
 
   /**

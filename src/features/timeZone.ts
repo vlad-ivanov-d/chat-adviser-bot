@@ -19,22 +19,17 @@ export class TimeZone {
       return; // Something went wrong
     }
 
-    const { from } = ctx.callbackQuery;
-    const [{ language: lng }, prismaChat] = await Promise.all([
-      upsertPrismaChat(ctx.chat, from),
-      upsertPrismaChat(chatId, from),
-    ]);
-
-    const isAdmin = await settings.validateAdminPermissions(ctx, prismaChat, lng);
-    if (!isAdmin) {
-      return; // User is not an admin anymore, return.
+    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    if (!prismaChat) {
+      return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
     const timeZones = this.getAllTimeZones();
     const count = timeZones.length;
-
     const value = `${format(new Date(), "O", { timeZone: prismaChat.timeZone })} ${prismaChat.timeZone}`;
-    const msg = t("timeZone:select", { CHAT_TITLE: prismaChat.title, VALUE: value, lng });
+    const msg = t("timeZone:select", { CHAT_TITLE: prismaChat.displayTitle, VALUE: value, lng });
+
     await Promise.all([
       ctx.answerCbQuery(),
       ctx.editMessageText(joinModifiedInfo(msg, { lng, prismaChat, settingName: "timeZone" }), {
@@ -65,21 +60,20 @@ export class TimeZone {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }
-    const { from } = ctx.callbackQuery;
-    const [{ language: lng }, prismaChat] = await Promise.all([
-      upsertPrismaChat(ctx.chat, from),
-      upsertPrismaChat(chatId, from),
-    ]);
-    const isAdmin = await settings.validateAdminPermissions(ctx, prismaChat, lng);
-    if (!isAdmin) {
-      return; // User is not an admin anymore, return.
+
+    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    if (!prismaChat) {
+      return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
+
     const timeZone = this.sanitizeValue(value);
+    const skip = Math.max(0, Math.floor(this.getAllTimeZones().indexOf(timeZone) / PAGE_SIZE) * PAGE_SIZE);
+
     await prisma.$transaction([
       prisma.chat.update({ data: { timeZone }, select: { id: true }, where: { id: chatId } }),
-      upsertPrismaChatSettingsHistory(chatId, from.id, "timeZone"),
+      upsertPrismaChatSettingsHistory(chatId, ctx.callbackQuery.from.id, "timeZone"),
     ]);
-    const skip = Math.max(0, Math.floor(this.getAllTimeZones().indexOf(timeZone) / PAGE_SIZE) * PAGE_SIZE);
     await Promise.all([settings.notifyChangesSaved(ctx, lng), this.renderSettings(ctx, chatId, skip)]);
   }
 
@@ -112,7 +106,7 @@ export class TimeZone {
    * @returns Sanitized value
    */
   private sanitizeValue(value: string | null): string {
-    return value && Intl.supportedValuesOf("timeZone").includes(value) ? value : "Europe/London";
+    return value && Intl.supportedValuesOf("timeZone").includes(value) ? value : "Etc/UTC";
   }
 }
 

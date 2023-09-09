@@ -26,20 +26,17 @@ export class Language {
       return; // Something went wrong
     }
 
-    const [{ language: lng }, prismaChat] = await Promise.all([
-      upsertPrismaChat(ctx.chat, ctx.callbackQuery.from),
-      upsertPrismaChat(chatId, ctx.callbackQuery.from),
-    ]);
-
-    const isAdmin = await settings.validateAdminPermissions(ctx, prismaChat, lng);
-    if (!isAdmin) {
-      return; // User is not an admin anymore, return.
+    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    if (!prismaChat) {
+      return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
     const enText = this.getOptions().find((l) => l.code === LanguageCode.en)?.title ?? "";
     const ruText = this.getOptions().find((l) => l.code === LanguageCode.ru)?.title ?? "";
     const value = this.getOptions().find((l) => l.code === prismaChat.language)?.title ?? "";
-    const msg = t("language:select", { CHAT_TITLE: prismaChat.title, VALUE: value, lng });
+    const msg = t("language:select", { CHAT_TITLE: prismaChat.displayTitle, VALUE: value, lng });
+
     await Promise.all([
       ctx.answerCbQuery(),
       ctx.editMessageText(joinModifiedInfo(msg, { lng, prismaChat, settingName: "language" }), {
@@ -74,19 +71,18 @@ export class Language {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }
-    const { from } = ctx.callbackQuery;
-    const [{ language: lng }, prismaChat] = await Promise.all([
-      upsertPrismaChat(ctx.chat, from),
-      upsertPrismaChat(chatId, from),
-    ]);
-    const isAdmin = await settings.validateAdminPermissions(ctx, prismaChat, lng);
-    if (!isAdmin) {
-      return; // User is not an admin anymore, return.
+
+    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    if (!prismaChat) {
+      return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
+
     const language = this.sanitizeValue(value);
+
     await prisma.$transaction([
       prisma.chat.update({ data: { language }, select: { id: true }, where: { id: chatId } }),
-      upsertPrismaChatSettingsHistory(chatId, from.id, "language"),
+      upsertPrismaChatSettingsHistory(chatId, ctx.callbackQuery.from.id, "language"),
     ]);
     await Promise.all([settings.notifyChangesSaved(ctx, lng), this.renderSettings(ctx, chatId)]);
   }
