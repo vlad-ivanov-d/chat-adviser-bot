@@ -1,21 +1,26 @@
 # Changelog
 
+## 1.5.2 (2023-09-14)
+
+- Fix: removed chats remained in the list of chats for configuration
+- Other: internal improvements
+
 ## 1.5.1 (2023-09-10)
 
 - Fix: incorrect voting for a ban against a message sent on behalf of a channel/group
-- Other: cleanup cron job now removes more garbage from database
+- Other: internal improvements
 
 ## 1.5.0 (2023-09-02)
 
-- Improvement: all information about the chat will be deleted from the bot database if the bot is kicked
+- Improvement: in respect of your privacy all information about the chat will be deleted from the bot if the bot is kicked from the chat
 
 ## 1.4.0 (2023-09-01)
 
-- Other: /voteban command will be silently ignored if Ban Voting feature is disabled
+- Improvement: /voteban command will be silently ignored if Ban Voting feature is disabled
 
 ## 1.3.1 (2023-08-22)
 
-- Fix: an error during the execution of a cron job in which obsolete ban votings were cleared
+- Fix: error while marking obsolete ban votings
 
 ## 1.3.0 (2023-08-12)
 

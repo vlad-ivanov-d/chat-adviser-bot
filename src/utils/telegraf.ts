@@ -44,6 +44,26 @@ export const getPagination = (action: string, { count, skip, take }: PaginationP
 };
 
 /**
+ * Tries to resolve Telegram error code from unknown error
+ * @param error Unknown error
+ * @returns Telegram error code or undefined
+ */
+export const getTelegramErrorCode = (error: unknown): number | undefined => {
+  if (
+    error &&
+    typeof error === "object" &&
+    "response" in error &&
+    error.response &&
+    typeof error.response === "object" &&
+    "error_code" in error.response &&
+    typeof error.response.error_code === "number"
+  ) {
+    return error.response.error_code;
+  }
+  return undefined;
+};
+
+/**
  * Gets user title
  * @param user Telegram or Prisma user
  * @param format Title format
@@ -120,9 +140,7 @@ export const getChatHtmlLink = (chat: Chat | PrismaSenderChat): string => {
  */
 export const isChatAdmin = async (chatId: number, userId: number): Promise<boolean | undefined> => {
   const member = await bot.telegram.getChatMember(chatId, userId).catch((e) => {
-    // Carefully try to get error code
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    const errorCode = (e as { response?: { error_code?: number } })?.response?.error_code;
+    const errorCode = getTelegramErrorCode(e);
     switch (errorCode) {
       // User have never been in the chat
       case 400:
@@ -144,9 +162,7 @@ export const isChatAdmin = async (chatId: number, userId: number): Promise<boole
  */
 export const isChatMember = async (chatId: number, userId: number): Promise<boolean | undefined> => {
   const member = await bot.telegram.getChatMember(chatId, userId).catch((e) => {
-    // Carefully try to get error code
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    const errorCode = (e as { response?: { error_code?: number } })?.response?.error_code;
+    const errorCode = getTelegramErrorCode(e);
     switch (errorCode) {
       // User have never been in the chat
       case 400:

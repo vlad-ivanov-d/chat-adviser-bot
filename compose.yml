@@ -14,7 +14,7 @@ services:
     environment:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_USER: ${DATABASE_USER}
-    image: postgres:15.3
+    image: postgres:15.4
     ports:
       - ${DATABASE_PORT:-}:5432
     restart: unless-stopped

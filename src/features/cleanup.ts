@@ -22,7 +22,7 @@ export class Cleanup {
   }
 
   /**
-   * Stops cleanup job
+   * Stops cleanup cron job
    */
   public stopCronJob(): void {
     this.cronJob?.stop();

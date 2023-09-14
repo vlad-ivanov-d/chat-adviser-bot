@@ -1,10 +1,11 @@
+import { LanguageCode } from "@prisma/client";
 import { t } from "i18next";
 import { Chat, InlineKeyboardButton, InlineKeyboardMarkup } from "telegraf/typings/core/types/typegram";
 import { CallbackCtx, MessageCtx } from "types/context";
 import { PrismaChat } from "types/prismaChat";
 import { PAGE_SIZE } from "utils/consts";
 import { isPrismaChatAdmin, prisma, upsertPrismaChat } from "utils/prisma";
-import { getPagination, isCleanCommand } from "utils/telegraf";
+import { getPagination, getTelegramErrorCode, isCleanCommand } from "utils/telegraf";
 
 export enum SettingsAction {
   AddingBots = "cfg-addng-bts",
@@ -51,7 +52,7 @@ export class Settings {
       return; // Something went wrong
     }
 
-    const patchedTake = skip === 0 ? PAGE_SIZE - 1 : PAGE_SIZE;
+    const take = skip === 0 ? PAGE_SIZE - 1 : PAGE_SIZE;
     const [prismaChat, [count, prismaChats]] = await Promise.all([
       upsertPrismaChat(ctx.chat, from),
       prisma.$transaction([
@@ -60,7 +61,7 @@ export class Settings {
           orderBy: { displayTitle: "asc" },
           select: { displayTitle: true, id: true },
           skip,
-          take: patchedTake,
+          take,
           where: { admins: { some: { id: from.id } } },
         }),
       ]),
@@ -75,7 +76,7 @@ export class Settings {
         ...prismaChats.map((c) => [
           { callback_data: `${SettingsAction.Features}?chatId=${c.id}`, text: c.displayTitle },
         ]),
-        getPagination(SettingsAction.Chats, { count, skip, take: patchedTake }),
+        getPagination(SettingsAction.Chats, { count, skip, take }),
       ],
     };
     const msg = [t("settings:selectChat", { lng }), t("settings:updateInfoHint", { lng })].join("\n\n");
@@ -143,7 +144,7 @@ export class Settings {
    * @param lng Language code
    * @returns Inline button
    */
-  public getBackToFeaturesButton(chatId: number, lng: string): InlineKeyboardButton[] {
+  public getBackToFeaturesButton(chatId: number, lng: LanguageCode): InlineKeyboardButton[] {
     return [
       {
         callback_data: `${SettingsAction.Features}?chatId=${chatId}`,
@@ -157,7 +158,7 @@ export class Settings {
    * @param ctx Callback context
    * @param lng Alert language code
    */
-  public async notifyChangesSaved(ctx: CallbackCtx, lng: string): Promise<void> {
+  public async notifyChangesSaved(ctx: CallbackCtx, lng: LanguageCode): Promise<void> {
     await ctx.answerCbQuery(t("settings:changesSaved", { lng }), { show_alert: true });
   }
 
@@ -169,15 +170,18 @@ export class Settings {
    * @param lng Language code
    * @returns True if validation is successfully passed
    */
-  public async resolvePrismaChat(ctx: CallbackCtx, chatId: number, lng: string): Promise<PrismaChat | undefined> {
+  public async resolvePrismaChat(ctx: CallbackCtx, chatId: number, lng: LanguageCode): Promise<PrismaChat | undefined> {
     try {
       const chat = await ctx.telegram.getChat(chatId);
       const prismaChat = await upsertPrismaChat(chat, ctx.callbackQuery.from);
       if (isPrismaChatAdmin(prismaChat, ctx.callbackQuery.from.id)) {
         return prismaChat;
       }
-    } catch {
-      // An error may happen if the bot was banned from the chat.
+    } catch (e) {
+      const errorCode = getTelegramErrorCode(e);
+      if (errorCode === 403) {
+        await prisma.chat.deleteMany({ where: { id: chatId } }); // Chat was deleted, remove it from database.
+      }
     }
     await Promise.all([
       ctx.answerCbQuery(t("settings:forbidden", { lng }), { show_alert: true }),

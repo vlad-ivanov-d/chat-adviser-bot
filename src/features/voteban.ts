@@ -1,4 +1,4 @@
-import { User } from "@prisma/client";
+import { LanguageCode, User } from "@prisma/client";
 import { language } from "features/language";
 import { settings, SettingsAction } from "features/settings";
 import { t, TOptions } from "i18next";
@@ -263,7 +263,7 @@ export class Voteban {
    * @param lng Language code
    * @returns User links
    */
-  private getUserLinks(users: (User | TelegramUser)[], lng: string): string {
+  private getUserLinks(users: (User | TelegramUser)[], lng: LanguageCode): string {
     let result = "";
     for (const user of users) {
       const link = getUserHtmlLink(user);
