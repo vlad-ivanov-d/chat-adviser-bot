@@ -179,7 +179,7 @@ export class Settings {
       }
     } catch (e) {
       const errorCode = getTelegramErrorCode(e);
-      if (errorCode === 403) {
+      if (errorCode === 400 || errorCode === 403) {
         await prisma.chat.deleteMany({ where: { id: chatId } }); // Chat was deleted, remove it from database.
       }
     }
