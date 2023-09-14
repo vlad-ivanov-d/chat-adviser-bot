@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.3 (2023-09-15)
+
+- Fix: chat sorting in settings list
+
 ## 1.5.2 (2023-09-14)
 
 - Fix: removed chats remained in the list of chats for configuration

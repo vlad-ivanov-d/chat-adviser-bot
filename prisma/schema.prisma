@@ -55,6 +55,8 @@ model Chat {
   chatSettingsHistory ChatSettingsHistory[]
   editor              User                  @relation("ChatEditor", fields: [editorId], references: [id])
   votebans            Voteban[]
+
+  @@index([displayTitle])
 }
 
 model ChatSettingsHistory {
