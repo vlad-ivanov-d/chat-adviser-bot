@@ -107,9 +107,9 @@ export const upsertPrismaChat = async (chat: TelegramChat, editor: TelegramUser)
 
   const displayTitle = getChatDisplayTitle(chat);
   const firstName = "first_name" in chat ? chat.first_name : null;
-  const lastName = "last_name" in chat ? chat.last_name : null;
+  const lastName = "last_name" in chat ? chat.last_name ?? null : null;
   const title = "title" in chat ? chat.title : null;
-  const username = "username" in chat ? chat.username : null;
+  const username = "username" in chat ? chat.username ?? null : null;
 
   const transaction = await prisma.$transaction([
     ...[editor, ...admins.map((a) => a.user)]
@@ -187,9 +187,9 @@ export const upsertPrismaChatSettingsHistory = (
  */
 export const upsertPrismaSenderChat = async (chat: TelegramChat, editor: TelegramUser): Promise<number> => {
   const firstName = "first_name" in chat ? chat.first_name : null;
-  const lastName = "last_name" in chat ? chat.last_name : null;
+  const lastName = "last_name" in chat ? chat.last_name ?? null : null;
   const title = "title" in chat ? chat.title : null;
-  const username = "username" in chat ? chat.username : null;
+  const username = "username" in chat ? chat.username ?? null : null;
   const [, prismaSenderChat] = await prisma.$transaction([
     upsertPrismaUser(editor, editor),
     prisma.senderChat.upsert({
