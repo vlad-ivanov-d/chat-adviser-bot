@@ -1,7 +1,7 @@
 {
   "name": "chat-adviser-bot",
   "description": "Chat Adviser is an open source Telegram bot that helps to moderate chats.",
-  "version": "1.5.3",
+  "version": "1.6.0",
   "scripts": {
     "build": "eslint . && tsc -noEmit && node build.mjs",
     "dev": "docker compose --file compose.dev.yml up --build --detach --force-recreate --remove-orphans && prisma migrate dev && nodemon -r tsconfig-paths/register src/index.ts",
@@ -33,7 +33,7 @@
     "npm": "9.6.7"
   },
   "dependencies": {
-    "@prisma/client": "5.3.0",
+    "@prisma/client": "5.3.1",
     "cron": "2.4.3",
     "date-fns": "2.30.0",
     "date-fns-tz": "2.0.0",
@@ -42,17 +42,17 @@
     "telegraf": "4.13.1"
   },
   "devDependencies": {
-    "@types/node": "20.6.0",
-    "@typescript-eslint/eslint-plugin": "6.7.0",
-    "@typescript-eslint/parser": "6.7.0",
+    "@types/node": "20.6.2",
+    "@typescript-eslint/eslint-plugin": "6.7.2",
+    "@typescript-eslint/parser": "6.7.2",
     "esbuild": "0.19.3",
     "esbuild-copy-static-files": "0.1.0",
     "eslint": "8.49.0",
     "eslint-config-prettier": "9.0.0",
     "eslint-import-resolver-typescript": "3.6.0",
     "eslint-plugin-import": "2.28.1",
-    "eslint-plugin-jest": "27.2.3",
-    "eslint-plugin-jsdoc": "46.8.0",
+    "eslint-plugin-jest": "27.4.0",
+    "eslint-plugin-jsdoc": "46.8.1",
     "eslint-plugin-optimize-regex": "1.2.1",
     "eslint-plugin-prettier": "5.0.0",
     "eslint-plugin-promise": "6.1.1",
@@ -61,7 +61,7 @@
     "eslint-plugin-typescript-sort-keys": "3.0.0",
     "nodemon": "3.0.1",
     "prettier": "3.0.3",
-    "prisma": "5.3.0",
+    "prisma": "5.3.1",
     "rimraf": "5.0.1",
     "ts-node": "10.9.1",
     "tsconfig-paths": "4.2.0",

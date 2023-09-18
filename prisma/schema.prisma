@@ -121,6 +121,8 @@ model User {
   votebanEditors             Voteban[]             @relation("VotebanEditor")
   votebanNoBanVoterAuthors   VotebanNoBanVoter[]   @relation("VotebanNoBanVoterAuthor")
   votebanNoBanVoterEditors   VotebanNoBanVoter[]   @relation("VotebanNoBanVoterEditor")
+
+  @@index([updatedAt])
 }
 
 model Voteban {

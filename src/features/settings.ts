@@ -53,18 +53,16 @@ export class Settings {
     }
 
     const take = skip === 0 ? PAGE_SIZE - 1 : PAGE_SIZE;
-    const [prismaChat, [count, prismaChats]] = await Promise.all([
+    const [count, prismaChat, prismaChats] = await Promise.all([
+      prisma.chat.count({ where: { admins: { some: { id: from.id } } } }),
       upsertPrismaChat(ctx.chat, from),
-      prisma.$transaction([
-        prisma.chat.count({ where: { admins: { some: { id: from.id } } } }),
-        prisma.chat.findMany({
-          orderBy: { displayTitle: "asc" },
-          select: { displayTitle: true, id: true },
-          skip,
-          take,
-          where: { admins: { some: { id: from.id } } },
-        }),
-      ]),
+      prisma.chat.findMany({
+        orderBy: { displayTitle: "asc" },
+        select: { displayTitle: true, id: true },
+        skip,
+        take,
+        where: { admins: { some: { id: from.id } } },
+      }),
     ]);
 
     if (skip === 0) {
