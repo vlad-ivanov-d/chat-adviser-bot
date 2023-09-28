@@ -114,6 +114,7 @@
     "no-console": "error",
     "no-invalid-this": "error",
     "no-multi-str": "error",
+    "no-nested-ternary": "error",
     "no-new": "error",
     "no-restricted-syntax": ["error", {
       "message": "Must not use this in a static context.",
