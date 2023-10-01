@@ -9,20 +9,18 @@ export class Cleanup {
    */
   public startCronJob(): void {
     this.stopCronJob();
-    this.cronJob = new CronJob({
-      cronTime: "0 0 0 * * *", // Every day at 00:00:00
-      /**
-       * The function to fire at the specified time.
-       */
-      onTick: () => {
+    this.cronJob = new CronJob(
+      "0 0 0 * * *", // Every day at 00:00:00
+      () => {
         void (async () => {
           await this.cleanupVoteban();
           await this.cleanupSenderChats();
           await this.cleanupUsers();
         })();
       },
-      start: true,
-    });
+      null,
+      true,
+    );
   }
 
   /**
