@@ -3,7 +3,7 @@ import { language } from "features/language";
 import { settings, SettingsAction } from "features/settings";
 import { t, TOptions } from "i18next";
 import { User as TelegramUser } from "telegraf/typings/core/types/typegram";
-import { CallbackCtx, MessageCtx } from "types/context";
+import { CallbackCtx, TextMessageCtx } from "types/context";
 import { MAX_INT } from "utils/consts";
 import {
   isPrismaChatAdmin,
@@ -25,10 +25,10 @@ export enum VotebanAction {
 export class Voteban {
   /**
    * Provides the ability to vote for ban. Message should be strict.
-   * @param ctx Message context
+   * @param ctx Text message context
    * @param cleanCommand Clean command name
    */
-  public async command(ctx: MessageCtx, cleanCommand: string): Promise<void> {
+  public async command(ctx: TextMessageCtx, cleanCommand: string): Promise<void> {
     if (!isCleanCommand(cleanCommand, ctx.message.text)) {
       return; // Not clean command, ignore.
     }

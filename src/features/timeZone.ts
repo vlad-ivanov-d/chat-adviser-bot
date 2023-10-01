@@ -54,7 +54,7 @@ export class TimeZone {
    * Saves settings
    * @param ctx Callback context
    * @param chatId Id of the chat which is edited
-   * @param value Restrict bots state
+   * @param value Time zone state
    */
   public async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {

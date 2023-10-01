@@ -3,7 +3,7 @@
     "allow": "Allow",
     "allowed": "allowed",
     "featureName": "Restriction On Adding Bots",
-    "help": "- <i>Restriction On Adding Bots</i>\nI can prevent users from adding bots to chat.",
+    "help": "- Restriction On Adding Bots\nI can prevent users from adding bots to chat.",
     "restrict": "Restrict",
     "restricted": "restricted",
     "restrictAndBan": "Restrict + ban",
@@ -14,15 +14,12 @@
   "common": {
     "commandForPrivateChat": "Send this command to me in <a href=\"{{BOT_LINK}}\">private messages</a> and I'll help you to configure your chats.",
     "commandNotForPrivateChats": "This command is not for private chats.",
+    "help": "Hello! I'm a bot that helps to moderate chats.\n\n<b>Getting started:</b>\n1. add me to chat\n2. give me administrator permissions\n3. send a <a href=\"{{BOT_LINK}}\">private message</a> command /mychats and I will help you set up your chat\n\n<b>Feature list:</b>\n\n{{FEATURE_LIST}}\n\n<b>Help:</b>\nYou can call this message again at any time.\n/help - information about functions and commands",
     "needAdminPermissions": "I need administrator permissions for this feature to work."
-  },
-  "help": {
-    "greeting": "Hello! I'm a bot that helps to moderate chats.\n\n<b>Getting started:</b>\n1. add me to chat\n2. give me administrator permissions\n3. send a <a href=\"{{BOT_LINK}}\">private message</a> command /mychats and I will help you set up your chat\n\n<b>Feature list:</b>",
-    "ending": "I will tell you more about each feature at the time of setting.\n\n<b>Help:</b>\nYou can call this message again at any time.\n/help - information about functions and commands"
   },
   "language": {
     "featureName": "Language",
-    "help": "- <i>Language</i>\nI can chat in multiple languages.",
+    "help": "- Language\nI can chat in multiple languages.",
     "select": "<b>Language</b>\nI can chat in multiple languages.\n\nSelect a language for <b>{{CHAT_TITLE}}</b> chat.\n\nCurrent language: <b>{{VALUE}}</b>"
   },
   "settings": {
@@ -35,6 +32,15 @@
     "selectChat": "Select the chat for which you want to change the settings:",
     "selectFeature": "Select the feature you want to configure for the <b>{{CHAT_TITLE}}</b> chat. The list of features depends on the type of chat (channel, group, etc.):",
     "updateInfoHint": "If the required chat is not in the list, try writing the /help command in it so that I can update the list. You must be a chat administrator."
+  },
+  "profanityFilter": {
+    "disable": "Disable",
+    "disabled": "disabled",
+    "enable": "Enable",
+    "enabled": "enabled",
+    "featureName": "Profanity Filter",
+    "help": "- Profanity Filter\nI can filter profanity in chat.",
+    "set": "<b>Profanity Filter</b>\nI can filter profanity in chat. I need administrator permissions for this feature.\n\nFilter profanity in <b>{{CHAT_TITLE}}</b> chat?\n\nCurrent value: <b>{{VALUE}}</b>"
   },
   "timeZone": {
     "featureName": "Time Zone",
@@ -52,7 +58,7 @@
     "completed": "Voting completed.",
     "expired": "Voting has expired",
     "featureName": "Ban Voting",
-    "help": "- <i>Ban Voting</i>\nI can run votes to ban a user in a chat.\n/voteban - start voting (can be used without the slash)",
+    "help": "- Ban Voting\nI can run votes to ban a user in a chat.\n/voteban - start voting (can be used without the slash)",
     "mustBeChatMember": "You must be a member of the chat",
     "noBanResults": "Decided: <b>keep</b>.\n\nVoted for keep: {{USERS}}.",
     "noBanWithCounter": "Keep ({{VOTES}}/{{LIMIT}})",

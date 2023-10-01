@@ -15,7 +15,11 @@ export class Cleanup {
        * The function to fire at the specified time.
        */
       onTick: () => {
-        void this.removeGarbage();
+        void (async () => {
+          await this.cleanupVoteban();
+          await this.cleanupSenderChats();
+          await this.cleanupUsers();
+        })();
       },
       start: true,
     });
@@ -29,16 +33,28 @@ export class Cleanup {
   }
 
   /**
-   * Removes unnecessary data from database
+   * Expires votings by removing old data
    */
-  private async removeGarbage(): Promise<void> {
+  private async cleanupVoteban(): Promise<void> {
     const monthAgoDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     // Remove expired votings from database
     await prisma.voteban.deleteMany({ where: { createdAt: { lt: monthAgoDate } } });
-    // Remove unused sender chats from database
+  }
+
+  /**
+   * Removes unused sender chats
+   */
+  private async cleanupSenderChats(): Promise<void> {
     await prisma.senderChat.deleteMany({
       where: { AND: [{ votebanAuthorSenderChats: { none: {} } }, { votebanCandidateSenderChats: { none: {} } }] },
     });
+  }
+
+  /**
+   * Removes unused users
+   */
+  private async cleanupUsers(): Promise<void> {
+    const monthAgoDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     // Remove unused users from database
     await prisma.user.deleteMany({
       where: {
@@ -48,6 +64,8 @@ export class Cleanup {
           { chatEditors: { none: {} } },
           { chatSettingsHistoryAuthors: { none: {} } },
           { chatSettingsHistoryEditors: { none: {} } },
+          { profaneWordAuthors: { none: {} } },
+          { profaneWordEditors: { none: {} } },
           { senderChatAuthors: { none: {} } },
           { senderChatEditors: { none: {} } },
           { userAuthors: { none: {} } },
@@ -73,6 +91,8 @@ export class Cleanup {
           { chatEditors: { none: {} } },
           { chatSettingsHistoryAuthors: { none: {} } },
           { chatSettingsHistoryEditors: { none: {} } },
+          { profaneWordAuthors: { none: {} } },
+          { profaneWordEditors: { none: {} } },
           { senderChatAuthors: { none: {} } },
           { senderChatEditors: { none: {} } },
           { NOT: { userAuthors: { none: {} } } },

@@ -76,11 +76,13 @@ export const joinModifiedInfo = (
  * Checks the user is a chat admin
  * @param prismaChat Prisma chat
  * @param userId User id
+ * @param senderChatId Sender chat id. A message can be send on behalf of current chat.
  * @returns True if admin
  */
-export const isPrismaChatAdmin = (prismaChat: PrismaChat, userId: number): boolean =>
-  // Private chat has the same id as a user
-  userId === prismaChat.id || prismaChat.admins.some((a) => a.id === userId);
+export const isPrismaChatAdmin = (prismaChat: PrismaChat, userId: number, senderChatId?: number): boolean =>
+  userId === prismaChat.id || // Private chat has the same id as a user
+  senderChatId === prismaChat.id || // A message can be send on behalf of current chat
+  prismaChat.admins.some((a) => a.id === userId); // Check admin list. IMPORTANT: other bots won't be in this array.
 
 /**
  * Checks if chat exists in database
@@ -117,6 +119,7 @@ export const upsertPrismaChat = async (chat: TelegramChat, editor: TelegramUser)
       .map((u) => upsertPrismaUser(u, editor)),
     prisma.chat.upsert({
       create: {
+        addingBots: ["group", "supergroup"].includes(chat.type) ? "restricted" : undefined,
         admins: { connect: admins.map((a) => ({ id: a.user.id })) },
         authorId: editor.id,
         displayTitle,
@@ -126,6 +129,7 @@ export const upsertPrismaChat = async (chat: TelegramChat, editor: TelegramUser)
         language: resolveLanguage(editor.language_code),
         lastName,
         membersCount: membersCount ?? 0,
+        profanityFilter: ["group", "supergroup"].includes(chat.type) ? "enabled" : undefined,
         timeZone: resolveTimeZone(editor.language_code),
         title,
         type: chat.type,
