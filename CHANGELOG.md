@@ -2,6 +2,7 @@
 
 ## 1.6.0 (2023-x-x)
 
+- Improvement: Profanity filter feature
 - Other: internal improvements
 
 ## 1.5.3 (2023-09-15)
