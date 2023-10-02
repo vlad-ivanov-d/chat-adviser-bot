@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.6.0 (2023-10-03)
+
+- Improvement: Profanity Filter feature
+- Other: internal improvements
+
 ## 1.5.3 (2023-09-15)
 
 - Fix: chat sorting in settings list

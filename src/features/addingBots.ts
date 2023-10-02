@@ -104,7 +104,7 @@ export class AddingBots {
     const prismaChat = await upsertPrismaChat(chat, from);
 
     const { addingBots, language: lng } = prismaChat;
-    if (isPrismaChatAdmin(prismaChat, from.id) || senderChat?.id === chat.id) {
+    if (isPrismaChatAdmin(prismaChat, from.id, senderChat?.id)) {
       return; // Current user is an admin, return.
     }
     if (!isPrismaChatAdmin(prismaChat, ctx.botInfo.id)) {

@@ -2,6 +2,7 @@ import { addingBots } from "features/addingBots";
 import { cleanup } from "features/cleanup";
 import { help } from "features/help";
 import { language } from "features/language";
+import { profanityFilter } from "features/profanityFilter";
 import { settings, SettingsAction } from "features/settings";
 import { timeZone } from "features/timeZone";
 import { voteban, VotebanAction } from "features/voteban";
@@ -17,10 +18,10 @@ export const defaultNs = "common";
 void init({ defaultNS: defaultNs, fallbackLng: "en", interpolation: { escapeValue: false }, resources: { en, ru } });
 
 // Bot commands
-bot.start((ctx) => help.command(ctx));
-bot.help((ctx) => help.command(ctx));
 bot.command("mychats", (ctx) => settings.command(ctx, "mychats"));
 bot.command("voteban", (ctx) => voteban.command(ctx, "voteban"));
+bot.help((ctx) => help.command(ctx));
+bot.start((ctx) => help.command(ctx));
 
 // Bot events
 bot.on(callbackQuery("data"), async (ctx) => {
@@ -29,8 +30,7 @@ bot.on(callbackQuery("data"), async (ctx) => {
   const chatId = parseFloat(params.get("chatId") ?? "");
   const skip = parseFloat(params.get("skip") ?? "0");
   const value = params.get("v");
-  const valueStr = value ?? "";
-  const valueNum = parseFloat(valueStr);
+  const valueNum = parseFloat(value ?? "");
   switch (action) {
     case SettingsAction.AddingBots:
       return addingBots.renderSettings(ctx, chatId);
@@ -43,11 +43,15 @@ bot.on(callbackQuery("data"), async (ctx) => {
     case SettingsAction.Language:
       return language.renderSettings(ctx, chatId);
     case SettingsAction.LanguageSave:
-      return language.saveSettings(ctx, chatId, valueStr);
+      return language.saveSettings(ctx, chatId, value);
+    case SettingsAction.ProfanityFilter:
+      return profanityFilter.renderSettings(ctx, chatId);
+    case SettingsAction.ProfanityFilterSave:
+      return profanityFilter.saveSettings(ctx, chatId, value);
     case SettingsAction.TimeZone:
       return timeZone.renderSettings(ctx, chatId, skip);
     case SettingsAction.TimeZoneSave:
-      return timeZone.saveSettings(ctx, chatId, valueStr);
+      return timeZone.saveSettings(ctx, chatId, value);
     case SettingsAction.Voteban:
       return voteban.renderSettings(ctx, chatId, valueNum);
     case SettingsAction.VotebanSave:
@@ -59,6 +63,7 @@ bot.on(callbackQuery("data"), async (ctx) => {
       return;
   }
 });
+bot.on(message(), (ctx) => profanityFilter.filter(ctx));
 bot.on(message("group_chat_created"), (ctx) => upsertPrismaChat(ctx.chat, ctx.update.message.from));
 bot.on(message("left_chat_member"), async ({ botInfo, chat, update }) => {
   if (update.message.left_chat_member.id === botInfo.id) {

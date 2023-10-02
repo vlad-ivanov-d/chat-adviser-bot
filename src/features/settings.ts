@@ -1,7 +1,7 @@
 import { LanguageCode } from "@prisma/client";
 import { t } from "i18next";
 import { Chat, InlineKeyboardButton, InlineKeyboardMarkup } from "telegraf/typings/core/types/typegram";
-import { CallbackCtx, MessageCtx } from "types/context";
+import { CallbackCtx, TextMessageCtx } from "types/context";
 import { PrismaChat } from "types/prismaChat";
 import { PAGE_SIZE } from "utils/consts";
 import { isPrismaChatAdmin, prisma, upsertPrismaChat } from "utils/prisma";
@@ -14,6 +14,8 @@ export enum SettingsAction {
   Features = "cfg-ftrs",
   Language = "cfg-lng",
   LanguageSave = "cfg-lng-sv",
+  ProfanityFilter = "cfg-pf",
+  ProfanityFilterSave = "cfg-pf-sv",
   TimeZone = "cfg-tz",
   TimeZoneSave = "cfg-tz-sv",
   Voteban = "cfg-vtbn",
@@ -23,10 +25,10 @@ export enum SettingsAction {
 export class Settings {
   /**
    * Provides the ability to get all shared chats where the user is an admin
-   * @param ctx Message context
+   * @param ctx Text message context
    * @param cleanCommand Clean command name
    */
-  public async command(ctx: MessageCtx, cleanCommand: string): Promise<void> {
+  public async command(ctx: TextMessageCtx, cleanCommand: string): Promise<void> {
     if (!isCleanCommand(cleanCommand, ctx.message.text)) {
       return; // Not clean command, ignore.
     }
@@ -43,28 +45,26 @@ export class Settings {
 
   /**
    * Renders chats
-   * @param ctx Callback or message context
+   * @param ctx Callback or text message context
    * @param skip Skip count
    */
-  public async renderChats(ctx: CallbackCtx | MessageCtx, skip: number): Promise<void> {
+  public async renderChats(ctx: CallbackCtx | TextMessageCtx, skip: number): Promise<void> {
     const from = ctx.callbackQuery?.from ?? ctx.message?.from;
     if (!ctx.chat || !from || isNaN(skip)) {
       return; // Something went wrong
     }
 
     const take = skip === 0 ? PAGE_SIZE - 1 : PAGE_SIZE;
-    const [prismaChat, [count, prismaChats]] = await Promise.all([
+    const [count, prismaChat, prismaChats] = await Promise.all([
+      prisma.chat.count({ where: { admins: { some: { id: from.id } } } }),
       upsertPrismaChat(ctx.chat, from),
-      prisma.$transaction([
-        prisma.chat.count({ where: { admins: { some: { id: from.id } } } }),
-        prisma.chat.findMany({
-          orderBy: { displayTitle: "asc" },
-          select: { displayTitle: true, id: true },
-          skip,
-          take,
-          where: { admins: { some: { id: from.id } } },
-        }),
-      ]),
+      prisma.chat.findMany({
+        orderBy: { displayTitle: "asc" },
+        select: { displayTitle: true, id: true },
+        skip,
+        take,
+        where: { admins: { some: { id: from.id } } },
+      }),
     ]);
 
     if (skip === 0) {
@@ -108,6 +108,12 @@ export class Settings {
     const languageButton: InlineKeyboardButton[] = [
       { callback_data: `${SettingsAction.Language}?chatId=${chatId}`, text: t("language:featureName", { lng }) },
     ];
+    const profanityFilterButton: InlineKeyboardButton[] = [
+      {
+        callback_data: `${SettingsAction.ProfanityFilter}?chatId=${chatId}`,
+        text: t("profanityFilter:featureName", { lng }),
+      },
+    ];
     const timeZoneButton: InlineKeyboardButton[] = [
       { callback_data: `${SettingsAction.TimeZone}?chatId=${chatId}`, text: t("timeZone:featureName", { lng }) },
     ];
@@ -116,9 +122,9 @@ export class Settings {
     ];
     const allFeatures: Record<Chat["type"], InlineKeyboardButton[][]> = {
       channel: [languageButton, timeZoneButton],
-      group: [addingBotsButton, languageButton, timeZoneButton, votebanButton],
+      group: [addingBotsButton, languageButton, profanityFilterButton, timeZoneButton, votebanButton],
       private: [languageButton, timeZoneButton],
-      supergroup: [addingBotsButton, languageButton, timeZoneButton, votebanButton],
+      supergroup: [addingBotsButton, languageButton, profanityFilterButton, timeZoneButton, votebanButton],
     };
     const features = [...allFeatures[prismaChat.type]].sort((a, b) => a[0]?.text.localeCompare(b[0]?.text));
     const count = features.length;

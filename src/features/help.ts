@@ -1,30 +1,34 @@
 import { t } from "i18next";
-import { MessageCtx } from "types/context";
+import { TextMessageCtx } from "types/context";
 import { upsertPrismaChat } from "utils/prisma";
 import { isCleanCommand } from "utils/telegraf";
 
 export class Help {
   /**
    * Shows help message
-   * @param ctx Message context
+   * @param ctx Text message context
    */
-  public async command(ctx: MessageCtx): Promise<void> {
+  public async command(ctx: TextMessageCtx): Promise<void> {
     if (!isCleanCommand("help", ctx.message.text) && !isCleanCommand("start", ctx.message.text)) {
       return; // Not clean command, ignore.
     }
 
     const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.message.from);
 
-    const msg = [
-      t("help:greeting", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}`, lng }),
-      ...[t("language:help", { lng }), t("addingBots:help", { lng }), t("voteban:help", { lng })].sort((a, b) =>
-        a.localeCompare(b),
-      ),
-      `\n${t("help:ending", { lng })}`,
-    ].join("\n");
-    const replyToMessageId = ctx.chat.type === "private" ? undefined : ctx.message.message_id;
+    const featureList = [
+      t("addingBots:help", { lng }),
+      t("language:help", { lng }),
+      t("profanityFilter:help", { lng }),
+      t("voteban:help", { lng }),
+    ]
+      .sort((a, b) => a.localeCompare(b))
+      .join("\n\n");
+    const msg = t("common:help", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}`, FEATURE_LIST: featureList, lng });
 
-    await ctx.reply(msg, { parse_mode: "HTML", reply_to_message_id: replyToMessageId });
+    await ctx.reply(msg, {
+      parse_mode: "HTML",
+      reply_to_message_id: ctx.chat.type === "private" ? undefined : ctx.message.message_id,
+    });
   }
 }
 

@@ -16,6 +16,7 @@ enum AddingBotsRule {
 enum ChatSettingName {
   addingBots
   language
+  profanityFilter
   timeZone
   votebanLimit
 }
@@ -32,24 +33,29 @@ enum LanguageCode {
   ru
 }
 
+enum ProfanityFilterRule {
+  enabled
+}
+
 model Chat {
-  addingBots   AddingBotsRule?
-  admins       User[]          @relation("ChatAdmins")
-  authorId     Float
-  createdAt    DateTime        @default(now())
-  displayTitle String
-  editorId     Float
-  firstName    String?
-  id           Float           @id
-  language     LanguageCode
-  lastName     String?
-  membersCount Int
-  timeZone     String
-  title        String?
-  type         ChatType
-  updatedAt    DateTime        @updatedAt
-  username     String?
-  votebanLimit Int?
+  addingBots      AddingBotsRule?
+  admins          User[]               @relation("ChatAdmins")
+  authorId        Float
+  createdAt       DateTime             @default(now())
+  displayTitle    String
+  editorId        Float
+  firstName       String?
+  id              Float                @id
+  language        LanguageCode
+  lastName        String?
+  membersCount    Int
+  profanityFilter ProfanityFilterRule?
+  timeZone        String
+  title           String?
+  type            ChatType
+  updatedAt       DateTime             @updatedAt
+  username        String?
+  votebanLimit    Int?
 
   author              User                  @relation("ChatAuthor", fields: [authorId], references: [id])
   chatSettingsHistory ChatSettingsHistory[]
@@ -93,6 +99,20 @@ model SenderChat {
   votebanCandidateSenderChats Voteban[] @relation("VotebanCandidateSenderChat")
 }
 
+model ProfaneWord {
+  authorId  Float
+  createdAt DateTime     @default(now())
+  editorId  Float
+  id        BigInt       @id @default(autoincrement())
+  isRoot    Boolean?
+  language  LanguageCode
+  updatedAt DateTime     @updatedAt
+  word      String
+
+  author User @relation("ProfaneWordAuthor", fields: [authorId], references: [id])
+  editor User @relation("ProfaneWordEditor", fields: [editorId], references: [id])
+}
+
 model User {
   authorId  Float
   createdAt DateTime @default(now())
@@ -110,6 +130,8 @@ model User {
   chatSettingsHistoryAuthors ChatSettingsHistory[] @relation("ChatSettingsHistoryAuthor")
   chatSettingsHistoryEditors ChatSettingsHistory[] @relation("ChatSettingsHistoryEditor")
   editor                     User                  @relation("UserEditor", fields: [editorId], references: [id])
+  profaneWordAuthors         ProfaneWord[]         @relation("ProfaneWordAuthor")
+  profaneWordEditors         ProfaneWord[]         @relation("ProfaneWordEditor")
   senderChatAuthors          SenderChat[]          @relation("SenderChatAuthor")
   senderChatEditors          SenderChat[]          @relation("SenderChatEditor")
   userAuthors                User[]                @relation("UserAuthor")
@@ -121,6 +143,8 @@ model User {
   votebanEditors             Voteban[]             @relation("VotebanEditor")
   votebanNoBanVoterAuthors   VotebanNoBanVoter[]   @relation("VotebanNoBanVoterAuthor")
   votebanNoBanVoterEditors   VotebanNoBanVoter[]   @relation("VotebanNoBanVoterEditor")
+
+  @@index([updatedAt])
 }
 
 model Voteban {
