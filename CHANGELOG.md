@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.6.0 (2023-x-x)
+## 1.6.0 (2023-10-03)
 
 - Improvement: Profanity filter feature
 - Other: internal improvements
