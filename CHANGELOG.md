@@ -2,7 +2,9 @@
 
 ## 1.7.0 (2023-xx-xx)
 
-- Improvement: more detailed description of the Profanity Filter feature
+- Improvement: more detailed description for the Profanity Filter feature
+- Improvement: more detailed response for voteban command
+- Fix: voteban command doesn't work without slash
 
 ## 1.6.0 (2023-10-03)
 
