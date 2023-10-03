@@ -349,7 +349,7 @@ export class Voteban {
       const resultsMsg = isBan ? t("voteban:banResults", lngOptions) : t("voteban:noBanResults", lngOptions);
       await Promise.all([
         prisma.voteban.update({
-          data: { completed: true },
+          data: { isCompleted: true },
           select: { id: true },
           where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
         }),

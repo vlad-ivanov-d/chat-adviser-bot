@@ -101,6 +101,7 @@ model SenderChat {
 
 model ProfaneWord {
   authorId  Float
+  comment   String?
   createdAt DateTime     @default(now())
   editorId  Float
   id        BigInt       @id @default(autoincrement())
@@ -111,17 +112,20 @@ model ProfaneWord {
 
   author User @relation("ProfaneWordAuthor", fields: [authorId], references: [id])
   editor User @relation("ProfaneWordEditor", fields: [editorId], references: [id])
+
+  @@unique([word])
 }
 
 model User {
-  authorId  Float
-  createdAt DateTime @default(now())
-  editorId  Float
-  firstName String
-  id        Float    @id
-  lastName  String?
-  updatedAt DateTime @updatedAt
-  username  String?
+  authorId     Float
+  createdAt    DateTime @default(now())
+  editorId     Float
+  firstName    String
+  id           Float    @id
+  languageCode String?
+  lastName     String?
+  updatedAt    DateTime @updatedAt
+  username     String?
 
   author                     User                  @relation("UserAuthor", fields: [authorId], references: [id])
   chatAdmins                 Chat[]                @relation("ChatAdmins")
@@ -154,10 +158,10 @@ model Voteban {
   candidateId           Float
   candidateSenderChatId Float?
   chatId                Float
-  completed             Boolean?
   createdAt             DateTime            @default(now())
   editorId              Float
   id                    BigInt              @id @default(autoincrement())
+  isCompleted           Boolean?
   messageId             Float
   noBanVoters           VotebanNoBanVoter[]
   updatedAt             DateTime            @updatedAt
