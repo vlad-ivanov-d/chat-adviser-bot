@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.7.0 (2023-xx-xx)
+## 1.7.0 (2023-10-05)
 
 - Improvement: more detailed description for the Profanity Filter feature
 - Improvement: more detailed response for voteban command
