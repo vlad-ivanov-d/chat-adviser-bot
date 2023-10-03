@@ -14,6 +14,10 @@ The bot can run votes to ban a user in a chat. The user will be banned and their
 
 The bot can chat in multiple languages.
 
+### Profanity Filter
+
+The bot can filter profanity in chat.
+
 ### Restriction On Adding Bots
 
 The bot can prevent users from adding bots to chat. Additionally, it's possible to configure the ban of the violator. The user who tried to add the bot will be banned.
