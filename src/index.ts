@@ -63,7 +63,6 @@ bot.on(callbackQuery("data"), async (ctx) => {
       return;
   }
 });
-bot.on(message(), (ctx) => profanityFilter.filter(ctx));
 bot.on(message("group_chat_created"), (ctx) => upsertPrismaChat(ctx.chat, ctx.update.message.from));
 bot.on(message("left_chat_member"), async ({ botInfo, chat, update }) => {
   if (update.message.left_chat_member.id === botInfo.id) {
@@ -78,6 +77,7 @@ bot.on(message("new_chat_members"), async (ctx) => {
 });
 bot.on(message("supergroup_chat_created"), (ctx) => upsertPrismaChat(ctx.chat, ctx.update.message.from));
 bot.on(message("text"), (ctx) => voteban.command(ctx, "voteban"));
+bot.on(message(), (ctx) => profanityFilter.filter(ctx));
 
 // Start bot
 void bot.launch();
