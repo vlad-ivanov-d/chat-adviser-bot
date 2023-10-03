@@ -15,7 +15,7 @@ import {
   upsertPrismaSenderChat,
   upsertPrismaUser,
 } from "utils/prisma";
-import { getChatHtmlLink, getUserHtmlLink, isChatAdmin, isChatMember, isCleanCommand } from "utils/telegraf";
+import { getUserHtmlLink, getUserOrChatHtmlLink, isChatAdmin, isChatMember, isCleanCommand } from "utils/telegraf";
 
 export enum VotebanAction {
   Ban = "voteban-ban",
@@ -69,15 +69,15 @@ export class Voteban {
       return; // Candidate is an admin, return.
     }
 
-    const authorLink = fromSenderChat ? getChatHtmlLink(fromSenderChat) : getUserHtmlLink(from);
-    const candidateLink = candidateSenderChat ? getChatHtmlLink(candidateSenderChat) : getUserHtmlLink(candidate);
+    const authorLink = getUserOrChatHtmlLink(from, fromSenderChat);
+    const candidateLink = getUserOrChatHtmlLink(candidate, candidateSenderChat);
     // Do not accept vote from sender chat
     const banVotesCount = fromSenderChat ? 0 : 1;
     const banButtonText = t("voteban:banWithCounter", { LIMIT: votebanLimit, VOTES: banVotesCount, lng });
     const noBanButtonText = t("voteban:noBanWithCounter", { LIMIT: votebanLimit, VOTES: 0, lng });
 
     const [reply] = await Promise.all([
-      ctx.reply(t("voteban:question", { AUTHOR: authorLink, CANDIDATE: candidateLink, lng }), {
+      ctx.reply(t("voteban:question", { AUTHOR: authorLink, CANDIDATE: candidateLink, count: votebanLimit, lng }), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
@@ -319,13 +319,13 @@ export class Voteban {
 
     const { author, authorSenderChat, banVoters, candidate, candidateSenderChat, noBanVoters } = voting;
     const { language: lng, votebanLimit } = chat;
-    const authorLink = authorSenderChat ? getChatHtmlLink(authorSenderChat) : getUserHtmlLink(author);
-    const candidateLink = candidateSenderChat ? getChatHtmlLink(candidateSenderChat) : getUserHtmlLink(candidate);
+    const authorLink = getUserOrChatHtmlLink(author, authorSenderChat);
+    const candidateLink = getUserOrChatHtmlLink(candidate, candidateSenderChat);
     const isBan = banVoters.length > noBanVoters.length;
     const voteUsers = (isBan ? banVoters : noBanVoters).map((v) => v.author);
     const voteUserLinks = this.getUserLinks(voteUsers, lng);
     const lngOptions: TOptions = { AUTHOR: authorLink, CANDIDATE: candidateLink, USERS: voteUserLinks, lng };
-    const questionMsg = t("voteban:question", lngOptions);
+    const questionMsg = t("voteban:question", { ...lngOptions, count: votebanLimit ?? 0 });
 
     if (!votebanLimit) {
       const cancelledMsg = t("voteban:cancelledFeatureDisabled", { lng });
@@ -349,7 +349,7 @@ export class Voteban {
       const resultsMsg = isBan ? t("voteban:banResults", lngOptions) : t("voteban:noBanResults", lngOptions);
       await Promise.all([
         prisma.voteban.update({
-          data: { completed: true },
+          data: { isCompleted: true },
           select: { id: true },
           where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
         }),

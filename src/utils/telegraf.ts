@@ -133,6 +133,15 @@ export const getChatHtmlLink = (chat: Chat | PrismaSenderChat): string => {
 };
 
 /**
+ * Gets chat or user link. Chat will be used as a priority if defined.
+ * @param user Telegram or Prisma user
+ * @param chat Telegram chat or Prisma sender chat
+ * @returns Returns user link HTML
+ */
+export const getUserOrChatHtmlLink = (user: User | PrismaUser, chat?: Chat | PrismaSenderChat | null): string =>
+  chat ? getChatHtmlLink(chat) : getUserHtmlLink(user);
+
+/**
  * Check if the user is chat admin
  * @param chatId Chat id
  * @param userId User id
