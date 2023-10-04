@@ -40,7 +40,7 @@
     "enabled": "enabled",
     "featureName": "Profanity Filter",
     "help": "- Profanity Filter\nI can filter profanity in chat.",
-    "set": "<b>Profanity Filter</b>\nI can filter profanity in chat. In this case, the filter will not be applied to messages from chat administrators. I need administrator permissions for this feature.\n\nEnable profanity filter in <b>{{CHAT_TITLE}}</b> chat?\n\nCurrent value: <b>{{VALUE}}</b>"
+    "set": "<b>Profanity Filter</b>\nI can filter profanity in chat. The filter will not be applied to messages from administrators. I need administrator permissions for this feature.\n\nEnable profanity filter in <b>{{CHAT_TITLE}}</b> chat?\n\nCurrent value: <b>{{VALUE}}</b>"
   },
   "timeZone": {
     "featureName": "Time Zone",
