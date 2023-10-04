@@ -157,6 +157,9 @@ export class ProfanityFilter {
     if ("caption" in message) {
       return message.caption ?? "";
     }
+    if ("poll" in message) {
+      return [message.poll.question, ...message.poll.options.map((o) => o.text)].join("\n");
+    }
     if ("text" in message) {
       return message.text;
     }
