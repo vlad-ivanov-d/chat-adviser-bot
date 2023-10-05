@@ -144,6 +144,7 @@ export class ProfanityFilter {
     const cacheTimeout = 15 * 60 * 1000;
     if (!this.profaneWords || this.profaneWordsDate.getTime() < Date.now() - cacheTimeout) {
       this.profaneWords = await prisma.profaneWord.findMany({ select: { isRoot: true, word: true } });
+      this.profaneWordsDate = new Date();
     }
     return this.profaneWords;
   }
