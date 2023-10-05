@@ -142,9 +142,10 @@ export class ProfanityFilter {
    */
   private async getCachedProfaneWords(): Promise<Pick<ProfaneWord, "isRoot" | "word">[]> {
     const cacheTimeout = 15 * 60 * 1000;
-    return this.profaneWords && this.profaneWordsDate.getTime() > Date.now() - cacheTimeout
-      ? this.profaneWords
-      : await prisma.profaneWord.findMany({ select: { isRoot: true, word: true } });
+    if (!this.profaneWords || this.profaneWordsDate.getTime() < Date.now() - cacheTimeout) {
+      this.profaneWords = await prisma.profaneWord.findMany({ select: { isRoot: true, word: true } });
+    }
+    return this.profaneWords;
   }
 
   /**
