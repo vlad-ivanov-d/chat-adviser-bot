@@ -128,7 +128,7 @@ export const upsertPrismaChat = async (chat: TelegramChat, editor: TelegramUser)
         id: chat.id,
         language: resolveLanguage(editor.language_code),
         lastName,
-        membersCount: membersCount ?? 0,
+        membersCount,
         profanityFilter: ["group", "supergroup"].includes(chat.type) ? "enabled" : undefined,
         timeZone: resolveTimeZone(editor.language_code),
         title,
