@@ -115,7 +115,7 @@ export const upsertPrismaChat = async (chat: TelegramChat, editor: TelegramUser)
 
   const transaction = await prisma.$transaction([
     ...[editor, ...admins.map((a) => a.user)]
-      .filter((u, i, arr) => arr.indexOf(u) === i) // Trim duplicates
+      .filter((u, i, arr) => arr.findIndex((au) => au.id === u.id) === i) // Trim duplicates
       .map((u) => upsertPrismaUser(u, editor)),
     prisma.chat.upsert({
       create: {
