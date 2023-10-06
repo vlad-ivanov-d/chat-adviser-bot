@@ -13,8 +13,8 @@
     "url": "https://github.com/vlad-ivanov-d/chat-adviser-bot/issues"
   },
   "engines": {
-    "node": "18.17.1",
-    "npm": "9.6.7"
+    "node": "18.18.0",
+    "npm": "9.8.1"
   },
   "homepage": "https://github.com/vlad-ivanov-d/chat-adviser-bot#readme",
   "keywords": [
@@ -29,8 +29,8 @@
     "url": "git+https://github.com:vlad-ivanov-d/chat-adviser-bot.git"
   },
   "volta": {
-    "node": "18.17.1",
-    "npm": "9.6.7"
+    "node": "18.18.0",
+    "npm": "9.8.1"
   },
   "dependencies": {
     "@prisma/client": "5.4.1",
