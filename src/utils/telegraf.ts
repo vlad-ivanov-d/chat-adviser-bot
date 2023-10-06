@@ -87,9 +87,6 @@ export const getUserTitle = (user: User | PrismaUser, format: "full" | "short"):
  * @returns Returns user link HTML
  */
 export const getUserHtmlLink = (user: User | PrismaUser): string => {
-  if (user.username) {
-    return `@${user.username}`;
-  }
   const title = getUserTitle(user, "short");
   return `<a href="tg:user?id=${user.id}">${encodeText(title)}</a>`;
 };
