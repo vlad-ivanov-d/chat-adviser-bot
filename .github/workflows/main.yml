@@ -17,16 +17,29 @@ jobs:
       - name: Build sources
         run: npm run build
       - name: Save dist
-        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v3
         with:
           name: dist
           path: dist
 
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Setup node version
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.18.0"
+      - name: Restore dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm run test
+
   deploy:
     environment: production
     if: github.ref == 'refs/heads/main'
-    needs: build
+    needs: [build, test]
     runs-on: ubuntu-latest
     steps:
       - name: Download dist
