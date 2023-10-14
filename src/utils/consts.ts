@@ -18,7 +18,7 @@ export const DATE_LOCALES: Record<LanguageCode, Locale> = {
 /**
  * Database maximum integer limit
  */
-export const MAX_INT = 2147483647;
+export const MAX_INT = 2_147_483_647;
 
 /**
  * Page size
