@@ -28,7 +28,7 @@ export class Voteban {
    * @param ctx Text message context
    * @param cleanCommand Clean command name
    */
-  public async command(ctx: TextMessageCtx, cleanCommand: string): Promise<void> {
+  async command(ctx: TextMessageCtx, cleanCommand: string): Promise<void> {
     if (!isCleanCommand(cleanCommand, ctx.message.text)) {
       return; // Not clean command, ignore.
     }
@@ -116,7 +116,7 @@ export class Voteban {
    * @param chatId Id of the chat which is edited
    * @param value Voteban limit value
    */
-  public async renderSettings(ctx: CallbackCtx, chatId: number, value?: number): Promise<void> {
+  async renderSettings(ctx: CallbackCtx, chatId: number, value?: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }
@@ -168,7 +168,7 @@ export class Voteban {
    * @param chatId Id of the chat which is edited
    * @param value Voteban limit value
    */
-  public async saveSettings(ctx: CallbackCtx, chatId: number, value: number): Promise<void> {
+  async saveSettings(ctx: CallbackCtx, chatId: number, value: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }
@@ -192,7 +192,7 @@ export class Voteban {
    * @param ctx Callback context
    * @param action User action
    */
-  public async vote(ctx: CallbackCtx, action: VotebanAction): Promise<void> {
+  async vote(ctx: CallbackCtx, action: VotebanAction): Promise<void> {
     const { from, message } = ctx.update.callback_query;
     if (!message) {
       return; // No message, something went wrong.
@@ -369,8 +369,8 @@ export class Voteban {
       parse_mode: "HTML",
       reply_markup: {
         inline_keyboard: [
-          [{ callback_data: "voteban-ban", text: banButtonText }],
-          [{ callback_data: "voteban-no-ban", text: noBanButtonText }],
+          [{ callback_data: VotebanAction.Ban, text: banButtonText }],
+          [{ callback_data: VotebanAction.NoBan, text: noBanButtonText }],
         ],
       },
     });
