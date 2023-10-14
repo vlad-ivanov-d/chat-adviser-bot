@@ -12,7 +12,7 @@ import {
 import { Profanity } from "utils/profanity";
 
 export class ProfanityFilter {
-  private profaneWords: string[] | undefined;
+  private profaneWords?: string[];
   private profaneWordsDate: Date = new Date();
 
   /**
