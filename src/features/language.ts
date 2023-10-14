@@ -9,7 +9,7 @@ export class Language {
    * Gets available language options
    * @returns Language options
    */
-  public getOptions(): { code: LanguageCode; title: string }[] {
+  getOptions(): { code: LanguageCode; title: string }[] {
     return [
       { code: LanguageCode.en, title: "English" },
       { code: LanguageCode.ru, title: "Русский" },
@@ -21,7 +21,7 @@ export class Language {
    * @param ctx Callback context
    * @param chatId Id of the chat which is edited
    */
-  public async renderSettings(ctx: CallbackCtx, chatId: number): Promise<void> {
+  async renderSettings(ctx: CallbackCtx, chatId: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }
@@ -57,7 +57,7 @@ export class Language {
    * @param value Value
    * @returns Sanitized value
    */
-  public sanitizeValue(value: string | null | undefined): LanguageCode {
+  sanitizeValue(value: string | null | undefined): LanguageCode {
     return this.getOptions().find((l) => l.code === value)?.code ?? "en";
   }
 
@@ -67,7 +67,7 @@ export class Language {
    * @param chatId Id of the chat which is edited
    * @param value Language code
    */
-  public async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
+  async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }

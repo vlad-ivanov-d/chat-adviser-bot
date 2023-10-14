@@ -14,7 +14,7 @@ export class TimeZone {
    * @param chatId Id of the chat which is edited
    * @param skip Skip count
    */
-  public async renderSettings(ctx: CallbackCtx, chatId: number, skip: number): Promise<void> {
+  async renderSettings(ctx: CallbackCtx, chatId: number, skip: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }
@@ -56,7 +56,7 @@ export class TimeZone {
    * @param chatId Id of the chat which is edited
    * @param value Time zone state
    */
-  public async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
+  async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }

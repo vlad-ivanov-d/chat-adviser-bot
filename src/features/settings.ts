@@ -28,7 +28,7 @@ export class Settings {
    * @param ctx Text message context
    * @param cleanCommand Clean command name
    */
-  public async command(ctx: TextMessageCtx, cleanCommand: string): Promise<void> {
+  async command(ctx: TextMessageCtx, cleanCommand: string): Promise<void> {
     if (!isCleanCommand(cleanCommand, ctx.message.text)) {
       return; // Not clean command, ignore.
     }
@@ -48,7 +48,7 @@ export class Settings {
    * @param ctx Callback or text message context
    * @param skip Skip count
    */
-  public async renderChats(ctx: CallbackCtx | TextMessageCtx, skip: number): Promise<void> {
+  async renderChats(ctx: CallbackCtx | TextMessageCtx, skip: number): Promise<void> {
     const from = ctx.callbackQuery?.from ?? ctx.message?.from;
     if (!ctx.chat || !from || isNaN(skip)) {
       return; // Something went wrong
@@ -91,7 +91,7 @@ export class Settings {
    * @param chatId Id of the chat which is edited
    * @param skip Skip count
    */
-  public async renderFeatures(ctx: CallbackCtx, chatId: number, skip: number): Promise<void> {
+  async renderFeatures(ctx: CallbackCtx, chatId: number, skip: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId) || isNaN(skip)) {
       return; // Something went wrong
     }
@@ -150,7 +150,7 @@ export class Settings {
    * @param lng Language code
    * @returns Inline button
    */
-  public getBackToFeaturesButton(chatId: number, lng: LanguageCode): InlineKeyboardButton[] {
+  getBackToFeaturesButton(chatId: number, lng: LanguageCode): InlineKeyboardButton[] {
     return [
       {
         callback_data: `${SettingsAction.Features}?chatId=${chatId}`,
@@ -164,7 +164,7 @@ export class Settings {
    * @param ctx Callback context
    * @param lng Alert language code
    */
-  public async notifyChangesSaved(ctx: CallbackCtx, lng: LanguageCode): Promise<void> {
+  async notifyChangesSaved(ctx: CallbackCtx, lng: LanguageCode): Promise<void> {
     await ctx.answerCbQuery(t("settings:changesSaved", { lng }), { show_alert: true });
   }
 
@@ -176,7 +176,7 @@ export class Settings {
    * @param lng Language code
    * @returns True if validation is successfully passed
    */
-  public async resolvePrismaChat(ctx: CallbackCtx, chatId: number, lng: LanguageCode): Promise<PrismaChat | undefined> {
+  async resolvePrismaChat(ctx: CallbackCtx, chatId: number, lng: LanguageCode): Promise<PrismaChat | undefined> {
     try {
       const chat = await ctx.telegram.getChat(chatId);
       const prismaChat = await upsertPrismaChat(chat, ctx.callbackQuery.from);

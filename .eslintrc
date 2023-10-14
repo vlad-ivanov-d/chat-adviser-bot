@@ -61,7 +61,8 @@
         "allowTypedFunctionExpressions": true
       }
     ],
-    "@typescript-eslint/explicit-member-accessibility": "error",
+    "@typescript-eslint/explicit-member-accessibility": ["error", { "accessibility": "no-public" }],
+    "@typescript-eslint/member-ordering": "error",
     "@typescript-eslint/naming-convention": [
       "error",
       { "format": ["UPPER_CASE", "strictCamelCase"], "selector": "default" },

@@ -19,7 +19,7 @@ export class ProfanityFilter {
    * Filters message
    * @param ctx Message context
    */
-  public async filter(ctx: MessageCtx): Promise<void> {
+  async filter(ctx: MessageCtx): Promise<void> {
     const { chat, from, message_id: messageId, sender_chat: senderChat } = ctx.update.message;
 
     const prismaChat = await upsertPrismaChat(chat, from);
@@ -66,7 +66,7 @@ export class ProfanityFilter {
    * @param lng Language code
    * @returns Profanity filter options
    */
-  public getOptions(lng: string): { id: ProfanityFilterRule | null; title: string }[] {
+  getOptions(lng: string): { id: ProfanityFilterRule | null; title: string }[] {
     return [
       { id: null, title: t("profanityFilter:disabled", { lng }) },
       { id: ProfanityFilterRule.enabled, title: t("profanityFilter:enabled", { lng }) },
@@ -78,7 +78,7 @@ export class ProfanityFilter {
    * @param ctx Callback context
    * @param chatId Id of the chat which is edited
    */
-  public async renderSettings(ctx: CallbackCtx, chatId: number): Promise<void> {
+  async renderSettings(ctx: CallbackCtx, chatId: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }
@@ -116,7 +116,7 @@ export class ProfanityFilter {
    * @param chatId Id of the chat which is edited
    * @param value Profanity filter state
    */
-  public async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
+  async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }

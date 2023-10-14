@@ -8,7 +8,7 @@ export class Help {
    * Shows help message
    * @param ctx Text message context
    */
-  public async command(ctx: TextMessageCtx): Promise<void> {
+  async command(ctx: TextMessageCtx): Promise<void> {
     if (!isCleanCommand("help", ctx.message.text) && !isCleanCommand("start", ctx.message.text)) {
       return; // Not clean command, ignore.
     }

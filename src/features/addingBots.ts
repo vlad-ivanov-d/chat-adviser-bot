@@ -17,7 +17,7 @@ export class AddingBots {
    * @param lng Language code
    * @returns Adding bots options
    */
-  public getOptions(lng: string): { id: AddingBotsRule | null; title: string }[] {
+  getOptions(lng: string): { id: AddingBotsRule | null; title: string }[] {
     return [
       { id: null, title: t("addingBots:allowed", { lng }) },
       { id: AddingBotsRule.restricted, title: t("addingBots:restricted", { lng }) },
@@ -30,7 +30,7 @@ export class AddingBots {
    * @param ctx Callback context
    * @param chatId Id of the chat which is edited
    */
-  public async renderSettings(ctx: CallbackCtx, chatId: number): Promise<void> {
+  async renderSettings(ctx: CallbackCtx, chatId: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }
@@ -70,7 +70,7 @@ export class AddingBots {
    * @param chatId Id of the chat which is edited
    * @param value Restrict bots state
    */
-  public async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
+  async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }
@@ -94,7 +94,7 @@ export class AddingBots {
    * Validates new chat members
    * @param ctx NewMembers context
    */
-  public async validate(ctx: NewMembersCtx): Promise<void> {
+  async validate(ctx: NewMembersCtx): Promise<void> {
     const { chat, from, new_chat_members: newChatMembers, sender_chat: senderChat } = ctx.update.message;
     const newBots = newChatMembers.filter((m) => m.is_bot && m.id !== ctx.botInfo.id);
     if (newBots.length === 0) {
