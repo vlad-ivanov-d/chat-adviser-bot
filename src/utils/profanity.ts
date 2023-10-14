@@ -68,7 +68,7 @@ export class Profanity {
    * Creates the class to work with profane words
    * @param profaneWords Profane words which should be filtered
    */
-  constructor(profaneWords: Array<ProfaneWord | string>) {
+  public constructor(profaneWords: Array<ProfaneWord | string>) {
     this.profaneWords = profaneWords.map((w) => ({
       isRoot: typeof w === "string" ? undefined : w.isRoot,
       word: typeof w === "string" ? w : w.word,
@@ -80,7 +80,7 @@ export class Profanity {
    * @param text Text to filter
    * @returns Profanity filter result
    */
-  filter(text: string): ProfanityResult {
+  public filter(text: string): ProfanityResult {
     let hasProfanity = false;
     const filteredText = this.splitText(text)
       .map((word) => {

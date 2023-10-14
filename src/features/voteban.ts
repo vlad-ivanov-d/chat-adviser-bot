@@ -28,7 +28,7 @@ export class Voteban {
    * @param ctx Text message context
    * @param cleanCommand Clean command name
    */
-  async command(ctx: TextMessageCtx, cleanCommand: string): Promise<void> {
+  public async command(ctx: TextMessageCtx, cleanCommand: string): Promise<void> {
     if (!isCleanCommand(cleanCommand, ctx.message.text)) {
       return; // Not clean command, ignore.
     }
@@ -116,7 +116,7 @@ export class Voteban {
    * @param chatId Id of the chat which is edited
    * @param value Voteban limit value
    */
-  async renderSettings(ctx: CallbackCtx, chatId: number, value?: number): Promise<void> {
+  public async renderSettings(ctx: CallbackCtx, chatId: number, value?: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }
@@ -168,7 +168,7 @@ export class Voteban {
    * @param chatId Id of the chat which is edited
    * @param value Voteban limit value
    */
-  async saveSettings(ctx: CallbackCtx, chatId: number, value: number): Promise<void> {
+  public async saveSettings(ctx: CallbackCtx, chatId: number, value: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }
@@ -192,7 +192,7 @@ export class Voteban {
    * @param ctx Callback context
    * @param action User action
    */
-  async vote(ctx: CallbackCtx, action: VotebanAction): Promise<void> {
+  public async vote(ctx: CallbackCtx, action: VotebanAction): Promise<void> {
     const { from, message } = ctx.update.callback_query;
     if (!message) {
       return; // No message, something went wrong.

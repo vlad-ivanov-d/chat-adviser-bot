@@ -7,7 +7,7 @@ export class Cleanup {
   /**
    * Starts cleanup cron job
    */
-  startCronJob(): void {
+  public startCronJob(): void {
     this.stopCronJob();
     this.cronJob = new CronJob(
       "0 0 0 * * *", // Every day at 00:00:00
@@ -26,7 +26,7 @@ export class Cleanup {
   /**
    * Stops cleanup cron job
    */
-  stopCronJob(): void {
+  public stopCronJob(): void {
     this.cronJob?.stop();
   }
 
