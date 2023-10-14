@@ -105,7 +105,6 @@ model ProfaneWord {
   createdAt DateTime     @default(now())
   editorId  Float
   id        BigInt       @id @default(autoincrement())
-  isRoot    Boolean?
   language  LanguageCode
   updatedAt DateTime     @updatedAt
   word      String
