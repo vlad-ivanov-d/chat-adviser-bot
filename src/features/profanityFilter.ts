@@ -1,4 +1,4 @@
-import { ProfaneWord, ProfanityFilterRule } from "@prisma/client";
+import { ProfanityFilterRule } from "@prisma/client";
 import { settings, SettingsAction } from "features/settings";
 import { t } from "i18next";
 import { CallbackCtx, MessageCtx } from "types/context";
@@ -12,7 +12,7 @@ import {
 import { Profanity } from "utils/profanity";
 
 export class ProfanityFilter {
-  private profaneWords: Pick<ProfaneWord, "isRoot" | "word">[] | undefined;
+  private profaneWords?: string[];
   private profaneWordsDate: Date = new Date();
 
   /**
@@ -140,10 +140,11 @@ export class ProfanityFilter {
    * Gets profane words with 15 minutes cache
    * @returns Cached profane words
    */
-  private async getCachedProfaneWords(): Promise<Pick<ProfaneWord, "isRoot" | "word">[]> {
-    const cacheTimeout = 15 * 60 * 1000;
+  private async getCachedProfaneWords(): Promise<string[]> {
+    const cacheTimeout = 15 * 60 * 1000; // 15 minutes
     if (!this.profaneWords || this.profaneWordsDate.getTime() < Date.now() - cacheTimeout) {
-      this.profaneWords = await prisma.profaneWord.findMany({ select: { isRoot: true, word: true } });
+      const profaneWords = await prisma.profaneWord.findMany({ select: { word: true } });
+      this.profaneWords = profaneWords.map(({ word }) => word);
       this.profaneWordsDate = new Date();
     }
     return this.profaneWords;

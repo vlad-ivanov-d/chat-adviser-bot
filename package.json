@@ -1,7 +1,7 @@
 {
   "name": "chat-adviser-bot",
   "description": "Chat Adviser is an open source Telegram bot that helps to moderate chats.",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "scripts": {
     "build": "eslint . && tsc -noEmit && node build.mjs",
     "dev": "docker compose --file compose.dev.yml up --build --detach --force-recreate --remove-orphans && prisma migrate dev && nodemon -r tsconfig-paths/register src/index.ts",
@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@prisma/client": "5.4.2",
-    "cron": "3.1.0",
+    "cron": "3.1.1",
     "date-fns": "2.30.0",
     "date-fns-tz": "2.0.0",
     "dotenv": "16.3.1",
@@ -43,7 +43,7 @@
     "telegraf": "4.14.0"
   },
   "devDependencies": {
-    "@types/node": "20.8.4",
+    "@types/node": "20.8.6",
     "@typescript-eslint/eslint-plugin": "6.7.5",
     "@typescript-eslint/parser": "6.7.5",
     "esbuild": "0.19.4",
@@ -55,7 +55,7 @@
     "eslint-plugin-jest": "27.4.2",
     "eslint-plugin-jsdoc": "46.8.2",
     "eslint-plugin-optimize-regex": "1.2.1",
-    "eslint-plugin-prettier": "5.0.0",
+    "eslint-plugin-prettier": "5.0.1",
     "eslint-plugin-promise": "6.1.1",
     "eslint-plugin-simple-import-sort": "10.0.0",
     "eslint-plugin-sonarjs": "0.21.0",

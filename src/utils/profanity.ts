@@ -9,19 +9,7 @@ export interface ProfanityResult {
   hasProfanity: boolean;
 }
 
-export interface ProfaneWord {
-  /**
-   * Marks that text is a root of the word
-   */
-  isRoot?: boolean | null;
-  /**
-   * Profanity which can be a root of the word or a word itself
-   */
-  word: string;
-}
-
 export class Profanity {
-  private readonly profaneWords: ProfaneWord[];
   /**
    * English similar chars which can be used to workaround filter. Chars must be defined in lower case.
    */
@@ -56,8 +44,9 @@ export class Profanity {
     ч: ["ch"],
     ш: ["sh"],
     щ: ["sch"],
+    ъ: ["b", "ь"],
     ы: ["bi"],
-    ь: ["b"],
+    ь: ["b", "ъ"],
     э: ["e", "е"],
     ю: ["io"],
     я: ["ya"],
@@ -67,12 +56,7 @@ export class Profanity {
    * Creates the class to work with profane words
    * @param profaneWords Profane words which should be filtered
    */
-  public constructor(profaneWords: Array<ProfaneWord | string>) {
-    this.profaneWords = profaneWords.map((w) => ({
-      isRoot: typeof w === "string" ? undefined : w.isRoot,
-      word: typeof w === "string" ? w : w.word,
-    }));
-  }
+  public constructor(private readonly profaneWords: string[]) {}
 
   /**
    * Filters and checks profanity in the text
@@ -95,9 +79,9 @@ export class Profanity {
         };
         const cleanWord = this.cleanWord(word);
         for (const profaneWord of this.profaneWords) {
-          const cleanProfaneWord = this.cleanWord(profaneWord.word);
-          const regExpEn = this.getProfanityRegExp({ ...profaneWord, word: cleanProfaneWord }, this.similarCharsEn);
-          const regExpRu = this.getProfanityRegExp({ ...profaneWord, word: cleanProfaneWord }, this.similarCharsRu);
+          const cleanProfaneWord = this.cleanWord(profaneWord);
+          const regExpEn = this.getProfanityRegExp(cleanProfaneWord, this.similarCharsEn);
+          const regExpRu = this.getProfanityRegExp(cleanProfaneWord, this.similarCharsRu);
           const filteredWord = cleanWord.replace(regExpEn, replacer).replace(regExpRu, replacer);
           if (hasWord) {
             return filteredWord;
@@ -133,14 +117,17 @@ export class Profanity {
 
   /**
    * Gets profanity regular expression
-   * @param profaneWord Profane word object
+   * @param profaneWord Profane word
    * @param similarChars Similar chars which can be used to workaround regular expression
    * @returns Profanity regular expression
    */
-  private getProfanityRegExp(profaneWord: ProfaneWord, similarChars: Record<string, string[]>): RegExp {
-    const profanityRegexStr = profaneWord.word
+  private getProfanityRegExp(profaneWord: string, similarChars: Record<string, string[]>): RegExp {
+    const profanityRegExpStr = profaneWord
       .split("")
-      .map((char) => {
+      .map((char, i, arr) => {
+        if (char === "*" && (i === 0 || i === arr.length - 1)) {
+          return ""; // Remove starting and ending "*" character
+        }
         const chars = [this.escapeCharForRegExp(char)];
         if (similarChars[char]) {
           chars.push(...similarChars[char].map((c) => this.escapeCharForRegExp(c)));
@@ -148,7 +135,9 @@ export class Profanity {
         return `(${chars.join("|")})`;
       })
       .join("");
-    return new RegExp(profaneWord.isRoot ? profanityRegexStr : `^${profanityRegexStr}$`);
+    return new RegExp(
+      `${profaneWord.startsWith("*") ? "" : "^"}${profanityRegExpStr}${profaneWord.endsWith("*") ? "" : "$"}`,
+    );
   }
 
   /**

@@ -369,8 +369,8 @@ export class Voteban {
       parse_mode: "HTML",
       reply_markup: {
         inline_keyboard: [
-          [{ callback_data: "voteban-ban", text: banButtonText }],
-          [{ callback_data: "voteban-no-ban", text: noBanButtonText }],
+          [{ callback_data: VotebanAction.Ban, text: banButtonText }],
+          [{ callback_data: VotebanAction.NoBan, text: noBanButtonText }],
         ],
       },
     });

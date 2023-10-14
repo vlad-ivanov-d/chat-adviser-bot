@@ -62,6 +62,7 @@
       }
     ],
     "@typescript-eslint/explicit-member-accessibility": "error",
+    "@typescript-eslint/member-ordering": "error",
     "@typescript-eslint/naming-convention": [
       "error",
       { "format": ["UPPER_CASE", "strictCamelCase"], "selector": "default" },
