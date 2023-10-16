@@ -4,10 +4,10 @@
   "version": "1.8.0",
   "scripts": {
     "build": "eslint . && tsc -noEmit && node build.mjs",
-    "dev": "docker compose --file compose.dev.yml up --build --detach --force-recreate --remove-orphans && prisma migrate dev && nodemon -r tsconfig-paths/register src/index.ts",
+    "dev": "docker compose --file compose.dev.yml up --build --detach --force-recreate --remove-orphans && prisma migrate dev && nodemon src/index.ts",
     "lint": "eslint --fix .",
     "start": "docker compose --env-file=.env --file dist/compose.yml up --build --detach --force-recreate --remove-orphans",
-    "test": "node --experimental-test-coverage --loader ts-node/esm --no-warnings --test"
+    "test": "NODE_V8_COVERAGE=coverage/ node --experimental-test-coverage --loader ts-node/esm --no-warnings --test"
   },
   "author": "Vlad Ivanov",
   "bugs": {

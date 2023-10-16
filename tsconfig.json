@@ -14,5 +14,8 @@
     "strict": true,
     "target": "esnext",
   },
-  "exclude": ["coverage", "dist", "node_modules"]
+  "exclude": ["coverage", "dist", "node_modules"],
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  }
 }
