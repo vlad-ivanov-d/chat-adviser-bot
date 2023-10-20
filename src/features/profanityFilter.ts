@@ -10,6 +10,7 @@ import {
   upsertPrismaChatSettingsHistory,
 } from "utils/prisma";
 import { Profanity } from "utils/profanity";
+import { getUserFullName } from "utils/telegraf";
 
 export class ProfanityFilter {
   private profaneWords?: string[];
@@ -20,42 +21,42 @@ export class ProfanityFilter {
    * @param ctx Message context
    */
   public async filter(ctx: MessageCtx): Promise<void> {
-    const { chat, from, message_id: messageId, sender_chat: senderChat } = ctx.update.message;
+    const { message } = ctx.update;
+    const { chat, from, message_id: messageId, sender_chat: senderChat } = message;
 
     const prismaChat = await upsertPrismaChat(chat, from);
 
-    if (!prismaChat.profanityFilter) {
-      return; // Filter is disabled, return.
-    }
-    if (isPrismaChatAdmin(prismaChat, from.id, senderChat?.id)) {
-      return; // Current user is an admin, return.
-    }
-    if (!isPrismaChatAdmin(prismaChat, ctx.botInfo.id)) {
-      return; // Bot is not an admin, return.
+    if (
+      !prismaChat.profanityFilter || // Filter is disabled
+      isPrismaChatAdmin(prismaChat, from.id, senderChat?.id) || // Current user is an admin
+      !isPrismaChatAdmin(prismaChat, ctx.botInfo.id) // Bot is not an admin
+    ) {
+      return;
     }
 
-    const senderChatUserName = senderChat && "username" in senderChat ? senderChat.username ?? "" : "";
+    const forwardChatTitle =
+      "forward_from_chat" in message && message.forward_from_chat && "title" in message.forward_from_chat
+        ? message.forward_from_chat.title
+        : "";
+    const forwardSenderName = "forward_sender_name" in message ? message.forward_sender_name ?? "" : "";
+    const forwardUserFullName =
+      "forward_from" in message && message.forward_from ? getUserFullName(message.forward_from) : "";
     const senderChatTitle = senderChat && "title" in senderChat ? senderChat.title : "";
-    const text = this.getMessageText(ctx);
-    const userFullName = [from.first_name, from.last_name].filter((p) => p).join(" ");
-    const userName = from.username ?? "";
+    const senderChatUserName = senderChat && "username" in senderChat ? senderChat.username ?? "" : "";
 
     const profaneWords = await this.getCachedProfaneWords();
     const profanity = new Profanity(profaneWords);
-
-    const { hasProfanity: hasProfanityInMessage } = profanity.filter(text);
-    const { hasProfanity: hasProfanityInSenderChatTitle } = profanity.filter(senderChatTitle);
-    const { hasProfanity: hasProfanityInSenderChatUserName } = profanity.filter(senderChatUserName);
-    const { hasProfanity: hasProfanityInUserFullName } = profanity.filter(userFullName);
-    const { hasProfanity: hasProfanityInUserName } = profanity.filter(userName);
-
-    if (
-      hasProfanityInMessage ||
-      hasProfanityInSenderChatTitle ||
-      hasProfanityInSenderChatUserName ||
-      hasProfanityInUserFullName ||
-      hasProfanityInUserName
-    ) {
+    const profanityFlags: boolean[] = [
+      profanity.filter(forwardChatTitle).hasProfanity,
+      profanity.filter(forwardSenderName).hasProfanity,
+      profanity.filter(forwardUserFullName).hasProfanity,
+      profanity.filter(senderChatTitle).hasProfanity,
+      profanity.filter(senderChatUserName).hasProfanity,
+      profanity.filter(this.getMessageText(ctx)).hasProfanity,
+      profanity.filter(getUserFullName(from)).hasProfanity,
+      profanity.filter(from.username ?? "").hasProfanity,
+    ];
+    if (profanityFlags.includes(true)) {
       // An expected error may happen when bot have no enough permissions
       await ctx.deleteMessage(messageId).catch(() => undefined);
     }

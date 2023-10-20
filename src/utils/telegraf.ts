@@ -64,12 +64,12 @@ export const getTelegramErrorCode = (error: unknown): number | undefined => {
 };
 
 /**
- * Gets user title
+ * Gets user display name
  * @param user Telegram or Prisma user
- * @param format Title format
- * @returns User title
+ * @param format Name format
+ * @returns User display name
  */
-export const getUserTitle = (user: User | PrismaUser, format: "full" | "short"): string => {
+export const getUserDisplayName = (user: User | PrismaUser, format: "full" | "short"): string => {
   if (user.username) {
     return `@${user.username}`;
   }
@@ -82,13 +82,24 @@ export const getUserTitle = (user: User | PrismaUser, format: "full" | "short"):
 };
 
 /**
+ * Gets user full name
+ * @param user Telegram or Prisma user
+ * @returns User full name
+ */
+export const getUserFullName = (user: User | PrismaUser): string => {
+  const firstName = "firstName" in user ? user.firstName : user.first_name;
+  const lastName = "lastName" in user ? user.lastName : user.last_name;
+  return [firstName, lastName].filter((p) => p).join(" ");
+};
+
+/**
  * Gets the link to user
  * @param user Telegram or Prisma user
  * @returns Returns user link HTML
  */
 export const getUserHtmlLink = (user: User | PrismaUser): string => {
-  const title = getUserTitle(user, "short");
-  return `<a href="tg:user?id=${user.id}">${encodeText(title)}</a>`;
+  const displayName = getUserDisplayName(user, "short");
+  return `<a href="tg:user?id=${user.id}">${encodeText(displayName)}</a>`;
 };
 
 /**
@@ -109,7 +120,7 @@ export const getChatDisplayTitle = (chat: Chat | PrismaSenderChat): string => {
         last_name: "lastName" in chat ? chat.lastName ?? "" : chat.last_name,
         username: chat.username ?? undefined,
       };
-      return getUserTitle(privateChatAsUser, "full");
+      return getUserDisplayName(privateChatAsUser, "full");
     }
     default:
       return chat.title ?? "";

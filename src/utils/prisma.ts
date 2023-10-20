@@ -5,7 +5,7 @@ import { t } from "i18next";
 import { Chat as TelegramChat, User as TelegramUser } from "telegraf/typings/core/types/typegram";
 import { PrismaChat } from "types/prismaChat";
 import { DATE_FORMAT, DATE_LOCALES } from "utils/consts";
-import { bot, getChatDisplayTitle, getUserHtmlLink, getUserTitle } from "utils/telegraf";
+import { bot, getChatDisplayTitle, getUserDisplayName, getUserHtmlLink } from "utils/telegraf";
 
 /**
  * Resolves language based on Telegram language code
@@ -160,7 +160,7 @@ export const upsertPrismaChat = async (chat: TelegramChat, editor: TelegramUser)
     ...prismaChat,
     // Patch bot private chat title
     displayTitle:
-      prismaChat.id === editor.id && bot.botInfo ? getUserTitle(bot.botInfo, "full") : prismaChat.displayTitle,
+      prismaChat.id === editor.id && bot.botInfo ? getUserDisplayName(bot.botInfo, "full") : prismaChat.displayTitle,
   };
 };
 

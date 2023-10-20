@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.x (2023-x-x)
+
+- Improvement: pagination on time zone settings
+- Fix: profanity filter ignored profanity in forwarded names
+- Fix: order of voters in voteban results was inconsistent
+
 ## 1.8.0 (2023-10-15)
 
 - Improvement: more accurate profanity filter
