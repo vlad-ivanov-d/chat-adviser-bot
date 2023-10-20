@@ -308,10 +308,10 @@ export class Voteban {
         select: {
           author: true,
           authorSenderChat: true,
-          banVoters: { select: { author: true } },
+          banVoters: { orderBy: { createdAt: "asc" }, select: { author: true } },
           candidate: true,
           candidateSenderChat: true,
-          noBanVoters: { select: { author: true } },
+          noBanVoters: { orderBy: { createdAt: "asc" }, select: { author: true } },
         },
         where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
       }),
