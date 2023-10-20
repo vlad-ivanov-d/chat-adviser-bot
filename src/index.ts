@@ -28,7 +28,7 @@ bot.on(callbackQuery("data"), async (ctx) => {
   const action = ctx.callbackQuery.data.split("?")[0];
   const params = new URLSearchParams(ctx.callbackQuery.data.split("?")[1] ?? "");
   const chatId = parseFloat(params.get("chatId") ?? "");
-  const skip = parseFloat(params.get("skip") ?? "0");
+  const skip = params.get("skip") ? parseFloat(params.get("skip") ?? "0") : undefined;
   const value = params.get("v");
   const valueNum = parseFloat(value ?? "");
   switch (action) {

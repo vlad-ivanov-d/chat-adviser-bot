@@ -14,7 +14,7 @@ export class TimeZone {
    * @param chatId Id of the chat which is edited
    * @param skip Skip count
    */
-  public async renderSettings(ctx: CallbackCtx, chatId: number, skip: number): Promise<void> {
+  public async renderSettings(ctx: CallbackCtx, chatId: number, skip?: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Something went wrong
     }
@@ -27,6 +27,9 @@ export class TimeZone {
 
     const timeZones = this.getAllTimeZones();
     const count = timeZones.length;
+    const valueIndex = timeZones.indexOf(prismaChat.timeZone);
+    // Use provided skip or the index of the current value. Use 0 as the last fallback.
+    const patchedSkip = skip ?? (valueIndex > -1 ? valueIndex : 0);
     const value = `${format(new Date(), "O", { timeZone: prismaChat.timeZone })} ${prismaChat.timeZone}`;
     const msg = t("timeZone:select", { CHAT_TITLE: prismaChat.displayTitle, VALUE: value, lng });
 
@@ -36,13 +39,13 @@ export class TimeZone {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
-            ...timeZones.slice(skip, skip + PAGE_SIZE).map((tz): InlineKeyboardButton[] => [
+            ...timeZones.slice(patchedSkip, patchedSkip + PAGE_SIZE).map((tz): InlineKeyboardButton[] => [
               {
                 callback_data: `${SettingsAction.TimeZoneSave}?chatId=${chatId}&v=${tz}`,
                 text: `${format(new Date(), "O", { timeZone: tz })} ${tz}`,
               },
             ]),
-            getPagination(`${SettingsAction.TimeZone}?chatId=${chatId}`, { count, skip, take: PAGE_SIZE }),
+            getPagination(`${SettingsAction.TimeZone}?chatId=${chatId}`, { count, skip: patchedSkip, take: PAGE_SIZE }),
             settings.getBackToFeaturesButton(chatId, lng),
           ],
         },

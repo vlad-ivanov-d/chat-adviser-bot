@@ -48,7 +48,7 @@ export class Settings {
    * @param ctx Callback or text message context
    * @param skip Skip count
    */
-  public async renderChats(ctx: CallbackCtx | TextMessageCtx, skip: number): Promise<void> {
+  public async renderChats(ctx: CallbackCtx | TextMessageCtx, skip = 0): Promise<void> {
     const from = ctx.callbackQuery?.from ?? ctx.message?.from;
     if (!ctx.chat || !from || isNaN(skip)) {
       return; // Something went wrong
@@ -91,7 +91,7 @@ export class Settings {
    * @param chatId Id of the chat which is edited
    * @param skip Skip count
    */
-  public async renderFeatures(ctx: CallbackCtx, chatId: number, skip: number): Promise<void> {
+  public async renderFeatures(ctx: CallbackCtx, chatId: number, skip = 0): Promise<void> {
     if (!ctx.chat || isNaN(chatId) || isNaN(skip)) {
       return; // Something went wrong
     }
