@@ -1,6 +1,6 @@
 import { ProfanityFilterRule } from "@prisma/client";
 import { settings, SettingsAction } from "features/settings";
-import { t } from "i18next";
+import { changeLanguage, t } from "i18next";
 import { CallbackCtx, MessageCtx } from "types/context";
 import {
   isPrismaChatAdmin,
@@ -60,13 +60,12 @@ export class ProfanityFilter {
 
   /**
    * Gets available profanity filter options
-   * @param lng Language code
    * @returns Profanity filter options
    */
-  public getOptions(lng: string): { id: ProfanityFilterRule | null; title: string }[] {
+  public getOptions(): { id: ProfanityFilterRule | null; title: string }[] {
     return [
-      { id: null, title: t("profanityFilter:disabled", { lng }) },
-      { id: ProfanityFilterRule.enabled, title: t("profanityFilter:enabled", { lng }) },
+      { id: null, title: t("profanityFilter:disabled") },
+      { id: ProfanityFilterRule.enabled, title: t("profanityFilter:enabled") },
     ];
   }
 
@@ -80,8 +79,9 @@ export class ProfanityFilter {
       return; // Something went wrong
     }
 
-    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
-    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    const { language } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(language);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId);
     if (!prismaChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -89,18 +89,18 @@ export class ProfanityFilter {
     const disabledCbData = `${SettingsAction.ProfanityFilterSave}?chatId=${chatId}`;
     const enabledCbData = `${SettingsAction.ProfanityFilterSave}?chatId=${chatId}&v=${ProfanityFilterRule.enabled}`;
     const sanitizedValue = this.sanitizeValue(prismaChat.profanityFilter);
-    const value = this.getOptions(lng).find((o) => o.id === sanitizedValue)?.title ?? "";
-    const msg = t("profanityFilter:set", { CHAT_TITLE: prismaChat.displayTitle, VALUE: value, lng });
+    const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";
+    const msg = t("profanityFilter:set", { CHAT_TITLE: prismaChat.displayTitle, VALUE: value });
 
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(joinModifiedInfo(msg, { lng, prismaChat: prismaChat, settingName: "profanityFilter" }), {
+      ctx.editMessageText(joinModifiedInfo(msg, "profanityFilter", prismaChat), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
-            [{ callback_data: disabledCbData, text: t("profanityFilter:disable", { lng }) }],
-            [{ callback_data: enabledCbData, text: t("profanityFilter:enable", { lng }) }],
-            settings.getBackToFeaturesButton(chatId, lng),
+            [{ callback_data: disabledCbData, text: t("profanityFilter:disable") }],
+            [{ callback_data: enabledCbData, text: t("profanityFilter:enable") }],
+            settings.getBackToFeaturesButton(chatId),
           ],
         },
       }),
@@ -118,8 +118,9 @@ export class ProfanityFilter {
       return; // Something went wrong
     }
 
-    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
-    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    const { language } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(language);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId);
     if (!prismaChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -130,7 +131,7 @@ export class ProfanityFilter {
       prisma.chat.update({ data: { profanityFilter }, select: { id: true }, where: { id: chatId } }),
       upsertPrismaChatSettingsHistory(chatId, ctx.callbackQuery.from.id, "profanityFilter"),
     ]);
-    await Promise.all([settings.notifyChangesSaved(ctx, lng), this.renderSettings(ctx, chatId)]);
+    await Promise.all([settings.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId)]);
   }
 
   /**

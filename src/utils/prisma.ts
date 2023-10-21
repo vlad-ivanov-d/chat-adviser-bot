@@ -1,7 +1,7 @@
 import { ChatSettingName, LanguageCode, Prisma, PrismaClient, User } from "@prisma/client";
 import { DefaultArgs } from "@prisma/client/runtime/library";
 import { formatInTimeZone } from "date-fns-tz";
-import { t } from "i18next";
+import i18next, { t } from "i18next";
 import { Chat as TelegramChat, User as TelegramUser } from "telegraf/typings/core/types/typegram";
 import { PrismaChat } from "types/prismaChat";
 import { DATE_FORMAT, DATE_LOCALES } from "utils/consts";
@@ -45,26 +45,20 @@ export const prisma = new PrismaClient();
 /**
  * Adds modified info to the text
  * @param text Text
- * @param options Options
- * @param options.lng Language code
- * @param options.prismaChat Prisma chat
- * @param options.settingName Setting name
+ * @param settingName Setting name
+ * @param prismaChat Prisma chat
  * @returns Text with modified information if available
  */
-export const joinModifiedInfo = (
-  text: string,
-  options: { lng: LanguageCode; prismaChat: PrismaChat; settingName: ChatSettingName },
-): string => {
-  const { lng, prismaChat, settingName } = options;
+export const joinModifiedInfo = (text: string, settingName: ChatSettingName, prismaChat: PrismaChat): string => {
   const { chatSettingsHistory, timeZone } = prismaChat;
   const historyItem = chatSettingsHistory.find((s) => s.settingName === settingName);
+  const language = resolveLanguage(i18next.language);
   return [
     text,
     historyItem
       ? t("settings:modified", {
-          DATE: formatInTimeZone(historyItem.updatedAt, timeZone, DATE_FORMAT, { locale: DATE_LOCALES[lng] }),
+          DATE: formatInTimeZone(historyItem.updatedAt, timeZone, DATE_FORMAT, { locale: DATE_LOCALES[language] }),
           USER: getUserHtmlLink(historyItem.editor),
-          lng,
         })
       : "",
   ]

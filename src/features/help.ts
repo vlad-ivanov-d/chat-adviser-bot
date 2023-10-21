@@ -1,4 +1,4 @@
-import { t } from "i18next";
+import { changeLanguage, t } from "i18next";
 import { TextMessageCtx } from "types/context";
 import { upsertPrismaChat } from "utils/prisma";
 import { isCleanCommand } from "utils/telegraf";
@@ -14,13 +14,13 @@ export class Help {
       return; // Not clean command, ignore.
     }
 
-    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.message.from);
-    const msg = t("common:help", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}`, lng });
+    const { language } = await upsertPrismaChat(ctx.chat, ctx.message.from);
+    await changeLanguage(language);
 
-    await ctx.reply(msg, {
-      parse_mode: "HTML",
-      reply_to_message_id: ctx.chat.type === "private" ? undefined : ctx.message.message_id,
-    });
+    const msg = t("common:help", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}` });
+    const replyToMessageId = ctx.chat.type === "private" ? undefined : ctx.message.message_id;
+
+    await ctx.reply(msg, { parse_mode: "HTML", reply_to_message_id: replyToMessageId });
   }
 }
 

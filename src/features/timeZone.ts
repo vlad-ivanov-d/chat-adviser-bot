@@ -1,6 +1,6 @@
 import { format, getTimezoneOffset } from "date-fns-tz";
 import { settings, SettingsAction } from "features/settings";
-import { t } from "i18next";
+import { changeLanguage, t } from "i18next";
 import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 import { CallbackCtx } from "types/context";
 import { PAGE_SIZE } from "utils/consts";
@@ -19,8 +19,9 @@ export class TimeZone {
       return; // Something went wrong
     }
 
-    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
-    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    const { language } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(language);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId);
     if (!prismaChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -31,11 +32,11 @@ export class TimeZone {
     // Use provided skip or the index of the current value. Use 0 as the last fallback.
     const patchedSkip = skip ?? (valueIndex > -1 ? valueIndex : 0);
     const value = `${format(new Date(), "O", { timeZone: prismaChat.timeZone })} ${prismaChat.timeZone}`;
-    const msg = t("timeZone:select", { CHAT_TITLE: prismaChat.displayTitle, VALUE: value, lng });
+    const msg = t("timeZone:select", { CHAT_TITLE: prismaChat.displayTitle, VALUE: value });
 
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(joinModifiedInfo(msg, { lng, prismaChat, settingName: "timeZone" }), {
+      ctx.editMessageText(joinModifiedInfo(msg, "timeZone", prismaChat), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
@@ -46,7 +47,7 @@ export class TimeZone {
               },
             ]),
             getPagination(`${SettingsAction.TimeZone}?chatId=${chatId}`, { count, skip: patchedSkip, take: PAGE_SIZE }),
-            settings.getBackToFeaturesButton(chatId, lng),
+            settings.getBackToFeaturesButton(chatId),
           ],
         },
       }),
@@ -64,8 +65,9 @@ export class TimeZone {
       return; // Something went wrong
     }
 
-    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
-    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    const { language } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(language);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId);
     if (!prismaChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -77,7 +79,7 @@ export class TimeZone {
       prisma.chat.update({ data: { timeZone }, select: { id: true }, where: { id: chatId } }),
       upsertPrismaChatSettingsHistory(chatId, ctx.callbackQuery.from.id, "timeZone"),
     ]);
-    await Promise.all([settings.notifyChangesSaved(ctx, lng), this.renderSettings(ctx, chatId, skip)]);
+    await Promise.all([settings.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId, skip)]);
   }
 
   /**

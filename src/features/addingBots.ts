@@ -1,6 +1,6 @@
 import { AddingBotsRule } from "@prisma/client";
 import { settings, SettingsAction } from "features/settings";
-import { t } from "i18next";
+import { changeLanguage, t } from "i18next";
 import { CallbackCtx, NewMembersCtx } from "types/context";
 import {
   isPrismaChatAdmin,
@@ -14,14 +14,13 @@ import { getChatHtmlLink, getUserHtmlLink, kickChatMember } from "utils/telegraf
 export class AddingBots {
   /**
    * Gets available adding bots options
-   * @param lng Language code
    * @returns Adding bots options
    */
-  public getOptions(lng: string): { id: AddingBotsRule | null; title: string }[] {
+  public getOptions(): { id: AddingBotsRule | null; title: string }[] {
     return [
-      { id: null, title: t("addingBots:allowed", { lng }) },
-      { id: AddingBotsRule.restricted, title: t("addingBots:restricted", { lng }) },
-      { id: AddingBotsRule.restrictedAndBan, title: t("addingBots:restrictedAndBan", { lng }) },
+      { id: null, title: t("addingBots:allowed") },
+      { id: AddingBotsRule.restricted, title: t("addingBots:restricted") },
+      { id: AddingBotsRule.restrictedAndBan, title: t("addingBots:restrictedAndBan") },
     ];
   }
 
@@ -35,8 +34,9 @@ export class AddingBots {
       return; // Something went wrong
     }
 
-    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
-    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    const { language } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(language);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId);
     if (!prismaChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -45,19 +45,19 @@ export class AddingBots {
     const restrictedCbData = `${SettingsAction.AddingBotsSave}?chatId=${chatId}&v=${AddingBotsRule.restricted}`;
     const restrictedAndBanCbData = `${SettingsAction.AddingBotsSave}?chatId=${chatId}&v=${AddingBotsRule.restrictedAndBan}`;
     const sanitizedValue = this.sanitizeValue(prismaChat.addingBots);
-    const value = this.getOptions(lng).find((o) => o.id === sanitizedValue)?.title ?? "";
-    const msg = t("addingBots:set", { CHAT_TITLE: prismaChat.displayTitle, VALUE: value, lng });
+    const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";
+    const msg = t("addingBots:set", { CHAT_TITLE: prismaChat.displayTitle, VALUE: value });
 
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(joinModifiedInfo(msg, { lng, prismaChat: prismaChat, settingName: "addingBots" }), {
+      ctx.editMessageText(joinModifiedInfo(msg, "addingBots", prismaChat), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
-            [{ callback_data: allowedCbData, text: t("addingBots:allow", { lng }) }],
-            [{ callback_data: restrictedCbData, text: t("addingBots:restrict", { lng }) }],
-            [{ callback_data: restrictedAndBanCbData, text: t("addingBots:restrictAndBan", { lng }) }],
-            settings.getBackToFeaturesButton(chatId, lng),
+            [{ callback_data: allowedCbData, text: t("addingBots:allow") }],
+            [{ callback_data: restrictedCbData, text: t("addingBots:restrict") }],
+            [{ callback_data: restrictedAndBanCbData, text: t("addingBots:restrictAndBan") }],
+            settings.getBackToFeaturesButton(chatId),
           ],
         },
       }),
@@ -75,8 +75,9 @@ export class AddingBots {
       return; // Something went wrong
     }
 
-    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
-    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    const { language } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(language);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId);
     if (!prismaChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -87,7 +88,7 @@ export class AddingBots {
       prisma.chat.update({ data: { addingBots }, select: { id: true }, where: { id: chatId } }),
       upsertPrismaChatSettingsHistory(chatId, ctx.callbackQuery.from.id, "addingBots"),
     ]);
-    await Promise.all([settings.notifyChangesSaved(ctx, lng), this.renderSettings(ctx, chatId)]);
+    await Promise.all([settings.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId)]);
   }
 
   /**
@@ -103,7 +104,8 @@ export class AddingBots {
 
     const prismaChat = await upsertPrismaChat(chat, from);
 
-    const { addingBots, language: lng } = prismaChat;
+    const { addingBots, language } = prismaChat;
+    await changeLanguage(language);
     if (isPrismaChatAdmin(prismaChat, from.id, senderChat?.id)) {
       return; // Current user is an admin, return.
     }
@@ -115,12 +117,12 @@ export class AddingBots {
         await Promise.all(newBots.map((b) => kickChatMember(chat.id, b.id)));
       }
       if (addingBots === AddingBotsRule.restrictedAndBan && senderChat) {
-        const msg = t("addingBots:userBanned", { USER: getChatHtmlLink(senderChat), lng });
+        const msg = t("addingBots:userBanned", { USER: getChatHtmlLink(senderChat) });
         await ctx.banChatSenderChat(senderChat.id);
         await ctx.reply(msg, { parse_mode: "HTML" });
       }
       if (addingBots === AddingBotsRule.restrictedAndBan && !senderChat) {
-        const msg = t("addingBots:userBanned", { USER: getUserHtmlLink(from), lng });
+        const msg = t("addingBots:userBanned", { USER: getUserHtmlLink(from) });
         await ctx.banChatMember(from.id);
         await ctx.reply(msg, { parse_mode: "HTML" });
       }
