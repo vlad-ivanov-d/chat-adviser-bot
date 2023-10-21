@@ -6,6 +6,7 @@
 - Fix: profanity filter ignored message which starts from command
 - Fix: profanity filter ignored profanity in forwarded names
 - Fix: order of voters in voteban results was inconsistent
+- Fix: voteban command was accepted from users with obscene names when the profanity filter was turned on
 
 ## 1.8.0 (2023-10-15)
 

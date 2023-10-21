@@ -19,8 +19,9 @@ export class ProfanityFilter {
   /**
    * Filters message
    * @param ctx Message context
+   * @returns Object with isProfanityRemoved attribute
    */
-  public async filter(ctx: MessageCtx): Promise<void> {
+  public async filter(ctx: MessageCtx): Promise<{ isProfanityRemoved: boolean }> {
     const { message } = ctx.update;
     const { chat, from, message_id: messageId, sender_chat: senderChat } = message;
 
@@ -31,7 +32,7 @@ export class ProfanityFilter {
       isPrismaChatAdmin(prismaChat, from.id, senderChat?.id) || // Current user is an admin
       !isPrismaChatAdmin(prismaChat, ctx.botInfo.id) // Bot is not an admin
     ) {
-      return;
+      return { isProfanityRemoved: false };
     }
 
     const forwardChatTitle =
@@ -56,10 +57,9 @@ export class ProfanityFilter {
       profanity.filter(getUserFullName(from)).hasProfanity,
       profanity.filter(from.username ?? "").hasProfanity,
     ];
-    if (profanityFlags.includes(true)) {
-      // An expected error may happen when bot have no enough permissions
-      await ctx.deleteMessage(messageId).catch(() => undefined);
-    }
+    return {
+      isProfanityRemoved: profanityFlags.includes(true) && (await ctx.deleteMessage(messageId).catch(() => false)),
+    };
   }
 
   /**

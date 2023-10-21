@@ -72,7 +72,10 @@ bot.on(callbackQuery("data"), async (ctx) => {
   }
 });
 bot.on(message(), async (ctx, next) => {
-  await profanityFilter.filter(ctx);
+  const { isProfanityRemoved } = await profanityFilter.filter(ctx);
+  if (isProfanityRemoved) {
+    return; // Message shouldn't be processed anymore
+  }
   await next();
 });
 bot.on(message("group_chat_created"), (ctx) => upsertPrismaChat(ctx.chat, ctx.update.message.from));
