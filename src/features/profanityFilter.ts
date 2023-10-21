@@ -19,11 +19,15 @@ export class ProfanityFilter {
   /**
    * Filters message
    * @param ctx Message context
-   * @returns Object with isProfanityRemoved attribute
+   * @returns True if profanity is detected and removed
    */
-  public async filter(ctx: MessageCtx): Promise<{ isProfanityRemoved: boolean }> {
+  public async filter(ctx: MessageCtx): Promise<boolean> {
     const { message } = ctx.update;
     const { chat, from, message_id: messageId, sender_chat: senderChat } = message;
+
+    if ("is_automatic_forward" in message && message.is_automatic_forward) {
+      return false; // Message from linked chat
+    }
 
     const prismaChat = await upsertPrismaChat(chat, from);
 
@@ -32,34 +36,26 @@ export class ProfanityFilter {
       isPrismaChatAdmin(prismaChat, from.id, senderChat?.id) || // Current user is an admin
       !isPrismaChatAdmin(prismaChat, ctx.botInfo.id) // Bot is not an admin
     ) {
-      return { isProfanityRemoved: false };
+      return false;
     }
 
-    const forwardChatTitle =
-      "forward_from_chat" in message && message.forward_from_chat && "title" in message.forward_from_chat
-        ? message.forward_from_chat.title
-        : "";
-    const forwardSenderName = "forward_sender_name" in message ? message.forward_sender_name ?? "" : "";
-    const forwardUserFullName =
-      "forward_from" in message && message.forward_from ? getUserFullName(message.forward_from) : "";
-    const senderChatTitle = senderChat && "title" in senderChat ? senderChat.title : "";
-    const senderChatUserName = senderChat && "username" in senderChat ? senderChat.username ?? "" : "";
-
+    const stringsToFilter = this.getStringsToFilter(ctx);
     const profaneWords = await this.getCachedProfaneWords();
     const profanity = new Profanity(profaneWords);
-    const profanityFlags: boolean[] = [
-      profanity.filter(forwardChatTitle).hasProfanity,
-      profanity.filter(forwardSenderName).hasProfanity,
-      profanity.filter(forwardUserFullName).hasProfanity,
-      profanity.filter(senderChatTitle).hasProfanity,
-      profanity.filter(senderChatUserName).hasProfanity,
-      profanity.filter(this.getMessageText(ctx)).hasProfanity,
-      profanity.filter(getUserFullName(from)).hasProfanity,
-      profanity.filter(from.username ?? "").hasProfanity,
-    ];
-    return {
-      isProfanityRemoved: profanityFlags.includes(true) && (await ctx.deleteMessage(messageId).catch(() => false)),
-    };
+
+    if (
+      profanity.filter(stringsToFilter.forwardChatTitle).hasProfanity ||
+      profanity.filter(stringsToFilter.forwardSenderName).hasProfanity ||
+      profanity.filter(stringsToFilter.forwardUserFullName).hasProfanity ||
+      profanity.filter(stringsToFilter.senderChatTitle).hasProfanity ||
+      profanity.filter(stringsToFilter.senderChatUserName).hasProfanity ||
+      profanity.filter(stringsToFilter.text).hasProfanity ||
+      profanity.filter(stringsToFilter.userFullName).hasProfanity ||
+      profanity.filter(stringsToFilter.username).hasProfanity
+    ) {
+      return ctx.deleteMessage(messageId).catch(() => false);
+    }
+    return false;
   }
 
   /**
@@ -152,12 +148,46 @@ export class ProfanityFilter {
   }
 
   /**
+   * Gets strings which should be checked by profanity filter
+   * @param ctx Message context
+   * @returns Object with strings which should be checked by profanity filter
+   */
+  private getStringsToFilter(ctx: MessageCtx): {
+    forwardChatTitle: string;
+    forwardSenderName: string;
+    forwardUserFullName: string;
+    senderChatTitle: string;
+    senderChatUserName: string;
+    text: string;
+    userFullName: string;
+    username: string;
+  } {
+    const { message } = ctx.update;
+    const { from, sender_chat: senderChat } = message;
+
+    return {
+      forwardChatTitle:
+        "forward_from_chat" in message && message.forward_from_chat && "title" in message.forward_from_chat
+          ? message.forward_from_chat.title
+          : "",
+      forwardSenderName: "forward_sender_name" in message ? message.forward_sender_name ?? "" : "",
+      forwardUserFullName:
+        "forward_from" in message && message.forward_from ? getUserFullName(message.forward_from) : "",
+      senderChatTitle: senderChat && "title" in senderChat ? senderChat.title : "",
+      senderChatUserName: senderChat && "username" in senderChat ? senderChat.username ?? "" : "",
+      text: this.getMessageText(ctx),
+      userFullName: getUserFullName(from),
+      username: from.username ?? "",
+    };
+  }
+
+  /**
    * Gets message text from context
    * @param ctx Message context
    * @returns Message text
    */
   private getMessageText(ctx: MessageCtx): string {
-    const message = ctx.update.message;
+    const { message } = ctx.update;
     if ("caption" in message) {
       return message.caption ?? "";
     }

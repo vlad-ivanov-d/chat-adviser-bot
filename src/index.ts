@@ -73,7 +73,7 @@ bot.on(callbackQuery("data"), async (ctx) => {
   }
 });
 bot.on(message(), async (ctx, next) => {
-  const { isProfanityRemoved } = await profanityFilter.filter(ctx);
+  const isProfanityRemoved = await profanityFilter.filter(ctx);
   if (isProfanityRemoved) {
     return; // Message shouldn't be processed anymore
   }
