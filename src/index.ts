@@ -45,6 +45,7 @@ bot.on(callbackQuery("data"), async (ctx) => {
     case SettingsAction.AddingBotsSave:
       return addingBots.saveSettings(ctx, chatId, value);
     case SettingsAction.Chats:
+    case SettingsAction.Refresh:
       return settings.renderChats(ctx, skip);
     case SettingsAction.Features:
       return settings.renderFeatures(ctx, chatId, skip);

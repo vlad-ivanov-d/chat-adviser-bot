@@ -4,6 +4,7 @@
 
 - Improvement: descriptions of the features
 - Improvement: pagination on time zone settings
+- Improvement: refresh button in chat list settings
 - Fix: profanity filter ignored message which starts from command
 - Fix: profanity filter ignored profanity in forwarded names
 - Fix: order of voters in voteban results was inconsistent

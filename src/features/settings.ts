@@ -16,6 +16,7 @@ export enum SettingsAction {
   LanguageSave = "cfg-lng-sv",
   ProfanityFilter = "cfg-pf",
   ProfanityFilterSave = "cfg-pf-sv",
+  Refresh = "cfg-rfrsh",
   TimeZone = "cfg-tz",
   TimeZoneSave = "cfg-tz-sv",
   Voteban = "cfg-vtbn",
@@ -77,12 +78,17 @@ export class Settings {
           { callback_data: `${SettingsAction.Features}?chatId=${c.id}`, text: c.displayTitle },
         ]),
         getPagination(SettingsAction.Chats, { count, skip, take }),
+        [{ callback_data: SettingsAction.Refresh, text: `↻ ${t("settings:refresh", { lng })}` }],
       ],
     };
     const msg = [t("settings:selectChat", { lng }), t("settings:updateInfoHint", { lng })].join("\n\n");
     await (typeof ctx.callbackQuery === "undefined"
-      ? ctx.reply(msg, { reply_markup: inlineKeyboardMarkup })
-      : Promise.all([ctx.answerCbQuery(), ctx.editMessageText(msg, { reply_markup: inlineKeyboardMarkup })]));
+      ? ctx.reply(msg, { parse_mode: "HTML", reply_markup: inlineKeyboardMarkup })
+      : Promise.all([
+          ctx.answerCbQuery(),
+          // An expected error may happen if message has the same text after edit
+          ctx.editMessageText(msg, { parse_mode: "HTML", reply_markup: inlineKeyboardMarkup }).catch(() => undefined),
+        ]));
   }
 
   /**

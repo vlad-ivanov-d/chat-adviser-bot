@@ -26,10 +26,11 @@
     "changesSaved": "Changes saved",
     "forbidden": "Unfortunately, this action is no longer available to you.",
     "modified": "Modified at {{DATE}} by {{USER}}",
+    "refresh": "Refresh",
     "save": "Save",
     "selectChat": "Select the chat for which you want to change the settings. You must be a chat administrator.",
     "selectFeature": "Select the feature you want to configure for the <b>{{CHAT_TITLE}}</b> chat. The list of features depends on the type of chat (channel, group, etc.).",
-    "updateInfoHint": "If the required chat is not in the list, try writing the /help command in it so that I can update the list."
+    "updateInfoHint": "If the list doesn't contain the chat you need, try writing any message in it and clicking the <b>↻ Refresh</b> button at the end of the list."
   },
   "profanityFilter": {
     "disable": "Disable",
