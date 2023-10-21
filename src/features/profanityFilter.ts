@@ -191,6 +191,12 @@ export class ProfanityFilter {
     if ("caption" in message) {
       return message.caption ?? "";
     }
+    if ("left_chat_member" in message) {
+      return getUserFullName(message.left_chat_member);
+    }
+    if ("new_chat_members" in message) {
+      return message.new_chat_members.map((u) => getUserFullName(u)).join(", ");
+    }
     if ("poll" in message) {
       return [message.poll.question, ...message.poll.options.map((o) => o.text)].join("\n");
     }

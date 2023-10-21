@@ -74,7 +74,7 @@ bot.on(callbackQuery("data"), async (ctx) => {
 });
 bot.on(message(), async (ctx, next) => {
   const isProfanityRemoved = await profanityFilter.filter(ctx);
-  if (isProfanityRemoved) {
+  if (isProfanityRemoved && !("new_chat_members" in ctx.update.message)) {
     return; // Message shouldn't be processed anymore
   }
   await next();
