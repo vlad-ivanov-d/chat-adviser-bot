@@ -15,16 +15,7 @@ export class Help {
     }
 
     const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.message.from);
-
-    const featureList = [
-      t("addingBots:help", { lng }),
-      t("language:help", { lng }),
-      t("profanityFilter:help", { lng }),
-      t("voteban:help", { lng }),
-    ]
-      .sort((a, b) => a.localeCompare(b))
-      .join("\n\n");
-    const msg = t("common:help", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}`, FEATURE_LIST: featureList, lng });
+    const msg = t("common:help", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}`, lng });
 
     await ctx.reply(msg, {
       parse_mode: "HTML",

@@ -3,7 +3,6 @@
     "allow": "Allow",
     "allowed": "allowed",
     "featureName": "Restriction On Adding Bots",
-    "help": "- Restriction On Adding Bots\nI can prevent users from adding bots to chat.",
     "restrict": "Restrict",
     "restricted": "restricted",
     "restrictAndBan": "Restrict + ban",
@@ -14,12 +13,11 @@
   "common": {
     "commandForPrivateChat": "Send this command to me in <a href=\"{{BOT_LINK}}\">private messages</a> and I'll help you to configure your chats.",
     "commandNotForPrivateChats": "This command is not for private chats.",
-    "help": "Hello! I'm a bot that helps to moderate chats.\n\n<b>Getting started:</b>\n1. add me to chat\n2. give me administrator permissions\n3. send a <a href=\"{{BOT_LINK}}\">private message</a> command /mychats and I will help you set up your chat\n\n<b>Feature list:</b>\n\n{{FEATURE_LIST}}\n\n<b>Help:</b>\nYou can call this message again at any time.\n/help - information about functions and commands",
+    "help": "Hello! I'm a bot that helps to moderate chats.\n\n<b>Getting started:</b>\n1. add me to chat\n2. give me administrator permissions\n3. send a <a href=\"{{BOT_LINK}}\">private message</a> command /mychats and I will help you set up your chat\n\n<b>Feature list:</b> ban voting, profanity filter, restriction on adding bots, support for different languages.\n\nYou can call this message again at any time using the /help command.",
     "needAdminPermissions": "I need administrator permissions for this feature to work."
   },
   "language": {
     "featureName": "Language",
-    "help": "- Language\nI can chat in multiple languages.",
     "select": "<b>Language</b>\nI can chat in multiple languages.\n\nSelect a language for <b>{{CHAT_TITLE}}</b> chat.\n\nCurrent language: <b>{{VALUE}}</b>"
   },
   "settings": {
@@ -39,8 +37,7 @@
     "enable": "Enable",
     "enabled": "enabled",
     "featureName": "Profanity Filter",
-    "help": "- Profanity Filter\nI can filter profanity in chat.",
-    "set": "<b>Profanity Filter</b>\nI can filter profanity in chat. The filter will not be applied to messages from administrators. I need administrator permissions for this feature.\n\nEnable profanity filter in <b>{{CHAT_TITLE}}</b> chat?\n\nCurrent value: <b>{{VALUE}}</b>"
+    "set": "<b>Profanity Filter</b>\nI can filter profanity in chat, including usernames. The filter will not be applied to messages from administrators. I need administrator permissions for this feature.\n\nEnable profanity filter in <b>{{CHAT_TITLE}}</b> chat?\n\nCurrent value: <b>{{VALUE}}</b>"
   },
   "timeZone": {
     "featureName": "Time Zone",
@@ -58,7 +55,6 @@
     "completed": "Voting completed.",
     "expired": "Voting has expired",
     "featureName": "Ban Voting",
-    "help": "- Ban Voting\nI can run votes to ban a user in a chat.\n/voteban - start voting (can be used without the slash)",
     "mustBeChatMember": "You must be a member of the chat",
     "noBanResults": "Decided: <b>keep</b>.\n\nVoted for keep: {{USERS}}.",
     "noBanWithCounter": "Keep ({{VOTES}}/{{LIMIT}})",
@@ -66,8 +62,8 @@
     "question_other": "{{AUTHOR}} offers to ban {{CANDIDATE}}. This requires {{count}} votes. Do you want to ban {{CANDIDATE}}?",
     "question_zero": "{{AUTHOR}} offers to ban {{CANDIDATE}}. Do you want to ban {{CANDIDATE}}?",
     "replyToSomeonesMessage": "You need to reply to someone's message with this command to start voting to ban the user.",
-    "setLimit": "<b>Ban Voting</b>\nI can run votes to ban a user in a chat. The user will be banned and their message deleted if the appropriate number of votes is reached. I need administrator permissions for this feature.\n/voteban - start voting (can be used without the slash)\n\nSet the vote limit for making a decision in <b>{{CHAT_TITLE}}</b> chat. If set a value less than 2, the feature will be disabled.\n\nCurrent value: <b>{{count}}</b>",
-    "setLimit_zero": "<b>Ban Voting</b>\nI can run votes to ban a user in a chat. The user will be banned and their message deleted if the appropriate number of votes is reached. I need administrator permissions for this feature.\n/voteban - start voting (can be used without the slash)\n\nSet the vote limit for making a decision in <b>{{CHAT_TITLE}}</b> chat. If set a value less than 2, the feature will be disabled.\n\nCurrent state: <b>disabled</b>",
+    "setLimit": "<b>Ban Voting</b>\nI can run votes to ban a user in a chat. The user will be banned and their message deleted if the appropriate number of votes is reached. Messages sent more than 48 hours ago won't be deleted according to Telegram rules.\n/voteban - start voting (can be used without the slash)\n\nSet the vote limit for making a decision in <b>{{CHAT_TITLE}}</b> chat. If set a value less than 2, the feature will be disabled.\n\nCurrent value: <b>{{count}}</b>",
+    "setLimit_zero": "<b>Ban Voting</b>\nI can run votes to ban a user in a chat. The user will be banned and their message deleted if the appropriate number of votes is reached. Messages sent more than 48 hours ago won't be deleted according to Telegram rules.\n/voteban - start voting (can be used without the slash)\n\nSet the vote limit for making a decision in <b>{{CHAT_TITLE}}</b> chat. If set a value less than 2, the feature will be disabled.\n\nCurrent state: <b>disabled</b>",
     "trimmedUsers": "{{USERS}} and others",
     "voteCounted": "Your vote has been counted"
   }
