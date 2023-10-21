@@ -164,7 +164,6 @@ export class ProfanityFilter {
   } {
     const { message } = ctx.update;
     const { from, sender_chat: senderChat } = message;
-
     return {
       forwardChatTitle:
         "forward_from_chat" in message && message.forward_from_chat && "title" in message.forward_from_chat
@@ -188,20 +187,21 @@ export class ProfanityFilter {
    */
   private getMessageText(ctx: MessageCtx): string {
     const { message } = ctx.update;
-    if ("caption" in message) {
-      return message.caption ?? "";
+    const srcMessage = "pinned_message" in message ? message.pinned_message : message;
+    if ("caption" in srcMessage) {
+      return srcMessage.caption ?? "";
     }
-    if ("left_chat_member" in message) {
-      return getUserFullName(message.left_chat_member);
+    if ("left_chat_member" in srcMessage) {
+      return getUserFullName(srcMessage.left_chat_member);
     }
-    if ("new_chat_members" in message) {
-      return message.new_chat_members.map((u) => getUserFullName(u)).join(", ");
+    if ("new_chat_members" in srcMessage) {
+      return srcMessage.new_chat_members.map((u) => getUserFullName(u)).join(", ");
     }
-    if ("poll" in message) {
-      return [message.poll.question, ...message.poll.options.map((o) => o.text)].join("\n");
+    if ("poll" in srcMessage) {
+      return [srcMessage.poll.question, ...srcMessage.poll.options.map((o) => o.text)].join("\n");
     }
-    if ("text" in message) {
-      return message.text;
+    if ("text" in srcMessage) {
+      return srcMessage.text;
     }
     return "";
   }

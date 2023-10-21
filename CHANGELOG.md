@@ -7,7 +7,7 @@
 - Improvement: refresh button in chat list settings
 - Fix: messages from a linked channel were mistakenly filtered by the profanity filter
 - Fix: profanity filter ignored message which starts from command
-- Fix: profanity filter ignored profanity in forwarded names and in system messages with names (user is added/removed)
+- Fix: profanity filter ignored profanity in forwarded names and in system messages
 - Fix: order of voters in voteban results was inconsistent
 - Fix: voteban command was accepted from users with obscene names when the profanity filter was turned on
 
