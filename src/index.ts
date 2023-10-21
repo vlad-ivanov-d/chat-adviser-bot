@@ -18,10 +18,18 @@ export const defaultNs = "common";
 void init({ defaultNS: defaultNs, fallbackLng: "en", interpolation: { escapeValue: false }, resources: { en, ru } });
 
 // Bot commands
-bot.command("mychats", (ctx) => settings.command(ctx, "mychats"));
-bot.command("voteban", (ctx) => voteban.command(ctx, "voteban"));
-bot.help((ctx) => help.command(ctx));
-bot.start((ctx) => help.command(ctx));
+bot.command("mychats", async (ctx, next) => {
+  await settings.command(ctx, "mychats");
+  await next();
+});
+bot.help(async (ctx, next) => {
+  await help.command(ctx, "help");
+  await next();
+});
+bot.start(async (ctx, next) => {
+  await help.command(ctx, "start");
+  await next();
+});
 
 // Bot events
 bot.on(callbackQuery("data"), async (ctx) => {

@@ -3,6 +3,7 @@
 ## 1.9.x (2023-x-x)
 
 - Improvement: pagination on time zone settings
+- Fix: profanity filter ignored message which starts from command
 - Fix: profanity filter ignored profanity in forwarded names
 - Fix: order of voters in voteban results was inconsistent
 
