@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.9.0 (2023-10-22)
+
+- Improvement: the bot itself will prompt admin to make settings when adding it to a new chat
+- Improvement: descriptions of the features
+- Improvement: refresh button in chat list settings
+- Fix: messages from a linked channel were mistakenly filtered by the profanity filter
+- Fix: profanity filter ignored profanity in some messages
+- Fix: order of voters in voteban results was inconsistent
+- Other: internal improvements
+
 ## 1.8.0 (2023-10-15)
 
 - Improvement: more accurate profanity filter

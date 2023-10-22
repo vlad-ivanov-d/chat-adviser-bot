@@ -1,7 +1,6 @@
-import { LanguageCode } from "@prisma/client";
-import { t } from "i18next";
+import { changeLanguage, t } from "i18next";
 import { Chat, InlineKeyboardButton, InlineKeyboardMarkup } from "telegraf/typings/core/types/typegram";
-import { CallbackCtx, TextMessageCtx } from "types/context";
+import { CallbackCtx, MessageCtx, TextMessageCtx } from "types/context";
 import { PrismaChat } from "types/prismaChat";
 import { PAGE_SIZE } from "utils/consts";
 import { isPrismaChatAdmin, prisma, upsertPrismaChat } from "utils/prisma";
@@ -16,6 +15,7 @@ export enum SettingsAction {
   LanguageSave = "cfg-lng-sv",
   ProfanityFilter = "cfg-pf",
   ProfanityFilterSave = "cfg-pf-sv",
+  Refresh = "cfg-rfrsh",
   TimeZone = "cfg-tz",
   TimeZoneSave = "cfg-tz-sv",
   Voteban = "cfg-vtbn",
@@ -34,8 +34,9 @@ export class Settings {
     }
 
     if (ctx.chat.type !== "private") {
-      const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.message.from);
-      const msg = t("common:commandForPrivateChat", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}`, lng });
+      const { language } = await upsertPrismaChat(ctx.chat, ctx.message.from);
+      await changeLanguage(language);
+      const msg = t("common:commandForPrivateChat", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}` });
       await ctx.reply(msg, { parse_mode: "HTML", reply_to_message_id: ctx.message.message_id });
       return;
     }
@@ -44,20 +45,48 @@ export class Settings {
   }
 
   /**
+   * Prompts admin to make settings when adding the bot to a new chat
+   * @param ctx Message context
+   */
+  public async promptSettings(ctx: MessageCtx): Promise<void> {
+    const botId = ctx.botInfo.id;
+    const { message } = ctx.update;
+
+    const [chat, userChat] = await Promise.all([
+      upsertPrismaChat(ctx.chat, message.from),
+      prisma.chat.findUnique({ select: { id: true, language: true }, where: { id: message.from.id } }),
+    ]);
+
+    const isBotAdded = "new_chat_members" in message && message.new_chat_members.some((m) => m.id === botId);
+    const isChatCreated = "group_chat_created" in message || "supergroup_chat_created" in message;
+    const isUserAdmin = isPrismaChatAdmin(chat, message.from.id, message.sender_chat?.id);
+
+    if (userChat && isUserAdmin && (isBotAdded || isChatCreated)) {
+      await changeLanguage(userChat.language);
+      await ctx.telegram.sendMessage(userChat.id, t("settings:invitation"));
+      await this.renderFeatures(ctx, chat.id);
+    }
+  }
+
+  /**
    * Renders chats
-   * @param ctx Callback or text message context
+   * @param ctx Callback or message context
    * @param skip Skip count
    */
-  public async renderChats(ctx: CallbackCtx | TextMessageCtx, skip: number): Promise<void> {
+  public async renderChats(ctx: CallbackCtx | MessageCtx, skip = 0): Promise<void> {
     const from = ctx.callbackQuery?.from ?? ctx.message?.from;
-    if (!ctx.chat || !from || isNaN(skip)) {
-      return; // Something went wrong
+    const take = skip === 0 ? PAGE_SIZE - 1 : PAGE_SIZE;
+    if (!from) {
+      throw new Error("User is not defined to render chats.");
+    }
+    if (!ctx.chat) {
+      throw new Error("Chat is not defined to render chats.");
+    }
+    if (isNaN(skip)) {
+      throw new Error('Parameter "skip" is not correct to render chats.');
     }
 
-    const take = skip === 0 ? PAGE_SIZE - 1 : PAGE_SIZE;
-    const [count, prismaChat, prismaChats] = await Promise.all([
-      prisma.chat.count({ where: { admins: { some: { id: from.id } } } }),
-      upsertPrismaChat(ctx.chat, from),
+    const [chats, count, prismaChat] = await Promise.all([
       prisma.chat.findMany({
         orderBy: { displayTitle: "asc" },
         select: { displayTitle: true, id: true },
@@ -65,60 +94,74 @@ export class Settings {
         take,
         where: { admins: { some: { id: from.id } } },
       }),
+      prisma.chat.count({ where: { admins: { some: { id: from.id } } } }),
+      upsertPrismaChat(ctx.chat, from),
     ]);
+    await changeLanguage(prismaChat.language);
 
     if (skip === 0) {
-      prismaChats.unshift(prismaChat);
+      chats.unshift(prismaChat);
     }
-    const { language: lng } = prismaChat;
-    const inlineKeyboardMarkup: InlineKeyboardMarkup = {
+    const replyMarkup: InlineKeyboardMarkup = {
       inline_keyboard: [
-        ...prismaChats.map((c) => [
-          { callback_data: `${SettingsAction.Features}?chatId=${c.id}`, text: c.displayTitle },
-        ]),
+        ...chats.map((c) => [{ callback_data: `${SettingsAction.Features}?chatId=${c.id}`, text: c.displayTitle }]),
         getPagination(SettingsAction.Chats, { count, skip, take }),
+        [{ callback_data: SettingsAction.Refresh, text: `↻ ${t("settings:refresh")}` }],
       ],
     };
-    const msg = [t("settings:selectChat", { lng }), t("settings:updateInfoHint", { lng })].join("\n\n");
+    const msg = [t("settings:selectChat"), t("settings:updateInfoHint")].join("\n\n");
     await (typeof ctx.callbackQuery === "undefined"
-      ? ctx.reply(msg, { reply_markup: inlineKeyboardMarkup })
-      : Promise.all([ctx.answerCbQuery(), ctx.editMessageText(msg, { reply_markup: inlineKeyboardMarkup })]));
+      ? ctx.reply(msg, { parse_mode: "HTML", reply_markup: replyMarkup })
+      : Promise.all([
+          ctx.answerCbQuery(),
+          // An expected error may happen if message has the same text after edit
+          ctx.editMessageText(msg, { parse_mode: "HTML", reply_markup: replyMarkup }).catch(() => undefined),
+        ]));
   }
 
   /**
    * Renders features
-   * @param ctx Callback context
+   * @param ctx Callback or message context
    * @param chatId Id of the chat which is edited
    * @param skip Skip count
    */
-  public async renderFeatures(ctx: CallbackCtx, chatId: number, skip: number): Promise<void> {
-    if (!ctx.chat || isNaN(chatId) || isNaN(skip)) {
-      return; // Something went wrong
+  public async renderFeatures(ctx: CallbackCtx | MessageCtx, chatId: number, skip = 0): Promise<void> {
+    const { callbackQuery, chat, telegram, update } = ctx;
+    const from = "message" in update ? update.message.from : callbackQuery?.from;
+    if (!from) {
+      throw new Error("User is not defined to render features.");
+    }
+    if (!chat || isNaN(chatId)) {
+      throw new Error("Chat is not defined to render features.");
+    }
+    if (isNaN(skip)) {
+      throw new Error('Parameter "skip" is not correct to render features.');
     }
 
-    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
-    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    const destPrismaChat = await (callbackQuery ? upsertPrismaChat(chat, from) : this.resolvePrismaChat(ctx, from.id));
+    if (!destPrismaChat) {
+      throw new Error("Target chat is not defined to render features.");
+    }
+    await changeLanguage(destPrismaChat.language);
+    const prismaChat = await this.resolvePrismaChat(ctx, chatId);
     if (!prismaChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
     const addingBotsButton: InlineKeyboardButton[] = [
-      { callback_data: `${SettingsAction.AddingBots}?chatId=${chatId}`, text: t("addingBots:featureName", { lng }) },
+      { callback_data: `${SettingsAction.AddingBots}?chatId=${chatId}`, text: t("addingBots:featureName") },
     ];
     const languageButton: InlineKeyboardButton[] = [
-      { callback_data: `${SettingsAction.Language}?chatId=${chatId}`, text: t("language:featureName", { lng }) },
+      { callback_data: `${SettingsAction.Language}?chatId=${chatId}`, text: t("language:featureName") },
     ];
     const profanityFilterButton: InlineKeyboardButton[] = [
-      {
-        callback_data: `${SettingsAction.ProfanityFilter}?chatId=${chatId}`,
-        text: t("profanityFilter:featureName", { lng }),
-      },
+      { callback_data: `${SettingsAction.ProfanityFilter}?chatId=${chatId}`, text: t("profanityFilter:featureName") },
     ];
     const timeZoneButton: InlineKeyboardButton[] = [
-      { callback_data: `${SettingsAction.TimeZone}?chatId=${chatId}`, text: t("timeZone:featureName", { lng }) },
+      { callback_data: `${SettingsAction.TimeZone}?chatId=${chatId}`, text: t("timeZone:featureName") },
     ];
     const votebanButton: InlineKeyboardButton[] = [
-      { callback_data: `${SettingsAction.Voteban}?chatId=${chatId}`, text: t("voteban:featureName", { lng }) },
+      { callback_data: `${SettingsAction.Voteban}?chatId=${chatId}`, text: t("voteban:featureName") },
     ];
     const allFeatures: Record<Chat["type"], InlineKeyboardButton[][]> = {
       channel: [languageButton, timeZoneButton],
@@ -127,60 +170,60 @@ export class Settings {
       supergroup: [addingBotsButton, languageButton, profanityFilterButton, timeZoneButton, votebanButton],
     };
     const features = [...allFeatures[prismaChat.type]].sort((a, b) => a[0]?.text.localeCompare(b[0]?.text));
-    const count = features.length;
 
-    await Promise.all([
-      ctx.answerCbQuery(),
-      ctx.editMessageText(t("settings:selectFeature", { CHAT_TITLE: prismaChat.displayTitle, lng }), {
-        parse_mode: "HTML",
-        reply_markup: {
-          inline_keyboard: [
-            ...features.slice(skip, skip + PAGE_SIZE),
-            getPagination(`${SettingsAction.Features}?chatId=${chatId}`, { count, skip, take: PAGE_SIZE }),
-            [{ callback_data: SettingsAction.Chats, text: `« ${t("settings:backToChats", { lng })}` }],
-          ],
-        },
-      }),
-    ]);
+    const msg = t("settings:selectFeature", { CHAT_TITLE: prismaChat.displayTitle });
+    const replyMarkup: InlineKeyboardMarkup = {
+      inline_keyboard: [
+        ...features.slice(skip, skip + PAGE_SIZE),
+        getPagination(`${SettingsAction.Features}?chatId=${chatId}`, { count: features.length, skip, take: PAGE_SIZE }),
+        [{ callback_data: SettingsAction.Chats, text: `« ${t("settings:backToChats")}` }],
+      ],
+    };
+
+    callbackQuery
+      ? await Promise.all([
+          ctx.answerCbQuery(),
+          ctx.editMessageText(msg, { parse_mode: "HTML", reply_markup: replyMarkup }),
+        ])
+      : await telegram.sendMessage(from.id, msg, { parse_mode: "HTML", reply_markup: replyMarkup });
   }
 
   /**
    * Gets back to features button
    * @param chatId Chat id
-   * @param lng Language code
    * @returns Inline button
    */
-  public getBackToFeaturesButton(chatId: number, lng: LanguageCode): InlineKeyboardButton[] {
+  public getBackToFeaturesButton(chatId: number): InlineKeyboardButton[] {
     return [
-      {
-        callback_data: `${SettingsAction.Features}?chatId=${chatId}`,
-        text: `« ${t("settings:backToFeatures", { lng })}`,
-      },
+      { callback_data: `${SettingsAction.Features}?chatId=${chatId}`, text: `« ${t("settings:backToFeatures")}` },
     ];
   }
 
   /**
    * Notifies user about successfully saved changes
    * @param ctx Callback context
-   * @param lng Alert language code
    */
-  public async notifyChangesSaved(ctx: CallbackCtx, lng: LanguageCode): Promise<void> {
-    await ctx.answerCbQuery(t("settings:changesSaved", { lng }), { show_alert: true });
+  public async notifyChangesSaved(ctx: CallbackCtx): Promise<void> {
+    await ctx.answerCbQuery(t("settings:changesSaved"), { show_alert: true });
   }
 
   /**
    * Upserts chat by id and validates admin permissions for current user.
    * Redirects to chat list with alert if there is no enough permissions.
-   * @param ctx Callback context
+   * @param ctx Callback or message context
    * @param chatId Chat id
-   * @param lng Language code
    * @returns True if validation is successfully passed
    */
-  public async resolvePrismaChat(ctx: CallbackCtx, chatId: number, lng: LanguageCode): Promise<PrismaChat | undefined> {
+  public async resolvePrismaChat(ctx: CallbackCtx | MessageCtx, chatId: number): Promise<PrismaChat | undefined> {
+    const from = "message" in ctx.update ? ctx.update.message.from : ctx.callbackQuery?.from;
+    if (!from) {
+      throw new Error("User is not defined to resolve prisma chat.");
+    }
+
     try {
       const chat = await ctx.telegram.getChat(chatId);
-      const prismaChat = await upsertPrismaChat(chat, ctx.callbackQuery.from);
-      if (isPrismaChatAdmin(prismaChat, ctx.callbackQuery.from.id)) {
+      const prismaChat = await upsertPrismaChat(chat, from);
+      if (isPrismaChatAdmin(prismaChat, from.id)) {
         return prismaChat;
       }
     } catch (e) {
@@ -189,11 +232,10 @@ export class Settings {
         await prisma.chat.deleteMany({ where: { id: chatId } }); // Chat was deleted, remove it from database.
       }
     }
-    await Promise.all([
-      ctx.answerCbQuery(t("settings:forbidden", { lng }), { show_alert: true }),
-      this.renderChats(ctx, 0),
-    ]);
-    return undefined;
+
+    if (ctx.callbackQuery) {
+      await Promise.all([ctx.answerCbQuery(t("settings:forbidden"), { show_alert: true }), this.renderChats(ctx, 0)]);
+    }
   }
 }
 

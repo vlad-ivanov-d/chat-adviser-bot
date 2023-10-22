@@ -1,6 +1,6 @@
 import { LanguageCode } from "@prisma/client";
 import { settings, SettingsAction } from "features/settings";
-import { t } from "i18next";
+import { changeLanguage, t } from "i18next";
 import { CallbackCtx } from "types/context";
 import { joinModifiedInfo, prisma, upsertPrismaChat, upsertPrismaChatSettingsHistory } from "utils/prisma";
 
@@ -23,11 +23,12 @@ export class Language {
    */
   public async renderSettings(ctx: CallbackCtx, chatId: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Something went wrong
+      throw new Error("Chat is not defined to render language settings.");
     }
 
-    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
-    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    const { language } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(language);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId);
     if (!prismaChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -35,17 +36,17 @@ export class Language {
     const enText = this.getOptions().find((l) => l.code === LanguageCode.en)?.title ?? "";
     const ruText = this.getOptions().find((l) => l.code === LanguageCode.ru)?.title ?? "";
     const value = this.getOptions().find((l) => l.code === prismaChat.language)?.title ?? "";
-    const msg = t("language:select", { CHAT_TITLE: prismaChat.displayTitle, VALUE: value, lng });
+    const msg = t("language:select", { CHAT_TITLE: prismaChat.displayTitle, VALUE: value });
 
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(joinModifiedInfo(msg, { lng, prismaChat, settingName: "language" }), {
+      ctx.editMessageText(joinModifiedInfo(msg, "language", prismaChat), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
             [{ callback_data: `${SettingsAction.LanguageSave}?chatId=${chatId}&v=${LanguageCode.en}`, text: enText }],
             [{ callback_data: `${SettingsAction.LanguageSave}?chatId=${chatId}&v=${LanguageCode.ru}`, text: ruText }],
-            settings.getBackToFeaturesButton(chatId, lng),
+            settings.getBackToFeaturesButton(chatId),
           ],
         },
       }),
@@ -69,11 +70,12 @@ export class Language {
    */
   public async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Something went wrong
+      throw new Error("Chat is not defined to save language settings.");
     }
 
     const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
-    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    await changeLanguage(lng);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId);
     if (!prismaChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -84,7 +86,7 @@ export class Language {
       prisma.chat.update({ data: { language }, select: { id: true }, where: { id: chatId } }),
       upsertPrismaChatSettingsHistory(chatId, ctx.callbackQuery.from.id, "language"),
     ]);
-    await Promise.all([settings.notifyChangesSaved(ctx, lng), this.renderSettings(ctx, chatId)]);
+    await Promise.all([settings.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId)]);
   }
 }
 

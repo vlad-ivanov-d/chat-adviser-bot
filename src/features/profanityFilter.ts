@@ -1,6 +1,6 @@
 import { ProfanityFilterRule } from "@prisma/client";
 import { settings, SettingsAction } from "features/settings";
-import { t } from "i18next";
+import { changeLanguage, t } from "i18next";
 import { CallbackCtx, MessageCtx } from "types/context";
 import {
   isPrismaChatAdmin,
@@ -10,6 +10,7 @@ import {
   upsertPrismaChatSettingsHistory,
 } from "utils/prisma";
 import { Profanity } from "utils/profanity";
+import { getUserFullName } from "utils/telegraf";
 
 export class ProfanityFilter {
   private profaneWords?: string[];
@@ -18,58 +19,53 @@ export class ProfanityFilter {
   /**
    * Filters message
    * @param ctx Message context
+   * @returns True if profanity is detected and removed
    */
-  public async filter(ctx: MessageCtx): Promise<void> {
-    const { chat, from, message_id: messageId, sender_chat: senderChat } = ctx.update.message;
+  public async filter(ctx: MessageCtx): Promise<boolean> {
+    const { message } = ctx.update;
+    const { chat, from, message_id: messageId, sender_chat: senderChat } = message;
+
+    if ("is_automatic_forward" in message && message.is_automatic_forward) {
+      return false; // Message from linked chat
+    }
 
     const prismaChat = await upsertPrismaChat(chat, from);
 
-    if (!prismaChat.profanityFilter) {
-      return; // Filter is disabled, return.
-    }
-    if (isPrismaChatAdmin(prismaChat, from.id, senderChat?.id)) {
-      return; // Current user is an admin, return.
-    }
-    if (!isPrismaChatAdmin(prismaChat, ctx.botInfo.id)) {
-      return; // Bot is not an admin, return.
+    if (
+      !prismaChat.profanityFilter || // Filter is disabled
+      isPrismaChatAdmin(prismaChat, from.id, senderChat?.id) || // Current user is an admin
+      !isPrismaChatAdmin(prismaChat, ctx.botInfo.id) // Bot is not an admin
+    ) {
+      return false;
     }
 
-    const senderChatUserName = senderChat && "username" in senderChat ? senderChat.username ?? "" : "";
-    const senderChatTitle = senderChat && "title" in senderChat ? senderChat.title : "";
-    const text = this.getMessageText(ctx);
-    const userFullName = [from.first_name, from.last_name].filter((p) => p).join(" ");
-    const userName = from.username ?? "";
-
+    const stringsToFilter = this.getStringsToFilter(ctx);
     const profaneWords = await this.getCachedProfaneWords();
     const profanity = new Profanity(profaneWords);
 
-    const { hasProfanity: hasProfanityInMessage } = profanity.filter(text);
-    const { hasProfanity: hasProfanityInSenderChatTitle } = profanity.filter(senderChatTitle);
-    const { hasProfanity: hasProfanityInSenderChatUserName } = profanity.filter(senderChatUserName);
-    const { hasProfanity: hasProfanityInUserFullName } = profanity.filter(userFullName);
-    const { hasProfanity: hasProfanityInUserName } = profanity.filter(userName);
-
     if (
-      hasProfanityInMessage ||
-      hasProfanityInSenderChatTitle ||
-      hasProfanityInSenderChatUserName ||
-      hasProfanityInUserFullName ||
-      hasProfanityInUserName
+      profanity.filter(stringsToFilter.forwardChatTitle).hasProfanity ||
+      profanity.filter(stringsToFilter.forwardSenderName).hasProfanity ||
+      profanity.filter(stringsToFilter.forwardUserFullName).hasProfanity ||
+      profanity.filter(stringsToFilter.senderChatTitle).hasProfanity ||
+      profanity.filter(stringsToFilter.senderChatUserName).hasProfanity ||
+      profanity.filter(stringsToFilter.text).hasProfanity ||
+      profanity.filter(stringsToFilter.userFullName).hasProfanity ||
+      profanity.filter(stringsToFilter.username).hasProfanity
     ) {
-      // An expected error may happen when bot have no enough permissions
-      await ctx.deleteMessage(messageId).catch(() => undefined);
+      return ctx.deleteMessage(messageId).catch(() => false);
     }
+    return false;
   }
 
   /**
    * Gets available profanity filter options
-   * @param lng Language code
    * @returns Profanity filter options
    */
-  public getOptions(lng: string): { id: ProfanityFilterRule | null; title: string }[] {
+  public getOptions(): { id: ProfanityFilterRule | null; title: string }[] {
     return [
-      { id: null, title: t("profanityFilter:disabled", { lng }) },
-      { id: ProfanityFilterRule.enabled, title: t("profanityFilter:enabled", { lng }) },
+      { id: null, title: t("profanityFilter:disabled") },
+      { id: ProfanityFilterRule.enabled, title: t("profanityFilter:enabled") },
     ];
   }
 
@@ -80,11 +76,12 @@ export class ProfanityFilter {
    */
   public async renderSettings(ctx: CallbackCtx, chatId: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Something went wrong
+      throw new Error("Chat is not defined to render profanity filter settings.");
     }
 
-    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
-    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    const { language } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(language);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId);
     if (!prismaChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -92,18 +89,18 @@ export class ProfanityFilter {
     const disabledCbData = `${SettingsAction.ProfanityFilterSave}?chatId=${chatId}`;
     const enabledCbData = `${SettingsAction.ProfanityFilterSave}?chatId=${chatId}&v=${ProfanityFilterRule.enabled}`;
     const sanitizedValue = this.sanitizeValue(prismaChat.profanityFilter);
-    const value = this.getOptions(lng).find((o) => o.id === sanitizedValue)?.title ?? "";
-    const msg = t("profanityFilter:set", { CHAT_TITLE: prismaChat.displayTitle, VALUE: value, lng });
+    const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";
+    const msg = t("profanityFilter:set", { CHAT_TITLE: prismaChat.displayTitle, VALUE: value });
 
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(joinModifiedInfo(msg, { lng, prismaChat: prismaChat, settingName: "profanityFilter" }), {
+      ctx.editMessageText(joinModifiedInfo(msg, "profanityFilter", prismaChat), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
-            [{ callback_data: disabledCbData, text: t("profanityFilter:disable", { lng }) }],
-            [{ callback_data: enabledCbData, text: t("profanityFilter:enable", { lng }) }],
-            settings.getBackToFeaturesButton(chatId, lng),
+            [{ callback_data: disabledCbData, text: t("profanityFilter:disable") }],
+            [{ callback_data: enabledCbData, text: t("profanityFilter:enable") }],
+            settings.getBackToFeaturesButton(chatId),
           ],
         },
       }),
@@ -118,11 +115,12 @@ export class ProfanityFilter {
    */
   public async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Something went wrong
+      throw new Error("Chat is not defined to save profanity filter settings.");
     }
 
-    const { language: lng } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
-    const prismaChat = await settings.resolvePrismaChat(ctx, chatId, lng);
+    const { language } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(language);
+    const prismaChat = await settings.resolvePrismaChat(ctx, chatId);
     if (!prismaChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -133,7 +131,7 @@ export class ProfanityFilter {
       prisma.chat.update({ data: { profanityFilter }, select: { id: true }, where: { id: chatId } }),
       upsertPrismaChatSettingsHistory(chatId, ctx.callbackQuery.from.id, "profanityFilter"),
     ]);
-    await Promise.all([settings.notifyChangesSaved(ctx, lng), this.renderSettings(ctx, chatId)]);
+    await Promise.all([settings.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId)]);
   }
 
   /**
@@ -151,20 +149,60 @@ export class ProfanityFilter {
   }
 
   /**
+   * Gets strings which should be checked by profanity filter
+   * @param ctx Message context
+   * @returns Object with strings which should be checked by profanity filter
+   */
+  private getStringsToFilter(ctx: MessageCtx): {
+    forwardChatTitle: string;
+    forwardSenderName: string;
+    forwardUserFullName: string;
+    senderChatTitle: string;
+    senderChatUserName: string;
+    text: string;
+    userFullName: string;
+    username: string;
+  } {
+    const { message } = ctx.update;
+    const { from, sender_chat: senderChat } = message;
+    return {
+      forwardChatTitle:
+        "forward_from_chat" in message && message.forward_from_chat && "title" in message.forward_from_chat
+          ? message.forward_from_chat.title
+          : "",
+      forwardSenderName: "forward_sender_name" in message ? message.forward_sender_name ?? "" : "",
+      forwardUserFullName:
+        "forward_from" in message && message.forward_from ? getUserFullName(message.forward_from) : "",
+      senderChatTitle: senderChat && "title" in senderChat ? senderChat.title : "",
+      senderChatUserName: senderChat && "username" in senderChat ? senderChat.username ?? "" : "",
+      text: this.getMessageText(ctx),
+      userFullName: getUserFullName(from),
+      username: from.username ?? "",
+    };
+  }
+
+  /**
    * Gets message text from context
    * @param ctx Message context
    * @returns Message text
    */
   private getMessageText(ctx: MessageCtx): string {
-    const message = ctx.update.message;
-    if ("caption" in message) {
-      return message.caption ?? "";
+    const { message } = ctx.update;
+    const srcMessage = "pinned_message" in message ? message.pinned_message : message;
+    if ("caption" in srcMessage) {
+      return srcMessage.caption ?? "";
     }
-    if ("poll" in message) {
-      return [message.poll.question, ...message.poll.options.map((o) => o.text)].join("\n");
+    if ("left_chat_member" in srcMessage) {
+      return getUserFullName(srcMessage.left_chat_member);
     }
-    if ("text" in message) {
-      return message.text;
+    if ("new_chat_members" in srcMessage) {
+      return srcMessage.new_chat_members.map((u) => getUserFullName(u)).join(", ");
+    }
+    if ("poll" in srcMessage) {
+      return [srcMessage.poll.question, ...srcMessage.poll.options.map((o) => o.text)].join("\n");
+    }
+    if ("text" in srcMessage) {
+      return srcMessage.text;
     }
     return "";
   }

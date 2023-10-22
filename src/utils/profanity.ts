@@ -54,7 +54,8 @@ export class Profanity {
 
   /**
    * Creates the class to work with profane words
-   * @param profaneWords Profane words which should be filtered
+   * @param profaneWords Profane words which should be filtered. If a word begins or ends with the char *,
+   * then instead of the char * there can be any sequence of letters.
    */
   public constructor(private readonly profaneWords: string[]) {}
 
@@ -117,7 +118,8 @@ export class Profanity {
 
   /**
    * Gets profanity regular expression
-   * @param profaneWord Profane word
+   * @param profaneWord Profane word. If a word begins or ends with the char *,
+   * then instead of the char * there can be any sequence of letters.
    * @param similarChars Similar chars which can be used to workaround regular expression
    * @returns Profanity regular expression
    */

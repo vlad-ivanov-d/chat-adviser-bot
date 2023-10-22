@@ -1,6 +1,6 @@
 import { LanguageCode } from "@prisma/client";
-import enLocale from "date-fns/locale/en-US";
-import ruLocale from "date-fns/locale/ru";
+import en from "date-fns/locale/en-US";
+import ru from "date-fns/locale/ru";
 
 /**
  * Date format related to date-fns
@@ -10,10 +10,7 @@ export const DATE_FORMAT = "P p zzz";
 /**
  * Date locales related to date-fns
  */
-export const DATE_LOCALES: Record<LanguageCode, Locale> = {
-  en: enLocale,
-  ru: ruLocale,
-};
+export const DATE_LOCALES: Record<LanguageCode, Locale> = { en, ru };
 
 /**
  * Database maximum integer limit

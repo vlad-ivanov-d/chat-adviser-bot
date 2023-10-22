@@ -10,7 +10,7 @@ import { init } from "i18next";
 import en from "languages/en.json";
 import ru from "languages/ru.json";
 import { callbackQuery, message } from "telegraf/filters";
-import { prisma, upsertPrismaChat } from "utils/prisma";
+import { prisma } from "utils/prisma";
 import { bot } from "utils/telegraf";
 
 // Init localization
@@ -18,17 +18,25 @@ export const defaultNs = "common";
 void init({ defaultNS: defaultNs, fallbackLng: "en", interpolation: { escapeValue: false }, resources: { en, ru } });
 
 // Bot commands
-bot.command("mychats", (ctx) => settings.command(ctx, "mychats"));
-bot.command("voteban", (ctx) => voteban.command(ctx, "voteban"));
-bot.help((ctx) => help.command(ctx));
-bot.start((ctx) => help.command(ctx));
+bot.command("mychats", async (ctx, next) => {
+  await settings.command(ctx, "mychats");
+  await next();
+});
+bot.help(async (ctx, next) => {
+  await help.command(ctx, "help");
+  await next();
+});
+bot.start(async (ctx, next) => {
+  await help.command(ctx, "start");
+  await next();
+});
 
 // Bot events
 bot.on(callbackQuery("data"), async (ctx) => {
   const action = ctx.callbackQuery.data.split("?")[0];
   const params = new URLSearchParams(ctx.callbackQuery.data.split("?")[1] ?? "");
   const chatId = parseFloat(params.get("chatId") ?? "");
-  const skip = parseFloat(params.get("skip") ?? "0");
+  const skip = params.get("skip") ? parseFloat(params.get("skip") ?? "0") : undefined;
   const value = params.get("v");
   const valueNum = parseFloat(value ?? "");
   switch (action) {
@@ -37,6 +45,7 @@ bot.on(callbackQuery("data"), async (ctx) => {
     case SettingsAction.AddingBotsSave:
       return addingBots.saveSettings(ctx, chatId, value);
     case SettingsAction.Chats:
+    case SettingsAction.Refresh:
       return settings.renderChats(ctx, skip);
     case SettingsAction.Features:
       return settings.renderFeatures(ctx, chatId, skip);
@@ -64,22 +73,24 @@ bot.on(callbackQuery("data"), async (ctx) => {
   }
 });
 bot.on(message(), async (ctx, next) => {
-  await profanityFilter.filter(ctx);
-  await next();
+  const { message } = ctx.update;
+  const isBotKicked = "left_chat_member" in message && message.left_chat_member.id === ctx.botInfo.id;
+  const isProfanityRemoved = isBotKicked ? false : await profanityFilter.filter(ctx);
+  if ("new_chat_members" in message || !isProfanityRemoved) {
+    await next();
+  }
 });
-bot.on(message("group_chat_created"), (ctx) => upsertPrismaChat(ctx.chat, ctx.update.message.from));
-bot.on(message("left_chat_member"), async ({ botInfo, chat, update }) => {
-  if (update.message.left_chat_member.id === botInfo.id) {
+bot.on(message("group_chat_created"), (ctx) => settings.promptSettings(ctx));
+bot.on(message("left_chat_member"), async ({ botInfo, chat, update: { message } }) => {
+  if (message.left_chat_member.id === botInfo.id) {
     await prisma.chat.deleteMany({ where: { id: chat.id } }); // Clean up database when bot is removed from the chat
   }
 });
 bot.on(message("new_chat_members"), async (ctx) => {
-  if (ctx.update.message.new_chat_members.some((m) => m.id === ctx.botInfo.id)) {
-    return upsertPrismaChat(ctx.chat, ctx.update.message.from); // The bot itself was added, upsert chat admins and return.
-  }
   await addingBots.validate(ctx);
+  await settings.promptSettings(ctx);
 });
-bot.on(message("supergroup_chat_created"), (ctx) => upsertPrismaChat(ctx.chat, ctx.update.message.from));
+bot.on(message("supergroup_chat_created"), (ctx) => settings.promptSettings(ctx));
 bot.on(message("text"), (ctx) => voteban.command(ctx, "voteban"));
 
 // Start bot
