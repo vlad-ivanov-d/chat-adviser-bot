@@ -1,7 +1,8 @@
 # Changelog
 
-## 1.9.x (2023-x-x)
+## 1.9.0 (2023-10-22)
 
+- Improvement: the bot itself will prompt admin to make settings when adding it to a new chat
 - Improvement: descriptions of the features
 - Improvement: refresh button in chat list settings
 - Fix: messages from a linked channel were mistakenly filtered by the profanity filter

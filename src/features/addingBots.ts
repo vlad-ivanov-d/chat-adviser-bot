@@ -31,7 +31,7 @@ export class AddingBots {
    */
   public async renderSettings(ctx: CallbackCtx, chatId: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Something went wrong
+      throw new Error("Chat is not defined to render adding bots settings.");
     }
 
     const { language } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
@@ -72,7 +72,7 @@ export class AddingBots {
    */
   public async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Something went wrong
+      throw new Error("Chat is not defined to save adding bots settings.");
     }
 
     const { language } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
@@ -103,31 +103,31 @@ export class AddingBots {
     }
 
     const prismaChat = await upsertPrismaChat(chat, from);
+    await changeLanguage(prismaChat.language);
 
-    const { addingBots, language } = prismaChat;
-    await changeLanguage(language);
-    if (isPrismaChatAdmin(prismaChat, from.id, senderChat?.id)) {
-      return; // Current user is an admin, return.
+    if (
+      isPrismaChatAdmin(prismaChat, from.id, senderChat?.id) || // Current user is an admin
+      !isPrismaChatAdmin(prismaChat, ctx.botInfo.id) // Bot is not an admin
+    ) {
+      return;
     }
-    if (!isPrismaChatAdmin(prismaChat, ctx.botInfo.id)) {
-      return; // Bot is not an admin, return.
-    }
+
     try {
-      if (addingBots === AddingBotsRule.restricted) {
+      if (prismaChat.addingBots === AddingBotsRule.restricted) {
         await Promise.all(newBots.map((b) => kickChatMember(chat.id, b.id)));
       }
-      if (addingBots === AddingBotsRule.restrictedAndBan && senderChat) {
+      if (prismaChat.addingBots === AddingBotsRule.restrictedAndBan && senderChat) {
         const msg = t("addingBots:userBanned", { USER: getChatHtmlLink(senderChat) });
         await ctx.banChatSenderChat(senderChat.id);
         await ctx.reply(msg, { parse_mode: "HTML" });
       }
-      if (addingBots === AddingBotsRule.restrictedAndBan && !senderChat) {
+      if (prismaChat.addingBots === AddingBotsRule.restrictedAndBan && !senderChat) {
         const msg = t("addingBots:userBanned", { USER: getUserHtmlLink(from) });
         await ctx.banChatMember(from.id);
         await ctx.reply(msg, { parse_mode: "HTML" });
       }
     } catch {
-      // An expected error may happen when bot have no enough permissions
+      // An expected error may happen when bot has no enough permissions
     }
   }
 

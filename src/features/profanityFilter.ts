@@ -76,7 +76,7 @@ export class ProfanityFilter {
    */
   public async renderSettings(ctx: CallbackCtx, chatId: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Something went wrong
+      throw new Error("Chat is not defined to render profanity filter settings.");
     }
 
     const { language } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
@@ -115,7 +115,7 @@ export class ProfanityFilter {
    */
   public async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Something went wrong
+      throw new Error("Chat is not defined to save profanity filter settings.");
     }
 
     const { language } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);

@@ -118,7 +118,7 @@ export class Voteban {
    */
   public async renderSettings(ctx: CallbackCtx, chatId: number, value?: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Something went wrong
+      throw new Error("Chat is not defined to render voteban settings.");
     }
 
     const { language } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
@@ -171,7 +171,7 @@ export class Voteban {
    */
   public async saveSettings(ctx: CallbackCtx, chatId: number, value: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Something went wrong
+      throw new Error("Chat is not defined to save voteban settings.");
     }
 
     const { language } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
@@ -197,7 +197,7 @@ export class Voteban {
   public async vote(ctx: CallbackCtx, action: VotebanAction): Promise<void> {
     const { from, message } = ctx.update.callback_query;
     if (!message) {
-      return; // No message, something went wrong.
+      throw new Error("Message is not defined to save the vote for voteban.");
     }
 
     const [isChatExists, isVoterChatMember, voting] = await Promise.all([
@@ -295,7 +295,7 @@ export class Voteban {
   private async updateResults(ctx: CallbackCtx): Promise<void> {
     const { from, message } = ctx.update.callback_query;
     if (!message) {
-      return; // No message, something went wrong.
+      throw new Error("Message is not defined to update results of voteban.");
     }
 
     const [chat, voting] = await Promise.all([

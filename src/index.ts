@@ -10,7 +10,7 @@ import { init } from "i18next";
 import en from "languages/en.json";
 import ru from "languages/ru.json";
 import { callbackQuery, message } from "telegraf/filters";
-import { prisma, upsertPrismaChat } from "utils/prisma";
+import { prisma } from "utils/prisma";
 import { bot } from "utils/telegraf";
 
 // Init localization
@@ -73,25 +73,24 @@ bot.on(callbackQuery("data"), async (ctx) => {
   }
 });
 bot.on(message(), async (ctx, next) => {
-  const isProfanityRemoved = await profanityFilter.filter(ctx);
-  if (isProfanityRemoved && !("new_chat_members" in ctx.update.message)) {
-    return; // Message shouldn't be processed anymore
+  const { message } = ctx.update;
+  const isBotKicked = "left_chat_member" in message && message.left_chat_member.id === ctx.botInfo.id;
+  const isProfanityRemoved = isBotKicked ? false : await profanityFilter.filter(ctx);
+  if ("new_chat_members" in message || !isProfanityRemoved) {
+    await next();
   }
-  await next();
 });
-bot.on(message("group_chat_created"), (ctx) => upsertPrismaChat(ctx.chat, ctx.update.message.from));
-bot.on(message("left_chat_member"), async ({ botInfo, chat, update }) => {
-  if (update.message.left_chat_member.id === botInfo.id) {
+bot.on(message("group_chat_created"), (ctx) => settings.promptSettings(ctx));
+bot.on(message("left_chat_member"), async ({ botInfo, chat, update: { message } }) => {
+  if (message.left_chat_member.id === botInfo.id) {
     await prisma.chat.deleteMany({ where: { id: chat.id } }); // Clean up database when bot is removed from the chat
   }
 });
 bot.on(message("new_chat_members"), async (ctx) => {
-  if (ctx.update.message.new_chat_members.some((m) => m.id === ctx.botInfo.id)) {
-    return upsertPrismaChat(ctx.chat, ctx.update.message.from); // The bot itself was added, upsert chat admins and return.
-  }
   await addingBots.validate(ctx);
+  await settings.promptSettings(ctx);
 });
-bot.on(message("supergroup_chat_created"), (ctx) => upsertPrismaChat(ctx.chat, ctx.update.message.from));
+bot.on(message("supergroup_chat_created"), (ctx) => settings.promptSettings(ctx));
 bot.on(message("text"), (ctx) => voteban.command(ctx, "voteban"));
 
 // Start bot

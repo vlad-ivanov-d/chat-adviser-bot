@@ -1,6 +1,6 @@
 import { changeLanguage, t } from "i18next";
 import { Chat, InlineKeyboardButton, InlineKeyboardMarkup } from "telegraf/typings/core/types/typegram";
-import { CallbackCtx, TextMessageCtx } from "types/context";
+import { CallbackCtx, MessageCtx, TextMessageCtx } from "types/context";
 import { PrismaChat } from "types/prismaChat";
 import { PAGE_SIZE } from "utils/consts";
 import { isPrismaChatAdmin, prisma, upsertPrismaChat } from "utils/prisma";
@@ -45,15 +45,45 @@ export class Settings {
   }
 
   /**
+   * Prompts admin to make settings when adding the bot to a new chat
+   * @param ctx Message context
+   */
+  public async promptSettings(ctx: MessageCtx): Promise<void> {
+    const botId = ctx.botInfo.id;
+    const { message } = ctx.update;
+
+    const [chat, userChat] = await Promise.all([
+      upsertPrismaChat(ctx.chat, message.from),
+      prisma.chat.findUnique({ select: { id: true, language: true }, where: { id: message.from.id } }),
+    ]);
+
+    const isBotAdded = "new_chat_members" in message && message.new_chat_members.some((m) => m.id === botId);
+    const isChatCreated = "group_chat_created" in message || "supergroup_chat_created" in message;
+    const isUserAdmin = isPrismaChatAdmin(chat, message.from.id, message.sender_chat?.id);
+
+    if (userChat && isUserAdmin && (isBotAdded || isChatCreated)) {
+      await changeLanguage(userChat.language);
+      await ctx.telegram.sendMessage(userChat.id, t("settings:invitation"));
+      await this.renderFeatures(ctx, chat.id);
+    }
+  }
+
+  /**
    * Renders chats
-   * @param ctx Callback or text message context
+   * @param ctx Callback or message context
    * @param skip Skip count
    */
-  public async renderChats(ctx: CallbackCtx | TextMessageCtx, skip = 0): Promise<void> {
+  public async renderChats(ctx: CallbackCtx | MessageCtx, skip = 0): Promise<void> {
     const from = ctx.callbackQuery?.from ?? ctx.message?.from;
     const take = skip === 0 ? PAGE_SIZE - 1 : PAGE_SIZE;
-    if (!ctx.chat || !from || isNaN(skip)) {
-      return; // Something went wrong
+    if (!from) {
+      throw new Error("User is not defined to render chats.");
+    }
+    if (!ctx.chat) {
+      throw new Error("Chat is not defined to render chats.");
+    }
+    if (isNaN(skip)) {
+      throw new Error('Parameter "skip" is not correct to render chats.');
     }
 
     const [chats, count, prismaChat] = await Promise.all([
@@ -91,18 +121,29 @@ export class Settings {
 
   /**
    * Renders features
-   * @param ctx Callback context
+   * @param ctx Callback or message context
    * @param chatId Id of the chat which is edited
    * @param skip Skip count
    */
-  public async renderFeatures(ctx: CallbackCtx, chatId: number, skip = 0): Promise<void> {
-    if (!ctx.chat || isNaN(chatId) || isNaN(skip)) {
-      return; // Something went wrong
+  public async renderFeatures(ctx: CallbackCtx | MessageCtx, chatId: number, skip = 0): Promise<void> {
+    const { callbackQuery, chat, telegram, update } = ctx;
+    const from = "message" in update ? update.message.from : callbackQuery?.from;
+    if (!from) {
+      throw new Error("User is not defined to render features.");
+    }
+    if (!chat || isNaN(chatId)) {
+      throw new Error("Chat is not defined to render features.");
+    }
+    if (isNaN(skip)) {
+      throw new Error('Parameter "skip" is not correct to render features.');
     }
 
-    const { language } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
-    await changeLanguage(language);
-    const prismaChat = await settings.resolvePrismaChat(ctx, chatId);
+    const destPrismaChat = await (callbackQuery ? upsertPrismaChat(chat, from) : this.resolvePrismaChat(ctx, from.id));
+    if (!destPrismaChat) {
+      throw new Error("Target chat is not defined to render features.");
+    }
+    await changeLanguage(destPrismaChat.language);
+    const prismaChat = await this.resolvePrismaChat(ctx, chatId);
     if (!prismaChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -129,21 +170,22 @@ export class Settings {
       supergroup: [addingBotsButton, languageButton, profanityFilterButton, timeZoneButton, votebanButton],
     };
     const features = [...allFeatures[prismaChat.type]].sort((a, b) => a[0]?.text.localeCompare(b[0]?.text));
-    const count = features.length;
 
-    await Promise.all([
-      ctx.answerCbQuery(),
-      ctx.editMessageText(t("settings:selectFeature", { CHAT_TITLE: prismaChat.displayTitle }), {
-        parse_mode: "HTML",
-        reply_markup: {
-          inline_keyboard: [
-            ...features.slice(skip, skip + PAGE_SIZE),
-            getPagination(`${SettingsAction.Features}?chatId=${chatId}`, { count, skip, take: PAGE_SIZE }),
-            [{ callback_data: SettingsAction.Chats, text: `« ${t("settings:backToChats")}` }],
-          ],
-        },
-      }),
-    ]);
+    const msg = t("settings:selectFeature", { CHAT_TITLE: prismaChat.displayTitle });
+    const replyMarkup: InlineKeyboardMarkup = {
+      inline_keyboard: [
+        ...features.slice(skip, skip + PAGE_SIZE),
+        getPagination(`${SettingsAction.Features}?chatId=${chatId}`, { count: features.length, skip, take: PAGE_SIZE }),
+        [{ callback_data: SettingsAction.Chats, text: `« ${t("settings:backToChats")}` }],
+      ],
+    };
+
+    callbackQuery
+      ? await Promise.all([
+          ctx.answerCbQuery(),
+          ctx.editMessageText(msg, { parse_mode: "HTML", reply_markup: replyMarkup }),
+        ])
+      : await telegram.sendMessage(from.id, msg, { parse_mode: "HTML", reply_markup: replyMarkup });
   }
 
   /**
@@ -168,15 +210,20 @@ export class Settings {
   /**
    * Upserts chat by id and validates admin permissions for current user.
    * Redirects to chat list with alert if there is no enough permissions.
-   * @param ctx Callback context
+   * @param ctx Callback or message context
    * @param chatId Chat id
    * @returns True if validation is successfully passed
    */
-  public async resolvePrismaChat(ctx: CallbackCtx, chatId: number): Promise<PrismaChat | undefined> {
+  public async resolvePrismaChat(ctx: CallbackCtx | MessageCtx, chatId: number): Promise<PrismaChat | undefined> {
+    const from = "message" in ctx.update ? ctx.update.message.from : ctx.callbackQuery?.from;
+    if (!from) {
+      throw new Error("User is not defined to resolve prisma chat.");
+    }
+
     try {
       const chat = await ctx.telegram.getChat(chatId);
-      const prismaChat = await upsertPrismaChat(chat, ctx.callbackQuery.from);
-      if (isPrismaChatAdmin(prismaChat, ctx.callbackQuery.from.id)) {
+      const prismaChat = await upsertPrismaChat(chat, from);
+      if (isPrismaChatAdmin(prismaChat, from.id)) {
         return prismaChat;
       }
     } catch (e) {
@@ -185,7 +232,10 @@ export class Settings {
         await prisma.chat.deleteMany({ where: { id: chatId } }); // Chat was deleted, remove it from database.
       }
     }
-    await Promise.all([ctx.answerCbQuery(t("settings:forbidden"), { show_alert: true }), this.renderChats(ctx, 0)]);
+
+    if (ctx.callbackQuery) {
+      await Promise.all([ctx.answerCbQuery(t("settings:forbidden"), { show_alert: true }), this.renderChats(ctx, 0)]);
+    }
   }
 }
 

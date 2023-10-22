@@ -147,7 +147,7 @@ export const upsertPrismaChat = async (chat: TelegramChat, editor: TelegramUser)
 
   const prismaChat = transaction[transaction.length - 1];
   if (!("admins" in prismaChat)) {
-    throw new Error("Something went wrong during chat upsertion");
+    throw new Error("Something went wrong during chat upsertion.");
   }
 
   return {

@@ -16,7 +16,7 @@ export class TimeZone {
    */
   public async renderSettings(ctx: CallbackCtx, chatId: number, skip?: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Something went wrong
+      throw new Error("Chat is not defined to render time zone settings.");
     }
 
     const { language } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
@@ -62,7 +62,7 @@ export class TimeZone {
    */
   public async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Something went wrong
+      throw new Error("Chat is not defined to save time zone settings.");
     }
 
     const { language } = await upsertPrismaChat(ctx.chat, ctx.callbackQuery.from);
