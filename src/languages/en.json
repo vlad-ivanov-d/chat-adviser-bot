@@ -13,7 +13,7 @@
   "common": {
     "commandForPrivateChat": "Send this command to me in <a href=\"{{BOT_LINK}}\">private messages</a> and I'll help you to configure your chats.",
     "commandNotForPrivateChats": "This command is not for private chats.",
-    "help": "Hello! I'm a bot that helps to moderate chats.\n\n<b>Getting started:</b>\n1. add me to chat\n2. give me administrator permissions\n3. send a <a href=\"{{BOT_LINK}}\">private message</a> command /mychats and I will help you set up your chat\n\n<b>Feature list:</b> ban voting, profanity filter, restriction on adding bots, support for different languages.\n\nYou can call this message again at any time using the /help command.",
+    "help": "Hello! I'm a bot that helps to moderate chats.\n\n<b>Getting started:</b>\n1. add me to chat\n2. give me administrator permissions\n3. send a <a href=\"{{BOT_LINK}}\">private message</a> command /mychats and I will help you set up your chat\n\n<b>Feature list:</b> ban voting, profanity filter, restriction on adding bots, support for different languages.\nI'll tell about each feature in more detail during setup.\n\nYou can call this message again at any time using the /help command.",
     "needAdminPermissions": "I need administrator permissions for this feature to work."
   },
   "language": {
@@ -27,11 +27,11 @@
     "forbidden": "Unfortunately, this action is no longer available to you.",
     "invitation": "I see that you've added me to a new chat. Perhaps you want to immediately configure this chat? Don't forget to give me admin permissions so that all my features are available.",
     "modified": "Modified at {{DATE}} by {{USER}}",
-    "refresh": "Refresh",
+    "refreshList": "Refresh the list",
     "save": "Save",
     "selectChat": "Select the chat for which you want to change the settings. You must be a chat administrator.",
     "selectFeature": "Select the feature you want to configure for the <b>{{CHAT_TITLE}}</b> chat. The list of features depends on the type of chat (channel, group, etc.).",
-    "updateInfoHint": "If the list doesn't contain the chat you need, try writing any message in it and clicking the <b>↻ Refresh</b> button at the end of the list."
+    "updateInfoHint": "If the list doesn't contain the chat you need, try writing any message in it and clicking the <b>↻ Refresh the list</b> button (the last button in this message)."
   },
   "profanityFilter": {
     "disable": "Disable",
