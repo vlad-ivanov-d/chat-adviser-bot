@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.10.0 (2023-xx-xx)
+
+- Improvement: descriptions of the features
+
 ## 1.9.0 (2023-10-22)
 
 - Improvement: the bot itself will prompt admin to make settings when adding it to a new chat
