@@ -18,9 +18,9 @@ export class AddingBots {
    */
   public getOptions(): { id: AddingBotsRule | null; title: string }[] {
     return [
-      { id: null, title: t("addingBots:allowed") },
       { id: AddingBotsRule.restricted, title: t("addingBots:restricted") },
       { id: AddingBotsRule.restrictedAndBan, title: t("addingBots:restrictedAndBan") },
+      { id: null, title: t("addingBots:allowed") },
     ];
   }
 
@@ -54,9 +54,9 @@ export class AddingBots {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
-            [{ callback_data: allowedCbData, text: t("addingBots:allow") }],
             [{ callback_data: restrictedCbData, text: t("addingBots:restrict") }],
             [{ callback_data: restrictedAndBanCbData, text: t("addingBots:restrictAndBan") }],
+            [{ callback_data: allowedCbData, text: t("addingBots:allow") }],
             settings.getBackToFeaturesButton(chatId),
           ],
         },

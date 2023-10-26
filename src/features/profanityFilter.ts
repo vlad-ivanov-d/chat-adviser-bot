@@ -64,8 +64,8 @@ export class ProfanityFilter {
    */
   public getOptions(): { id: ProfanityFilterRule | null; title: string }[] {
     return [
-      { id: null, title: t("profanityFilter:disabled") },
       { id: ProfanityFilterRule.enabled, title: t("profanityFilter:enabled") },
+      { id: null, title: t("profanityFilter:disabled") },
     ];
   }
 
@@ -98,8 +98,8 @@ export class ProfanityFilter {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
-            [{ callback_data: disabledCbData, text: t("profanityFilter:disable") }],
             [{ callback_data: enabledCbData, text: t("profanityFilter:enable") }],
+            [{ callback_data: disabledCbData, text: t("profanityFilter:disable") }],
             settings.getBackToFeaturesButton(chatId),
           ],
         },
