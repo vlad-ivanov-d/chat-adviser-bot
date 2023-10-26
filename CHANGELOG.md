@@ -3,6 +3,7 @@
 ## 1.10.0 (2023-xx-xx)
 
 - Improvement: descriptions of the features
+- Other: internal improvements
 
 ## 1.9.0 (2023-10-22)
 

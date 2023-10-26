@@ -46,6 +46,6 @@ The command starts the local `dev` server, compiles and reloads changes.
 ## Git Flow
 
 - `dev` and `main` branches are protected
-- Pull Requests used for merging changes to the protected branches
-- Pull Requests used for code review
+- Pull Requests are used to merging changes to the protected branches
+- Pull Requests are used to code review
 - After merged to protected branches, source branches are deleted
