@@ -38,6 +38,7 @@ enum ProfanityFilterRule {
 }
 
 model Chat {
+  id              Float                @id
   addingBots      AddingBotsRule?
   admins          User[]               @relation("ChatAdmins")
   authorId        Float
@@ -45,7 +46,6 @@ model Chat {
   displayTitle    String
   editorId        Float
   firstName       String?
-  id              Float                @id
   language        LanguageCode
   lastName        String?
   membersCount    Int
@@ -63,14 +63,15 @@ model Chat {
   votebans            Voteban[]
 
   @@index([displayTitle])
+  @@map("chats")
 }
 
 model ChatSettingsHistory {
+  id          BigInt          @id @default(autoincrement())
   authorId    Float
   chatId      Float
   createdAt   DateTime        @default(now())
   editorId    Float
-  id          BigInt          @id @default(autoincrement())
   settingName ChatSettingName
   updatedAt   DateTime        @updatedAt
 
@@ -79,14 +80,15 @@ model ChatSettingsHistory {
   editor User @relation("ChatSettingsHistoryEditor", fields: [editorId], references: [id])
 
   @@unique([chatId, settingName])
+  @@map("chat_settings_history")
 }
 
 model SenderChat {
+  id        Float    @id
   authorId  Float
   createdAt DateTime @default(now())
   editorId  Float
   firstName String?
-  id        Float    @id
   lastName  String?
   title     String?
   type      ChatType
@@ -97,14 +99,16 @@ model SenderChat {
   editor                      User      @relation("SenderChatEditor", fields: [editorId], references: [id])
   votebanAuthorSenderChats    Voteban[] @relation("VotebanAuthorSenderChat")
   votebanCandidateSenderChats Voteban[] @relation("VotebanCandidateSenderChat")
+
+  @@map("sender_chats")
 }
 
 model ProfaneWord {
+  id        BigInt       @id @default(autoincrement())
   authorId  Float
   comment   String?
   createdAt DateTime     @default(now())
   editorId  Float
-  id        BigInt       @id @default(autoincrement())
   language  LanguageCode
   updatedAt DateTime     @updatedAt
   word      String
@@ -113,14 +117,15 @@ model ProfaneWord {
   editor User @relation("ProfaneWordEditor", fields: [editorId], references: [id])
 
   @@unique([word])
+  @@map("profane_words")
 }
 
 model User {
+  id           Float    @id
   authorId     Float
   createdAt    DateTime @default(now())
   editorId     Float
   firstName    String
-  id           Float    @id
   languageCode String?
   lastName     String?
   updatedAt    DateTime @updatedAt
@@ -148,9 +153,11 @@ model User {
   votebanNoBanVoterEditors   VotebanNoBanVoter[]   @relation("VotebanNoBanVoterEditor")
 
   @@index([updatedAt])
+  @@map("users")
 }
 
 model Voteban {
+  id                    BigInt              @id @default(autoincrement())
   authorId              Float
   authorSenderChatId    Float?
   banVoters             VotebanBanVoter[]
@@ -159,7 +166,6 @@ model Voteban {
   chatId                Float
   createdAt             DateTime            @default(now())
   editorId              Float
-  id                    BigInt              @id @default(autoincrement())
   isCompleted           Boolean?
   messageId             Float
   noBanVoters           VotebanNoBanVoter[]
@@ -174,13 +180,14 @@ model Voteban {
 
   @@unique([chatId, messageId])
   @@index([createdAt])
+  @@map("votebans")
 }
 
 model VotebanBanVoter {
+  id        BigInt   @id @default(autoincrement())
   authorId  Float
   createdAt DateTime @default(now())
   editorId  Float
-  id        BigInt   @id @default(autoincrement())
   updatedAt DateTime @updatedAt
   votebanId BigInt
 
@@ -189,13 +196,14 @@ model VotebanBanVoter {
   voteban Voteban @relation(fields: [votebanId], onDelete: Cascade, references: [id])
 
   @@unique([authorId, votebanId])
+  @@map("voteban_ban_voters")
 }
 
 model VotebanNoBanVoter {
+  id        BigInt   @id @default(autoincrement())
   authorId  Float
   createdAt DateTime @default(now())
   editorId  Float
-  id        BigInt   @id @default(autoincrement())
   updatedAt DateTime @updatedAt
   votebanId BigInt
 
@@ -204,4 +212,5 @@ model VotebanNoBanVoter {
   voteban Voteban @relation(fields: [votebanId], onDelete: Cascade, references: [id])
 
   @@unique([authorId, votebanId])
+  @@map("voteban_no_ban_voters")
 }
