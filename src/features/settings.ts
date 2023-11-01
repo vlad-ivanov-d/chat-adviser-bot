@@ -106,7 +106,7 @@ export class Settings {
       inline_keyboard: [
         ...chats.map((c) => [{ callback_data: `${SettingsAction.Features}?chatId=${c.id}`, text: c.displayTitle }]),
         getPagination(SettingsAction.Chats, { count, skip, take }),
-        [{ callback_data: SettingsAction.Refresh, text: `↻ ${t("settings:refresh")}` }],
+        [{ callback_data: SettingsAction.Refresh, text: `↻ ${t("settings:refreshList")}` }],
       ],
     };
     const msg = [t("settings:selectChat"), t("settings:updateInfoHint")].join("\n\n");

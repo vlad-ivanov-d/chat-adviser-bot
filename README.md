@@ -8,19 +8,21 @@ Chat Adviser is an open source Telegram bot that helps to moderate chats.
 
 ### Ban Voting
 
-The bot can run votes to ban a user in a chat. The user will be banned and their message deleted if the appropriate number of votes is reached. The vote limit for making a decision is configurable.
+The bot can run votes to ban a user in a chat. The user will be banned and their message deleted if the appropriate number of votes is reached. This feature will help users ban the violator when administrators are offline. Messages sent more than 48 hours ago won't be deleted according to Telegram rules.
+
+/voteban - start voting (can be used without the slash)
 
 ### Language
 
-The bot can chat in multiple languages.
+The bot can communicate in different languages so that chat users can understand the bot.
 
 ### Profanity Filter
 
-The bot can filter profanity in chat.
+The bot can filter profanity in chat, including usernames. The filter won't be applied to messages from administrators. The bot needs administrator permissions for this feature.
 
 ### Restriction On Adding Bots
 
-The bot can prevent users from adding bots to chat. Additionally, it's possible to configure the ban of the violator. The user who tried to add the bot will be banned.
+The bot can prevent users from adding bots to chat. This will help avoid spam or, for example, collecting chat statistics without the approval of administrators. Additionally, the ban of the violator can be configured. The user who tried to add the bot will be banned. The bot needs administrator permissions for this feature.
 
 ## Getting Started
 

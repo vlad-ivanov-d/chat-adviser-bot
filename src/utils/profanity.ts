@@ -163,7 +163,7 @@ export class Profanity {
   /**
    * Splits text into words and punctuation
    * @param text Text to split
-   * @returns An array of separate words and puncruation
+   * @returns An array of separate words and punctuation
    */
   private splitText(text: string): string[] {
     // Regular expression to separate text into words, punctuation and spaces.
