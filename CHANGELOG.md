@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.10.0 (2023-xx-xx)
+## 1.10.0 (2023-11-01)
 
 - Improvement: descriptions of the features
 - Other: internal improvements
