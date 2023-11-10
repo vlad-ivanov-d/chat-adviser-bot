@@ -81,9 +81,11 @@ export class Profanity {
         const cleanWord = this.cleanWord(word);
         for (const profaneWord of this.profaneWords) {
           const cleanProfaneWord = this.cleanWord(profaneWord);
-          const regExpEn = this.getProfanityRegExp(cleanProfaneWord, this.similarCharsEn);
-          const regExpRu = this.getProfanityRegExp(cleanProfaneWord, this.similarCharsRu);
-          const filteredWord = cleanWord.replace(regExpEn, replacer).replace(regExpRu, replacer);
+          const profanityRegExp = this.getProfanityRegExp(cleanProfaneWord, {
+            ...this.similarCharsEn,
+            ...this.similarCharsRu,
+          });
+          const filteredWord = cleanWord.replace(profanityRegExp, replacer);
           if (hasWord) {
             return filteredWord;
           }
