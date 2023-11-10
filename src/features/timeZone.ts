@@ -89,8 +89,8 @@ export class TimeZone {
    */
   private getAllTimeZones(): string[] {
     return Intl.supportedValuesOf("timeZone").sort((a, b) => {
-      const aOffset = getTimezoneOffset(a) ?? 0;
-      const bOffset = getTimezoneOffset(b) ?? 0;
+      const aOffset = getTimezoneOffset(a);
+      const bOffset = getTimezoneOffset(b);
       // Sort by offset
       if (aOffset < bOffset) {
         return -1;
