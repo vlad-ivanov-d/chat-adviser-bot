@@ -3,4 +3,5 @@
  * @param text Text which should be encoded
  * @returns Encoded text
  */
-export const encodeText = (text: string): string => text.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+export const encodeText = (text: string): string =>
+  text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");

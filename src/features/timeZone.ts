@@ -5,7 +5,7 @@ import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 import { CallbackCtx } from "types/context";
 import { PAGE_SIZE } from "utils/consts";
 import { joinModifiedInfo, prisma, upsertPrismaChat, upsertPrismaChatSettingsHistory } from "utils/prisma";
-import { getPagination } from "utils/telegraf";
+import { getChatHtmlLink, getPagination } from "utils/telegraf";
 
 export class TimeZone {
   /**
@@ -26,13 +26,14 @@ export class TimeZone {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
+    const chatTitle = getChatHtmlLink(prismaChat);
     const timeZones = this.getAllTimeZones();
     const count = timeZones.length;
     const valueIndex = timeZones.indexOf(prismaChat.timeZone);
     // Use provided skip or the index of the current value. Use 0 as the last fallback.
     const patchedSkip = skip ?? (valueIndex > -1 ? valueIndex : 0);
     const value = `${format(new Date(), "O", { timeZone: prismaChat.timeZone })} ${prismaChat.timeZone}`;
-    const msg = t("timeZone:select", { CHAT_TITLE: prismaChat.displayTitle, VALUE: value });
+    const msg = t("timeZone:select", { CHAT_TITLE: chatTitle, VALUE: value });
 
     await Promise.all([
       ctx.answerCbQuery(),

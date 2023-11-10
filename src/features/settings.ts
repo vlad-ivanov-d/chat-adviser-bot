@@ -4,7 +4,7 @@ import { CallbackCtx, MessageCtx, TextMessageCtx } from "types/context";
 import { PrismaChat } from "types/prismaChat";
 import { PAGE_SIZE } from "utils/consts";
 import { isPrismaChatAdmin, prisma, upsertPrismaChat } from "utils/prisma";
-import { getPagination, getTelegramErrorCode, isCleanCommand } from "utils/telegraf";
+import { getChatHtmlLink, getPagination, getTelegramErrorCode, isCleanCommand } from "utils/telegraf";
 
 export enum SettingsAction {
   AddingBots = "cfg-addng-bts",
@@ -171,7 +171,8 @@ export class Settings {
     };
     const features = [...allFeatures[prismaChat.type]].sort((a, b) => a[0]?.text.localeCompare(b[0]?.text));
 
-    const msg = t("settings:selectFeature", { CHAT_TITLE: prismaChat.displayTitle });
+    const chatTitle = getChatHtmlLink(prismaChat);
+    const msg = t("settings:selectFeature", { CHAT_TITLE: chatTitle });
     const replyMarkup: InlineKeyboardMarkup = {
       inline_keyboard: [
         ...features.slice(skip, skip + PAGE_SIZE),
@@ -180,12 +181,11 @@ export class Settings {
       ],
     };
 
-    callbackQuery
-      ? await Promise.all([
-          ctx.answerCbQuery(),
-          ctx.editMessageText(msg, { parse_mode: "HTML", reply_markup: replyMarkup }),
-        ])
-      : await telegram.sendMessage(from.id, msg, { parse_mode: "HTML", reply_markup: replyMarkup });
+    await Promise.all([
+      callbackQuery && ctx.answerCbQuery(),
+      callbackQuery && ctx.editMessageText(msg, { parse_mode: "HTML", reply_markup: replyMarkup }),
+      !callbackQuery && telegram.sendMessage(from.id, msg, { parse_mode: "HTML", reply_markup: replyMarkup }),
+    ]);
   }
 
   /**
