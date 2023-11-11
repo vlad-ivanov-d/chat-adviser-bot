@@ -1,5 +1,4 @@
 import { ChatSettingName, LanguageCode, Prisma, PrismaClient, User } from "@prisma/client";
-import { DefaultArgs } from "@prisma/client/runtime/library";
 import { formatInTimeZone } from "date-fns-tz";
 import i18next, { t } from "i18next";
 import { Chat as TelegramChat, User as TelegramUser } from "telegraf/typings/core/types/typegram";
@@ -150,12 +149,10 @@ export const upsertPrismaChat = async (chat: TelegramChat, editor: TelegramUser)
     throw new Error("Something went wrong during chat upsertion.");
   }
 
-  return {
-    ...prismaChat,
-    // Patch bot private chat title
-    displayTitle:
-      prismaChat.id === editor.id && bot.botInfo ? getUserDisplayName(bot.botInfo, "full") : prismaChat.displayTitle,
-  };
+  // Patch bot private chat title
+  const patchedDisplayTitle =
+    bot.botInfo && chat.id === editor.id ? getUserDisplayName(bot.botInfo, "full") : displayTitle;
+  return { ...prismaChat, displayTitle: patchedDisplayTitle };
 };
 
 /**
@@ -169,7 +166,7 @@ export const upsertPrismaChatSettingsHistory = (
   chatId: number,
   editorId: number,
   settingName: ChatSettingName,
-): Prisma.Prisma__ChatSettingsHistoryClient<{ id: bigint }, never, DefaultArgs> =>
+): Prisma.Prisma__ChatSettingsHistoryClient<{ id: bigint }> =>
   prisma.chatSettingsHistory.upsert({
     create: { authorId: editorId, chatId, editorId, settingName },
     select: { id: true },
@@ -215,10 +212,7 @@ export const upsertPrismaSenderChat = async (chat: TelegramChat, editor: Telegra
  * @param editor Telegram user who makes upsert
  * @returns User
  */
-export const upsertPrismaUser = (
-  user: TelegramUser,
-  editor: TelegramUser,
-): Prisma.Prisma__UserClient<User, never, DefaultArgs> =>
+export const upsertPrismaUser = (user: TelegramUser, editor: TelegramUser): Prisma.Prisma__UserClient<User> =>
   prisma.user.upsert({
     create: {
       authorId: editor.id,

@@ -15,7 +15,14 @@ import {
   upsertPrismaSenderChat,
   upsertPrismaUser,
 } from "utils/prisma";
-import { getUserHtmlLink, getUserOrChatHtmlLink, isChatAdmin, isChatMember, isCleanCommand } from "utils/telegraf";
+import {
+  getChatHtmlLink,
+  getUserHtmlLink,
+  getUserOrChatHtmlLink,
+  isChatAdmin,
+  isChatMember,
+  isCleanCommand,
+} from "utils/telegraf";
 
 export enum VotebanAction {
   Ban = "voteban-ban",
@@ -128,9 +135,10 @@ export class Voteban {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
-    const { displayTitle, votebanLimit } = prismaChat;
+    const chatLink = getChatHtmlLink(prismaChat);
+    const { votebanLimit } = prismaChat;
     const newValue = this.sanitizeValue(typeof value === "undefined" || isNaN(value) ? votebanLimit : value);
-    const msg = t("voteban:setLimit", { CHAT_TITLE: displayTitle, count: newValue });
+    const msg = t("voteban:setLimit", { CHAT: chatLink, count: newValue });
 
     await Promise.all([
       ctx.answerCbQuery(),

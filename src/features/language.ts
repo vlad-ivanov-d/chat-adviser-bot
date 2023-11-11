@@ -3,6 +3,7 @@ import { settings, SettingsAction } from "features/settings";
 import { changeLanguage, t } from "i18next";
 import { CallbackCtx } from "types/context";
 import { joinModifiedInfo, prisma, upsertPrismaChat, upsertPrismaChatSettingsHistory } from "utils/prisma";
+import { getChatHtmlLink } from "utils/telegraf";
 
 export class Language {
   /**
@@ -33,10 +34,11 @@ export class Language {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
+    const chatLink = getChatHtmlLink(prismaChat);
     const enText = this.getOptions().find((l) => l.code === LanguageCode.en)?.title ?? "";
     const ruText = this.getOptions().find((l) => l.code === LanguageCode.ru)?.title ?? "";
     const value = this.getOptions().find((l) => l.code === prismaChat.language)?.title ?? "";
-    const msg = t("language:select", { CHAT_TITLE: prismaChat.displayTitle, VALUE: value });
+    const msg = t("language:select", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
       ctx.answerCbQuery(),

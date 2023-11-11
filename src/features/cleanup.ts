@@ -2,7 +2,7 @@ import { CronJob } from "cron";
 import { prisma } from "utils/prisma";
 
 export class Cleanup {
-  private cronJob?: CronJob<null>;
+  private cronJob?: CronJob;
 
   /**
    * Starts cleanup cron job

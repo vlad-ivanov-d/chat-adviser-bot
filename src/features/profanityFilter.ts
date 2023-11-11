@@ -10,7 +10,7 @@ import {
   upsertPrismaChatSettingsHistory,
 } from "utils/prisma";
 import { Profanity } from "utils/profanity";
-import { getUserFullName } from "utils/telegraf";
+import { getChatHtmlLink, getUserFullName } from "utils/telegraf";
 
 export class ProfanityFilter {
   private profaneWords?: string[];
@@ -86,11 +86,12 @@ export class ProfanityFilter {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
+    const chatLink = getChatHtmlLink(prismaChat);
     const disabledCbData = `${SettingsAction.ProfanityFilterSave}?chatId=${chatId}`;
     const enabledCbData = `${SettingsAction.ProfanityFilterSave}?chatId=${chatId}&v=${ProfanityFilterRule.enabled}`;
     const sanitizedValue = this.sanitizeValue(prismaChat.profanityFilter);
     const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";
-    const msg = t("profanityFilter:set", { CHAT_TITLE: prismaChat.displayTitle, VALUE: value });
+    const msg = t("profanityFilter:set", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
       ctx.answerCbQuery(),

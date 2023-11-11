@@ -11,13 +11,13 @@ export interface ProfanityResult {
 
 export class Profanity {
   /**
-   * English similar chars which can be used to workaround filter. Chars must be defined in lower case.
+   * Similar chars which can be used to workaround filter. Chars must be defined in lower case.
    */
-  private readonly similarCharsEn: Record<string, string[]> = {};
-  /**
-   * Russian similar chars which can be used to workaround filter. Chars must be defined in lower case.
-   */
-  private readonly similarCharsRu: Record<string, string[]> = {
+  private readonly similarChars: Record<string, string[]> = {
+    // English
+    i: ["1"],
+
+    // Russian
     а: ["a", "@"],
     б: ["b", "6"],
     в: ["b", "v"],
@@ -68,22 +68,18 @@ export class Profanity {
     let hasProfanity = false;
     const filteredText = this.splitText(text)
       .map((word) => {
-        let hasWord = false;
-        /**
-         * Replaces profanity with * chars and sets corresponding flags
-         * @returns Replaced string
-         */
-        const replacer = (): string => {
-          hasProfanity = true;
-          hasWord = true;
-          return "*".repeat(word.length);
-        };
         const cleanWord = this.cleanWord(word);
         for (const profaneWord of this.profaneWords) {
           const cleanProfaneWord = this.cleanWord(profaneWord);
-          const regExpEn = this.getProfanityRegExp(cleanProfaneWord, this.similarCharsEn);
-          const regExpRu = this.getProfanityRegExp(cleanProfaneWord, this.similarCharsRu);
-          const filteredWord = cleanWord.replace(regExpEn, replacer).replace(regExpRu, replacer);
+          const profanityRegExp = this.getProfanityRegExp(cleanProfaneWord, this.similarChars);
+          let hasWord = false;
+          const filteredWord = cleanWord.replace(profanityRegExp, (): string => {
+            hasProfanity = true;
+            hasWord = true;
+            return "*".repeat(word.length);
+          });
+          // Known issue with no-unnecessary-condition
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
           if (hasWord) {
             return filteredWord;
           }
@@ -131,7 +127,7 @@ export class Profanity {
           return ""; // Remove starting and ending "*" character
         }
         const chars = [this.escapeCharForRegExp(char)];
-        if (similarChars[char]) {
+        if (char in similarChars) {
           chars.push(...similarChars[char].map((c) => this.escapeCharForRegExp(c)));
         }
         return `(${chars.join("|")})`;
