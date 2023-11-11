@@ -39,7 +39,7 @@
     "date-fns": "2.30.0",
     "date-fns-tz": "2.0.0",
     "dotenv": "16.3.1",
-    "i18next": "23.7.1",
+    "i18next": "23.7.3",
     "telegraf": "4.15.0"
   },
   "devDependencies": {

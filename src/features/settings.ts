@@ -171,8 +171,8 @@ export class Settings {
     };
     const features = [...allFeatures[prismaChat.type]].sort((a, b) => a[0]?.text.localeCompare(b[0]?.text));
 
-    const chatTitle = getChatHtmlLink(prismaChat);
-    const msg = t("settings:selectFeature", { CHAT_TITLE: chatTitle });
+    const chatLink = getChatHtmlLink(prismaChat);
+    const msg = t("settings:selectFeature", { CHAT: chatLink });
     const replyMarkup: InlineKeyboardMarkup = {
       inline_keyboard: [
         ...features.slice(skip, skip + PAGE_SIZE),

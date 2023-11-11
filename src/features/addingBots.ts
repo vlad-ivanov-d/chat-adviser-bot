@@ -44,10 +44,10 @@ export class AddingBots {
     const allowedCbData = `${SettingsAction.AddingBotsSave}?chatId=${chatId}`;
     const restrictedCbData = `${SettingsAction.AddingBotsSave}?chatId=${chatId}&v=${AddingBotsRule.restricted}`;
     const restrictedAndBanCbData = `${SettingsAction.AddingBotsSave}?chatId=${chatId}&v=${AddingBotsRule.restrictedAndBan}`;
-    const chatTitle = getChatHtmlLink(prismaChat);
+    const chatLink = getChatHtmlLink(prismaChat);
     const sanitizedValue = this.sanitizeValue(prismaChat.addingBots);
     const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";
-    const msg = t("addingBots:set", { CHAT_TITLE: chatTitle, VALUE: value });
+    const msg = t("addingBots:set", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
       ctx.answerCbQuery(),
