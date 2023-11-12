@@ -1,3 +1,4 @@
+import { LanguageCode } from "@prisma/client";
 import { addingBots } from "features/addingBots";
 import { cleanup } from "features/cleanup";
 import { help } from "features/help";
@@ -15,7 +16,12 @@ import { bot } from "utils/telegraf";
 
 // Init localization
 export const defaultNs = "common";
-void init({ defaultNS: defaultNs, fallbackLng: "en", interpolation: { escapeValue: false }, resources: { en, ru } });
+void init({
+  defaultNS: defaultNs,
+  fallbackLng: LanguageCode.EN,
+  interpolation: { escapeValue: false },
+  resources: { [LanguageCode.EN]: en, [LanguageCode.RU]: ru },
+});
 
 // Bot commands
 bot.command("mychats", async (ctx, next) => {
@@ -40,33 +46,33 @@ bot.on(callbackQuery("data"), async (ctx) => {
   const value = params.get("v");
   const valueNum = parseFloat(value ?? "");
   switch (action) {
-    case SettingsAction.AddingBots:
+    case SettingsAction.ADDING_BOTS:
       return addingBots.renderSettings(ctx, chatId);
-    case SettingsAction.AddingBotsSave:
+    case SettingsAction.ADDING_BOTS_SAVE:
       return addingBots.saveSettings(ctx, chatId, value);
-    case SettingsAction.Chats:
-    case SettingsAction.Refresh:
+    case SettingsAction.CHATS:
+    case SettingsAction.REFRESH:
       return settings.renderChats(ctx, skip);
-    case SettingsAction.Features:
+    case SettingsAction.FEATURES:
       return settings.renderFeatures(ctx, chatId, skip);
-    case SettingsAction.Language:
+    case SettingsAction.LANGUAGE:
       return language.renderSettings(ctx, chatId);
-    case SettingsAction.LanguageSave:
+    case SettingsAction.LANGUAGE_SAVE:
       return language.saveSettings(ctx, chatId, value);
-    case SettingsAction.ProfanityFilter:
+    case SettingsAction.PROFANITY_FILTER:
       return profanityFilter.renderSettings(ctx, chatId);
-    case SettingsAction.ProfanityFilterSave:
+    case SettingsAction.PROFANITY_FILTER_SAVE:
       return profanityFilter.saveSettings(ctx, chatId, value);
-    case SettingsAction.TimeZone:
+    case SettingsAction.TIME_ZONE:
       return timeZone.renderSettings(ctx, chatId, skip);
-    case SettingsAction.TimeZoneSave:
+    case SettingsAction.TIME_ZONE_SAVE:
       return timeZone.saveSettings(ctx, chatId, value);
-    case SettingsAction.Voteban:
+    case SettingsAction.VOTEBAN:
       return voteban.renderSettings(ctx, chatId, valueNum);
-    case SettingsAction.VotebanSave:
+    case SettingsAction.VOTEBAN_SAVE:
       return voteban.saveSettings(ctx, chatId, valueNum);
-    case VotebanAction.Ban:
-    case VotebanAction.NoBan:
+    case VotebanAction.BAN:
+    case VotebanAction.NO_BAN:
       return voteban.vote(ctx, action);
     default:
       return;

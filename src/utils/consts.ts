@@ -10,7 +10,7 @@ export const DATE_FORMAT = "P p zzz";
 /**
  * Date locales related to date-fns
  */
-export const DATE_LOCALES: Record<LanguageCode, Locale> = { en, ru };
+export const DATE_LOCALES: Record<LanguageCode, Locale> = { [LanguageCode.EN]: en, [LanguageCode.RU]: ru };
 
 /**
  * Database maximum integer limit

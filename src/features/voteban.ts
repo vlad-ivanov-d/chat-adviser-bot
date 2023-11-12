@@ -1,4 +1,4 @@
-import { User } from "@prisma/client";
+import { ChatSettingName, ChatType, User } from "@prisma/client";
 import { language } from "features/language";
 import { settings, SettingsAction } from "features/settings";
 import { changeLanguage, t, TOptions } from "i18next";
@@ -25,8 +25,8 @@ import {
 } from "utils/telegraf";
 
 export enum VotebanAction {
-  Ban = "voteban-ban",
-  NoBan = "voteban-no-ban",
+  BAN = "voteban-ban",
+  NO_BAN = "voteban-no-ban",
 }
 
 export class Voteban {
@@ -52,7 +52,7 @@ export class Voteban {
     ]);
     await changeLanguage(chat.language);
 
-    if (chat.type === "private") {
+    if (chat.type === ChatType.PRIVATE) {
       await ctx.reply(t("common:commandNotForPrivateChats"));
       return; // Private chat, return.
     }
@@ -88,8 +88,8 @@ export class Voteban {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
-            [{ callback_data: VotebanAction.Ban, text: banButtonText }],
-            [{ callback_data: VotebanAction.NoBan, text: noBanButtonText }],
+            [{ callback_data: VotebanAction.BAN, text: banButtonText }],
+            [{ callback_data: VotebanAction.NO_BAN, text: noBanButtonText }],
           ],
         },
         reply_to_message_id: ctx.message.reply_to_message?.message_id,
@@ -142,25 +142,25 @@ export class Voteban {
 
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(joinModifiedInfo(msg, "votebanLimit", prismaChat), {
+      ctx.editMessageText(joinModifiedInfo(msg, ChatSettingName.VOTEBAN_LIMIT, prismaChat), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
             [
-              { callback_data: `${SettingsAction.Voteban}?chatId=${chatId}&v=${newValue - 1}`, text: "-1" },
+              { callback_data: `${SettingsAction.VOTEBAN}?chatId=${chatId}&v=${newValue - 1}`, text: "-1" },
               {
                 // Value can't be equal to 1
-                callback_data: `${SettingsAction.Voteban}?chatId=${chatId}&v=${Math.max(2, newValue + 1)}`,
+                callback_data: `${SettingsAction.VOTEBAN}?chatId=${chatId}&v=${Math.max(2, newValue + 1)}`,
                 text: "+1",
               },
             ],
             [
-              { callback_data: `${SettingsAction.Voteban}?chatId=${chatId}&v=${newValue - 50}`, text: "-50" },
-              { callback_data: `${SettingsAction.Voteban}?chatId=${chatId}&v=${newValue + 50}`, text: "+50" },
+              { callback_data: `${SettingsAction.VOTEBAN}?chatId=${chatId}&v=${newValue - 50}`, text: "-50" },
+              { callback_data: `${SettingsAction.VOTEBAN}?chatId=${chatId}&v=${newValue + 50}`, text: "+50" },
             ],
             [
               {
-                callback_data: `${SettingsAction.VotebanSave}?chatId=${chatId}&v=${newValue}`,
+                callback_data: `${SettingsAction.VOTEBAN_SAVE}?chatId=${chatId}&v=${newValue}`,
                 text: t("settings:save"),
               },
             ],
@@ -192,7 +192,7 @@ export class Voteban {
     const votebanLimit = this.sanitizeValue(value) || null;
     await prisma.$transaction([
       prisma.chat.update({ data: { votebanLimit }, select: { id: true }, where: { id: chatId } }),
-      upsertPrismaChatSettingsHistory(chatId, ctx.callbackQuery.from.id, "votebanLimit"),
+      upsertPrismaChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.VOTEBAN_LIMIT),
     ]);
     await Promise.all([settings.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId)]);
   }
@@ -232,7 +232,7 @@ export class Voteban {
 
     const { banVoters, id, noBanVoters } = voting;
     const { editorId } = chat;
-    if ((action === VotebanAction.Ban ? banVoters : noBanVoters).map((v) => v.authorId).includes(from.id)) {
+    if ((action === VotebanAction.BAN ? banVoters : noBanVoters).map((v) => v.authorId).includes(from.id)) {
       await ctx.answerCbQuery(t("voteban:alreadyVoted"), { show_alert: true });
       return; // User has already voted, return.
     }
@@ -246,13 +246,13 @@ export class Voteban {
       await ctx.answerCbQuery(t("voteban:mustBeChatMember"), { show_alert: true });
       return; // Voter is not a chat member, return.
     }
-    if (action === VotebanAction.Ban) {
+    if (action === VotebanAction.BAN) {
       await prisma.$transaction([
         prisma.votebanBanVoter.create({ data: { authorId: editorId, editorId, votebanId: id }, select: { id: true } }),
         prisma.votebanNoBanVoter.deleteMany({ where: { authorId: editorId, votebanId: id } }),
       ]);
     }
-    if (action === VotebanAction.NoBan) {
+    if (action === VotebanAction.NO_BAN) {
       await prisma.$transaction([
         prisma.votebanNoBanVoter.create({
           data: { authorId: editorId, editorId, votebanId: id },
@@ -373,8 +373,8 @@ export class Voteban {
       parse_mode: "HTML",
       reply_markup: {
         inline_keyboard: [
-          [{ callback_data: VotebanAction.Ban, text: banButtonText }],
-          [{ callback_data: VotebanAction.NoBan, text: noBanButtonText }],
+          [{ callback_data: VotebanAction.BAN, text: banButtonText }],
+          [{ callback_data: VotebanAction.NO_BAN, text: noBanButtonText }],
         ],
       },
     });

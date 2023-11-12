@@ -1,4 +1,4 @@
-import { SenderChat as PrismaSenderChat, User as PrismaUser } from "@prisma/client";
+import { ChatType as PrismaChatType, SenderChat as PrismaSenderChat, User as PrismaUser } from "@prisma/client";
 import { Telegraf } from "telegraf";
 import { Chat, InlineKeyboardButton, User } from "telegraf/typings/core/types/typegram";
 import { encodeText } from "utils/encode";
@@ -111,8 +111,11 @@ export const getChatDisplayTitle = (chat: Chat | PrismaSenderChat): string => {
   switch (chat.type) {
     case "channel":
     case "supergroup":
+    case PrismaChatType.CHANNEL:
+    case PrismaChatType.SUPERGROUP:
       return chat.username ? `@${chat.username}` : chat.title ?? "";
-    case "private": {
+    case "private":
+    case PrismaChatType.PRIVATE: {
       const privateChatAsUser: User = {
         first_name: "firstName" in chat ? chat.firstName ?? "" : chat.first_name,
         id: chat.id,

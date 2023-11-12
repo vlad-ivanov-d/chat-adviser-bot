@@ -1,4 +1,4 @@
-import { LanguageCode } from "@prisma/client";
+import { ChatSettingName, LanguageCode } from "@prisma/client";
 import { settings, SettingsAction } from "features/settings";
 import { changeLanguage, t } from "i18next";
 import { CallbackCtx } from "types/context";
@@ -12,8 +12,8 @@ export class Language {
    */
   public getOptions(): { code: LanguageCode; title: string }[] {
     return [
-      { code: LanguageCode.en, title: "English" },
-      { code: LanguageCode.ru, title: "Русский" },
+      { code: LanguageCode.EN, title: "English" },
+      { code: LanguageCode.RU, title: "Русский" },
     ];
   }
 
@@ -35,19 +35,19 @@ export class Language {
     }
 
     const chatLink = getChatHtmlLink(prismaChat);
-    const enText = this.getOptions().find((l) => l.code === LanguageCode.en)?.title ?? "";
-    const ruText = this.getOptions().find((l) => l.code === LanguageCode.ru)?.title ?? "";
+    const enText = this.getOptions().find((l) => l.code === LanguageCode.EN)?.title ?? "";
+    const ruText = this.getOptions().find((l) => l.code === LanguageCode.RU)?.title ?? "";
     const value = this.getOptions().find((l) => l.code === prismaChat.language)?.title ?? "";
     const msg = t("language:select", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(joinModifiedInfo(msg, "language", prismaChat), {
+      ctx.editMessageText(joinModifiedInfo(msg, ChatSettingName.LANGUAGE, prismaChat), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
-            [{ callback_data: `${SettingsAction.LanguageSave}?chatId=${chatId}&v=${LanguageCode.en}`, text: enText }],
-            [{ callback_data: `${SettingsAction.LanguageSave}?chatId=${chatId}&v=${LanguageCode.ru}`, text: ruText }],
+            [{ callback_data: `${SettingsAction.LANGUAGE_SAVE}?chatId=${chatId}&v=${LanguageCode.EN}`, text: enText }],
+            [{ callback_data: `${SettingsAction.LANGUAGE_SAVE}?chatId=${chatId}&v=${LanguageCode.RU}`, text: ruText }],
             settings.getBackToFeaturesButton(chatId),
           ],
         },
@@ -61,7 +61,7 @@ export class Language {
    * @returns Sanitized value
    */
   public sanitizeValue(value: string | null | undefined): LanguageCode {
-    return this.getOptions().find((l) => l.code === value)?.code ?? "en";
+    return this.getOptions().find((l) => l.code === value)?.code ?? LanguageCode.EN;
   }
 
   /**
@@ -86,7 +86,7 @@ export class Language {
 
     await prisma.$transaction([
       prisma.chat.update({ data: { language }, select: { id: true }, where: { id: chatId } }),
-      upsertPrismaChatSettingsHistory(chatId, ctx.callbackQuery.from.id, "language"),
+      upsertPrismaChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.LANGUAGE),
     ]);
     await Promise.all([settings.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId)]);
   }

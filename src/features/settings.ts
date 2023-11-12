@@ -1,5 +1,6 @@
+import { ChatType } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
-import { Chat, InlineKeyboardButton, InlineKeyboardMarkup } from "telegraf/typings/core/types/typegram";
+import { InlineKeyboardButton, InlineKeyboardMarkup } from "telegraf/typings/core/types/typegram";
 import { CallbackCtx, MessageCtx, TextMessageCtx } from "types/context";
 import { PrismaChat } from "types/prismaChat";
 import { PAGE_SIZE } from "utils/consts";
@@ -7,19 +8,19 @@ import { isPrismaChatAdmin, prisma, upsertPrismaChat } from "utils/prisma";
 import { getChatHtmlLink, getPagination, getTelegramErrorCode, isCleanCommand } from "utils/telegraf";
 
 export enum SettingsAction {
-  AddingBots = "cfg-addng-bts",
-  AddingBotsSave = "cfg-addng-bts-sv",
-  Chats = "cfg-chats",
-  Features = "cfg-ftrs",
-  Language = "cfg-lng",
-  LanguageSave = "cfg-lng-sv",
-  ProfanityFilter = "cfg-pf",
-  ProfanityFilterSave = "cfg-pf-sv",
-  Refresh = "cfg-rfrsh",
-  TimeZone = "cfg-tz",
-  TimeZoneSave = "cfg-tz-sv",
-  Voteban = "cfg-vtbn",
-  VotebanSave = "cfg-vtbn-sv",
+  ADDING_BOTS = "cfg-addng-bts",
+  ADDING_BOTS_SAVE = "cfg-addng-bts-sv",
+  CHATS = "cfg-chats",
+  FEATURES = "cfg-ftrs",
+  LANGUAGE = "cfg-lng",
+  LANGUAGE_SAVE = "cfg-lng-sv",
+  PROFANITY_FILTER = "cfg-pf",
+  PROFANITY_FILTER_SAVE = "cfg-pf-sv",
+  REFRESH = "cfg-rfrsh",
+  TIME_ZONE = "cfg-tz",
+  TIME_ZONE_SAVE = "cfg-tz-sv",
+  VOTEBAN = "cfg-vtbn",
+  VOTEBAN_SAVE = "cfg-vtbn-sv",
 }
 
 export class Settings {
@@ -104,9 +105,9 @@ export class Settings {
     }
     const replyMarkup: InlineKeyboardMarkup = {
       inline_keyboard: [
-        ...chats.map((c) => [{ callback_data: `${SettingsAction.Features}?chatId=${c.id}`, text: c.displayTitle }]),
-        getPagination(SettingsAction.Chats, { count, skip, take }),
-        [{ callback_data: SettingsAction.Refresh, text: `↻ ${t("settings:refreshList")}` }],
+        ...chats.map((c) => [{ callback_data: `${SettingsAction.FEATURES}?chatId=${c.id}`, text: c.displayTitle }]),
+        getPagination(SettingsAction.CHATS, { count, skip, take }),
+        [{ callback_data: SettingsAction.REFRESH, text: `↻ ${t("settings:refreshList")}` }],
       ],
     };
     const msg = [t("settings:selectChat"), t("settings:updateInfoHint")].join("\n\n");
@@ -149,25 +150,26 @@ export class Settings {
     }
 
     const addingBotsButton: InlineKeyboardButton[] = [
-      { callback_data: `${SettingsAction.AddingBots}?chatId=${chatId}`, text: t("addingBots:featureName") },
+      { callback_data: `${SettingsAction.ADDING_BOTS}?chatId=${chatId}`, text: t("addingBots:featureName") },
     ];
     const languageButton: InlineKeyboardButton[] = [
-      { callback_data: `${SettingsAction.Language}?chatId=${chatId}`, text: t("language:featureName") },
+      { callback_data: `${SettingsAction.LANGUAGE}?chatId=${chatId}`, text: t("language:featureName") },
     ];
     const profanityFilterButton: InlineKeyboardButton[] = [
-      { callback_data: `${SettingsAction.ProfanityFilter}?chatId=${chatId}`, text: t("profanityFilter:featureName") },
+      { callback_data: `${SettingsAction.PROFANITY_FILTER}?chatId=${chatId}`, text: t("profanityFilter:featureName") },
     ];
     const timeZoneButton: InlineKeyboardButton[] = [
-      { callback_data: `${SettingsAction.TimeZone}?chatId=${chatId}`, text: t("timeZone:featureName") },
+      { callback_data: `${SettingsAction.TIME_ZONE}?chatId=${chatId}`, text: t("timeZone:featureName") },
     ];
     const votebanButton: InlineKeyboardButton[] = [
-      { callback_data: `${SettingsAction.Voteban}?chatId=${chatId}`, text: t("voteban:featureName") },
+      { callback_data: `${SettingsAction.VOTEBAN}?chatId=${chatId}`, text: t("voteban:featureName") },
     ];
-    const allFeatures: Record<Chat["type"], InlineKeyboardButton[][]> = {
-      channel: [languageButton, timeZoneButton],
-      group: [addingBotsButton, languageButton, profanityFilterButton, timeZoneButton, votebanButton],
-      private: [languageButton, timeZoneButton],
-      supergroup: [addingBotsButton, languageButton, profanityFilterButton, timeZoneButton, votebanButton],
+    const allFeatures: Record<ChatType, InlineKeyboardButton[][]> = {
+      [ChatType.CHANNEL]: [languageButton, timeZoneButton],
+      [ChatType.GROUP]: [addingBotsButton, languageButton, profanityFilterButton, timeZoneButton, votebanButton],
+      [ChatType.PRIVATE]: [languageButton, timeZoneButton],
+      [ChatType.SUPERGROUP]: [addingBotsButton, languageButton, profanityFilterButton, timeZoneButton, votebanButton],
+      [ChatType.UNKNOWN]: [languageButton],
     };
     const features = [...allFeatures[prismaChat.type]].sort((a, b) => a[0]?.text.localeCompare(b[0]?.text));
 
@@ -176,8 +178,8 @@ export class Settings {
     const replyMarkup: InlineKeyboardMarkup = {
       inline_keyboard: [
         ...features.slice(skip, skip + PAGE_SIZE),
-        getPagination(`${SettingsAction.Features}?chatId=${chatId}`, { count: features.length, skip, take: PAGE_SIZE }),
-        [{ callback_data: SettingsAction.Chats, text: `« ${t("settings:backToChats")}` }],
+        getPagination(`${SettingsAction.FEATURES}?chatId=${chatId}`, { count: features.length, skip, take: PAGE_SIZE }),
+        [{ callback_data: SettingsAction.CHATS, text: `« ${t("settings:backToChats")}` }],
       ],
     };
 
@@ -195,7 +197,7 @@ export class Settings {
    */
   public getBackToFeaturesButton(chatId: number): InlineKeyboardButton[] {
     return [
-      { callback_data: `${SettingsAction.Features}?chatId=${chatId}`, text: `« ${t("settings:backToFeatures")}` },
+      { callback_data: `${SettingsAction.FEATURES}?chatId=${chatId}`, text: `« ${t("settings:backToFeatures")}` },
     ];
   }
 
