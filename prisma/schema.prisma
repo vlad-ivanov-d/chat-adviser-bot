@@ -9,18 +9,19 @@ datasource db {
 }
 
 enum AddingBotsRule {
-  restricted
-  restrictedAndBan
+  RESTRICTED         @map("restricted")
+  RESTRICTED_AND_BAN @map("restrictedAndBan")
 }
 
 enum ChatSettingName {
-  addingBots
-  language
-  profanityFilter
-  timeZone
-  votebanLimit
+  ADDING_BOTS      @map("addingBots")
+  LANGUAGE         @map("language")
+  PROFANITY_FILTER @map("profanityFilter")
+  TIME_ZONE        @map("timeZone")
+  VOTEBAN_LIMIT    @map("votebanLimit")
 }
 
+// Keep in sync with Telegram
 enum ChatType {
   channel
   group
@@ -29,12 +30,12 @@ enum ChatType {
 }
 
 enum LanguageCode {
-  en
-  ru
+  EN @map("en")
+  RU @map("ru")
 }
 
 enum ProfanityFilterRule {
-  enabled
+  ENABLED @map("enabled")
 }
 
 model Chat {

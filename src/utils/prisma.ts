@@ -1,4 +1,12 @@
-import { ChatSettingName, LanguageCode, Prisma, PrismaClient, User } from "@prisma/client";
+import {
+  AddingBotsRule,
+  ChatSettingName,
+  LanguageCode,
+  Prisma,
+  PrismaClient,
+  ProfanityFilterRule,
+  User,
+} from "@prisma/client";
 import { formatInTimeZone } from "date-fns-tz";
 import i18next, { t } from "i18next";
 import { Chat as TelegramChat, User as TelegramUser } from "telegraf/typings/core/types/typegram";
@@ -14,10 +22,10 @@ import { bot, getChatDisplayTitle, getUserDisplayName, getUserHtmlLink } from "u
 const resolveLanguage = (languageCode: string | undefined): LanguageCode => {
   switch (languageCode) {
     case "ru":
-      return "ru";
+      return LanguageCode.RU;
     case "en":
     default:
-      return "en";
+      return LanguageCode.EN;
   }
 };
 
@@ -112,7 +120,7 @@ export const upsertPrismaChat = async (chat: TelegramChat, editor: TelegramUser)
       .map((u) => upsertPrismaUser(u, editor)),
     prisma.chat.upsert({
       create: {
-        addingBots: ["group", "supergroup"].includes(chat.type) ? "restricted" : undefined,
+        addingBots: ["group", "supergroup"].includes(chat.type) ? AddingBotsRule.RESTRICTED : undefined,
         admins: { connect: admins.map((a) => ({ id: a.user.id })) },
         authorId: editor.id,
         displayTitle,
@@ -122,7 +130,7 @@ export const upsertPrismaChat = async (chat: TelegramChat, editor: TelegramUser)
         language: resolveLanguage(editor.language_code),
         lastName,
         membersCount,
-        profanityFilter: ["group", "supergroup"].includes(chat.type) ? "enabled" : undefined,
+        profanityFilter: ["group", "supergroup"].includes(chat.type) ? ProfanityFilterRule.ENABLED : undefined,
         timeZone: resolveTimeZone(editor.language_code),
         title,
         type: chat.type,

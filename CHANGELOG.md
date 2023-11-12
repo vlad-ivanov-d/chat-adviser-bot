@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.xx.x (2023-xx-xx)
+
+- Other: internal improvements
+
 ## 1.10.1 (2023-11-12)
 
 - Fix: the chat name is not displayed correctly if it contains "&", "<" or ">" symbols

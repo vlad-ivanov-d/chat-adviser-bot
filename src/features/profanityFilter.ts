@@ -1,4 +1,4 @@
-import { ProfanityFilterRule } from "@prisma/client";
+import { ChatSettingName, ProfanityFilterRule } from "@prisma/client";
 import { settings, SettingsAction } from "features/settings";
 import { changeLanguage, t } from "i18next";
 import { CallbackCtx, MessageCtx } from "types/context";
@@ -64,7 +64,7 @@ export class ProfanityFilter {
    */
   public getOptions(): { id: ProfanityFilterRule | null; title: string }[] {
     return [
-      { id: ProfanityFilterRule.enabled, title: t("profanityFilter:enabled") },
+      { id: ProfanityFilterRule.ENABLED, title: t("profanityFilter:enabled") },
       { id: null, title: t("profanityFilter:disabled") },
     ];
   }
@@ -87,15 +87,15 @@ export class ProfanityFilter {
     }
 
     const chatLink = getChatHtmlLink(prismaChat);
-    const disabledCbData = `${SettingsAction.ProfanityFilterSave}?chatId=${chatId}`;
-    const enabledCbData = `${SettingsAction.ProfanityFilterSave}?chatId=${chatId}&v=${ProfanityFilterRule.enabled}`;
+    const disabledCbData = `${SettingsAction.PROFANITY_FILTER_SAVE}?chatId=${chatId}`;
+    const enabledCbData = `${SettingsAction.PROFANITY_FILTER_SAVE}?chatId=${chatId}&v=${ProfanityFilterRule.ENABLED}`;
     const sanitizedValue = this.sanitizeValue(prismaChat.profanityFilter);
     const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";
     const msg = t("profanityFilter:set", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(joinModifiedInfo(msg, "profanityFilter", prismaChat), {
+      ctx.editMessageText(joinModifiedInfo(msg, ChatSettingName.PROFANITY_FILTER, prismaChat), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
@@ -130,7 +130,7 @@ export class ProfanityFilter {
 
     await prisma.$transaction([
       prisma.chat.update({ data: { profanityFilter }, select: { id: true }, where: { id: chatId } }),
-      upsertPrismaChatSettingsHistory(chatId, ctx.callbackQuery.from.id, "profanityFilter"),
+      upsertPrismaChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.PROFANITY_FILTER),
     ]);
     await Promise.all([settings.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId)]);
   }
@@ -214,7 +214,7 @@ export class ProfanityFilter {
    * @returns Sanitized value
    */
   private sanitizeValue(value: string | null): ProfanityFilterRule | null {
-    return value === ProfanityFilterRule.enabled ? value : null;
+    return value === ProfanityFilterRule.ENABLED ? value : null;
   }
 }
 

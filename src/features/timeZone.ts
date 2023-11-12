@@ -1,3 +1,4 @@
+import { ChatSettingName } from "@prisma/client";
 import { format, getTimezoneOffset } from "date-fns-tz";
 import { settings, SettingsAction } from "features/settings";
 import { changeLanguage, t } from "i18next";
@@ -28,7 +29,6 @@ export class TimeZone {
 
     const chatLink = getChatHtmlLink(prismaChat);
     const timeZones = this.getAllTimeZones();
-    const count = timeZones.length;
     const valueIndex = timeZones.indexOf(prismaChat.timeZone);
     // Use provided skip or the index of the current value. Use 0 as the last fallback.
     const patchedSkip = skip ?? (valueIndex > -1 ? valueIndex : 0);
@@ -37,17 +37,21 @@ export class TimeZone {
 
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(joinModifiedInfo(msg, "timeZone", prismaChat), {
+      ctx.editMessageText(joinModifiedInfo(msg, ChatSettingName.TIME_ZONE, prismaChat), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
             ...timeZones.slice(patchedSkip, patchedSkip + PAGE_SIZE).map((tz): InlineKeyboardButton[] => [
               {
-                callback_data: `${SettingsAction.TimeZoneSave}?chatId=${chatId}&v=${tz}`,
+                callback_data: `${SettingsAction.TIME_ZONE_SAVE}?chatId=${chatId}&v=${tz}`,
                 text: `${format(new Date(), "O", { timeZone: tz })} ${tz}`,
               },
             ]),
-            getPagination(`${SettingsAction.TimeZone}?chatId=${chatId}`, { count, skip: patchedSkip, take: PAGE_SIZE }),
+            getPagination(`${SettingsAction.TIME_ZONE}?chatId=${chatId}`, {
+              count: timeZones.length,
+              skip: patchedSkip,
+              take: PAGE_SIZE,
+            }),
             settings.getBackToFeaturesButton(chatId),
           ],
         },
@@ -78,7 +82,7 @@ export class TimeZone {
 
     await prisma.$transaction([
       prisma.chat.update({ data: { timeZone }, select: { id: true }, where: { id: chatId } }),
-      upsertPrismaChatSettingsHistory(chatId, ctx.callbackQuery.from.id, "timeZone"),
+      upsertPrismaChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.TIME_ZONE),
     ]);
     await Promise.all([settings.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId, skip)]);
   }
