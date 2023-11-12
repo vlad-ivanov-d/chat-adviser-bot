@@ -1,6 +1,7 @@
 import {
   AddingBotsRule,
   ChatSettingName,
+  ChatType,
   LanguageCode,
   Prisma,
   PrismaClient,
@@ -13,6 +14,26 @@ import { Chat as TelegramChat, User as TelegramUser } from "telegraf/typings/cor
 import { PrismaChat } from "types/prismaChat";
 import { DATE_FORMAT, DATE_LOCALES } from "utils/consts";
 import { bot, getChatDisplayTitle, getUserDisplayName, getUserHtmlLink } from "utils/telegraf";
+
+/**
+ * Resolves chat type based on Telegram chat type
+ * @param chatType Telegram chat type
+ * @returns Chat type which is supported by the bot
+ */
+const resolveChatType = (chatType: TelegramChat["type"]): ChatType => {
+  switch (chatType) {
+    case "channel":
+      return ChatType.CHANNEL;
+    case "group":
+      return ChatType.GROUP;
+    case "private":
+      return ChatType.PRIVATE;
+    case "supergroup":
+      return ChatType.SUPERGROUP;
+    default:
+      return ChatType.UNKNOWN;
+  }
+};
 
 /**
  * Resolves language based on Telegram language code
@@ -120,7 +141,7 @@ export const upsertPrismaChat = async (chat: TelegramChat, editor: TelegramUser)
       .map((u) => upsertPrismaUser(u, editor)),
     prisma.chat.upsert({
       create: {
-        addingBots: ["group", "supergroup"].includes(chat.type) ? AddingBotsRule.RESTRICTED : undefined,
+        addingBots: chat.type === "group" || chat.type === "supergroup" ? AddingBotsRule.RESTRICT : undefined,
         admins: { connect: admins.map((a) => ({ id: a.user.id })) },
         authorId: editor.id,
         displayTitle,
@@ -130,10 +151,10 @@ export const upsertPrismaChat = async (chat: TelegramChat, editor: TelegramUser)
         language: resolveLanguage(editor.language_code),
         lastName,
         membersCount,
-        profanityFilter: ["group", "supergroup"].includes(chat.type) ? ProfanityFilterRule.ENABLED : undefined,
+        profanityFilter: chat.type === "group" || chat.type === "supergroup" ? ProfanityFilterRule.FILTER : undefined,
         timeZone: resolveTimeZone(editor.language_code),
         title,
-        type: chat.type,
+        type: resolveChatType(chat.type),
         username,
       },
       include: { admins: true, chatSettingsHistory: { include: { editor: true } } },
@@ -145,7 +166,7 @@ export const upsertPrismaChat = async (chat: TelegramChat, editor: TelegramUser)
         lastName,
         membersCount,
         title,
-        type: chat.type,
+        type: resolveChatType(chat.type),
         username,
       },
       where: { id: chat.id },
@@ -203,11 +224,11 @@ export const upsertPrismaSenderChat = async (chat: TelegramChat, editor: Telegra
         id: chat.id,
         lastName,
         title,
-        type: chat.type,
+        type: resolveChatType(chat.type),
         username,
       },
       select: { id: true },
-      update: { editorId: editor.id, firstName, lastName, title, type: chat.type, username },
+      update: { editorId: editor.id, firstName, lastName, title, type: resolveChatType(chat.type), username },
       where: { id: chat.id },
     }),
   ]);

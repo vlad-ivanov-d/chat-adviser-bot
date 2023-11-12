@@ -64,7 +64,7 @@ export class ProfanityFilter {
    */
   public getOptions(): { id: ProfanityFilterRule | null; title: string }[] {
     return [
-      { id: ProfanityFilterRule.ENABLED, title: t("profanityFilter:enabled") },
+      { id: ProfanityFilterRule.FILTER, title: t("profanityFilter:enabled") },
       { id: null, title: t("profanityFilter:disabled") },
     ];
   }
@@ -87,8 +87,8 @@ export class ProfanityFilter {
     }
 
     const chatLink = getChatHtmlLink(prismaChat);
-    const disabledCbData = `${SettingsAction.PROFANITY_FILTER_SAVE}?chatId=${chatId}`;
-    const enabledCbData = `${SettingsAction.PROFANITY_FILTER_SAVE}?chatId=${chatId}&v=${ProfanityFilterRule.ENABLED}`;
+    const disableCbData = `${SettingsAction.PROFANITY_FILTER_SAVE}?chatId=${chatId}`;
+    const filterCbData = `${SettingsAction.PROFANITY_FILTER_SAVE}?chatId=${chatId}&v=${ProfanityFilterRule.FILTER}`;
     const sanitizedValue = this.sanitizeValue(prismaChat.profanityFilter);
     const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";
     const msg = t("profanityFilter:set", { CHAT: chatLink, VALUE: value });
@@ -99,8 +99,8 @@ export class ProfanityFilter {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
-            [{ callback_data: enabledCbData, text: t("profanityFilter:enable") }],
-            [{ callback_data: disabledCbData, text: t("profanityFilter:disable") }],
+            [{ callback_data: filterCbData, text: t("profanityFilter:enable") }],
+            [{ callback_data: disableCbData, text: t("profanityFilter:disable") }],
             settings.getBackToFeaturesButton(chatId),
           ],
         },
@@ -214,7 +214,7 @@ export class ProfanityFilter {
    * @returns Sanitized value
    */
   private sanitizeValue(value: string | null): ProfanityFilterRule | null {
-    return value === ProfanityFilterRule.ENABLED ? value : null;
+    return value === ProfanityFilterRule.FILTER ? value : null;
   }
 }
 

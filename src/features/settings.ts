@@ -1,5 +1,6 @@
+import { ChatType } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
-import { Chat, InlineKeyboardButton, InlineKeyboardMarkup } from "telegraf/typings/core/types/typegram";
+import { InlineKeyboardButton, InlineKeyboardMarkup } from "telegraf/typings/core/types/typegram";
 import { CallbackCtx, MessageCtx, TextMessageCtx } from "types/context";
 import { PrismaChat } from "types/prismaChat";
 import { PAGE_SIZE } from "utils/consts";
@@ -163,11 +164,12 @@ export class Settings {
     const votebanButton: InlineKeyboardButton[] = [
       { callback_data: `${SettingsAction.VOTEBAN}?chatId=${chatId}`, text: t("voteban:featureName") },
     ];
-    const allFeatures: Record<Chat["type"], InlineKeyboardButton[][]> = {
-      channel: [languageButton, timeZoneButton],
-      group: [addingBotsButton, languageButton, profanityFilterButton, timeZoneButton, votebanButton],
-      private: [languageButton, timeZoneButton],
-      supergroup: [addingBotsButton, languageButton, profanityFilterButton, timeZoneButton, votebanButton],
+    const allFeatures: Record<ChatType, InlineKeyboardButton[][]> = {
+      [ChatType.CHANNEL]: [languageButton, timeZoneButton],
+      [ChatType.GROUP]: [addingBotsButton, languageButton, profanityFilterButton, timeZoneButton, votebanButton],
+      [ChatType.PRIVATE]: [languageButton, timeZoneButton],
+      [ChatType.SUPERGROUP]: [addingBotsButton, languageButton, profanityFilterButton, timeZoneButton, votebanButton],
+      [ChatType.UNKNOWN]: [languageButton],
     };
     const features = [...allFeatures[prismaChat.type]].sort((a, b) => a[0]?.text.localeCompare(b[0]?.text));
 

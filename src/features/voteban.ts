@@ -1,4 +1,4 @@
-import { ChatSettingName, User } from "@prisma/client";
+import { ChatSettingName, ChatType, User } from "@prisma/client";
 import { language } from "features/language";
 import { settings, SettingsAction } from "features/settings";
 import { changeLanguage, t, TOptions } from "i18next";
@@ -52,7 +52,7 @@ export class Voteban {
     ]);
     await changeLanguage(chat.language);
 
-    if (chat.type === "private") {
+    if (chat.type === ChatType.PRIVATE) {
       await ctx.reply(t("common:commandNotForPrivateChats"));
       return; // Private chat, return.
     }

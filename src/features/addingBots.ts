@@ -18,8 +18,8 @@ export class AddingBots {
    */
   public getOptions(): { id: AddingBotsRule | null; title: string }[] {
     return [
-      { id: AddingBotsRule.RESTRICTED, title: t("addingBots:restricted") },
-      { id: AddingBotsRule.RESTRICTED_AND_BAN, title: t("addingBots:restrictedAndBan") },
+      { id: AddingBotsRule.RESTRICT, title: t("addingBots:restricted") },
+      { id: AddingBotsRule.BAN, title: t("addingBots:restrictedAndBan") },
       { id: null, title: t("addingBots:allowed") },
     ];
   }
@@ -42,8 +42,8 @@ export class AddingBots {
     }
 
     const allowedCbData = `${SettingsAction.ADDING_BOTS_SAVE}?chatId=${chatId}`;
-    const restrictedCbData = `${SettingsAction.ADDING_BOTS_SAVE}?chatId=${chatId}&v=${AddingBotsRule.RESTRICTED}`;
-    const restrictedAndBanCbData = `${SettingsAction.ADDING_BOTS_SAVE}?chatId=${chatId}&v=${AddingBotsRule.RESTRICTED_AND_BAN}`;
+    const banCbData = `${SettingsAction.ADDING_BOTS_SAVE}?chatId=${chatId}&v=${AddingBotsRule.BAN}`;
+    const restrictCbData = `${SettingsAction.ADDING_BOTS_SAVE}?chatId=${chatId}&v=${AddingBotsRule.RESTRICT}`;
     const chatLink = getChatHtmlLink(prismaChat);
     const sanitizedValue = this.sanitizeValue(prismaChat.addingBots);
     const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";
@@ -55,8 +55,8 @@ export class AddingBots {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
-            [{ callback_data: restrictedCbData, text: t("addingBots:restrict") }],
-            [{ callback_data: restrictedAndBanCbData, text: t("addingBots:restrictAndBan") }],
+            [{ callback_data: restrictCbData, text: t("addingBots:restrict") }],
+            [{ callback_data: banCbData, text: t("addingBots:restrictAndBan") }],
             [{ callback_data: allowedCbData, text: t("addingBots:allow") }],
             settings.getBackToFeaturesButton(chatId),
           ],
@@ -114,15 +114,15 @@ export class AddingBots {
     }
 
     try {
-      if (prismaChat.addingBots === AddingBotsRule.RESTRICTED) {
+      if (prismaChat.addingBots === AddingBotsRule.RESTRICT) {
         await Promise.all(newBots.map((b) => kickChatMember(chat.id, b.id)));
       }
-      if (prismaChat.addingBots === AddingBotsRule.RESTRICTED_AND_BAN && senderChat) {
+      if (prismaChat.addingBots === AddingBotsRule.BAN && senderChat) {
         const msg = t("addingBots:userBanned", { USER: getChatHtmlLink(senderChat) });
         await ctx.banChatSenderChat(senderChat.id);
         await ctx.reply(msg, { parse_mode: "HTML" });
       }
-      if (prismaChat.addingBots === AddingBotsRule.RESTRICTED_AND_BAN && !senderChat) {
+      if (prismaChat.addingBots === AddingBotsRule.BAN && !senderChat) {
         const msg = t("addingBots:userBanned", { USER: getUserHtmlLink(from) });
         await ctx.banChatMember(from.id);
         await ctx.reply(msg, { parse_mode: "HTML" });
@@ -139,8 +139,8 @@ export class AddingBots {
    */
   private sanitizeValue(value: string | null): AddingBotsRule | null {
     switch (value) {
-      case AddingBotsRule.RESTRICTED:
-      case AddingBotsRule.RESTRICTED_AND_BAN:
+      case AddingBotsRule.BAN:
+      case AddingBotsRule.RESTRICT:
         return value;
       default:
         return null;

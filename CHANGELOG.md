@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.xx.x (2023-xx-xx)
+## 1.10.2 (2023-11-12)
 
 - Other: internal improvements
 

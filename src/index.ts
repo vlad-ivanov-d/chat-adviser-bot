@@ -1,3 +1,4 @@
+import { LanguageCode } from "@prisma/client";
 import { addingBots } from "features/addingBots";
 import { cleanup } from "features/cleanup";
 import { help } from "features/help";
@@ -15,7 +16,12 @@ import { bot } from "utils/telegraf";
 
 // Init localization
 export const defaultNs = "common";
-void init({ defaultNS: defaultNs, fallbackLng: "en", interpolation: { escapeValue: false }, resources: { en, ru } });
+void init({
+  defaultNS: defaultNs,
+  fallbackLng: LanguageCode.EN,
+  interpolation: { escapeValue: false },
+  resources: { [LanguageCode.EN]: en, [LanguageCode.RU]: ru },
+});
 
 // Bot commands
 bot.command("mychats", async (ctx, next) => {
