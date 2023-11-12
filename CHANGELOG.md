@@ -2,6 +2,7 @@
 
 ## 1.10.2 (2023-11-12)
 
+- Fix: incorrect display of the name of the chat with the bot
 - Other: internal improvements
 
 ## 1.10.1 (2023-11-12)

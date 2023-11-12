@@ -178,10 +178,10 @@ export const upsertPrismaChat = async (chat: TelegramChat, editor: TelegramUser)
     throw new Error("Something went wrong during chat upsertion.");
   }
 
-  // Patch bot private chat title
-  const patchedDisplayTitle =
-    bot.botInfo && chat.id === editor.id ? getUserDisplayName(bot.botInfo, "full") : displayTitle;
-  return { ...prismaChat, displayTitle: patchedDisplayTitle };
+  return bot.botInfo && chat.id === editor.id
+    ? // Patch display title of the chat with the bot
+      { ...prismaChat, displayTitle: getUserDisplayName(bot.botInfo, "full"), username: bot.botInfo.username }
+    : prismaChat;
 };
 
 /**
