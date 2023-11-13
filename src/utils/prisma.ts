@@ -41,7 +41,7 @@ const resolveChatType = (chatType: TelegramChat["type"]): ChatType => {
  * @returns Language code which is supported by the bot
  */
 const resolveLanguage = (languageCode: string | undefined): LanguageCode => {
-  switch (languageCode) {
+  switch (languageCode?.toLowerCase()) {
     case "ru":
       return LanguageCode.RU;
     case "en":

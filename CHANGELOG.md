@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.10.3 (2023-11-xx)
+
+- Fix: incorrect display of dates depending on the language
+
 ## 1.10.2 (2023-11-12)
 
 - Fix: incorrect display of the name of the chat with the bot
