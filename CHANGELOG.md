@@ -3,6 +3,7 @@
 ## 1.10.3 (2023-11-xx)
 
 - Fix: incorrect display of dates depending on the language
+- Other: internal improvements
 
 ## 1.10.2 (2023-11-12)
 
