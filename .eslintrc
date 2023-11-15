@@ -109,6 +109,7 @@
     "jsdoc/require-description": "error",
     "jsdoc/require-param-type": "off",
     "jsdoc/require-returns-type": "off",
+    "max-len": ["error", { "code": 120 }],
     "max-params": "error",
     "multiline-comment-style": ["error", "starred-block"],
     "no-alert": "error",
