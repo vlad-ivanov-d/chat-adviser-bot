@@ -36,8 +36,8 @@ const resolveChatType = (chatType: TelegramChat["type"]): ChatType => {
 };
 
 /**
- * Resolves language based on Telegram language code
- * @param languageCode Telegram lanugage code
+ * Resolves language based on Telegram or Prisma language code
+ * @param languageCode Telegram or Prisma language code
  * @returns Language code which is supported by the bot
  */
 const resolveLanguage = (languageCode: string | undefined): LanguageCode => {
