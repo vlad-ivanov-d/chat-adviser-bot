@@ -53,6 +53,7 @@ export class ProfanityFilter {
       profanity.filter(stringsToFilter.userFullName).hasProfanity ||
       profanity.filter(stringsToFilter.username).hasProfanity
     ) {
+      // An expected error may happen if there are no enough permissions
       return ctx.deleteMessage(messageId).catch(() => false);
     }
     return false;

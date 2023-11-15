@@ -115,7 +115,7 @@ export class Settings {
       ? ctx.reply(msg, { parse_mode: "HTML", reply_markup: replyMarkup })
       : Promise.all([
           ctx.answerCbQuery(),
-          // An expected error may happen if message has the same text after edit
+          /// An expected error may happen if the message won't change during edit
           ctx.editMessageText(msg, { parse_mode: "HTML", reply_markup: replyMarkup }).catch(() => undefined),
         ]));
   }
