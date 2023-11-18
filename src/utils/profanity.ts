@@ -15,7 +15,19 @@ export class Profanity {
    */
   private readonly similarChars: Record<string, string[]> = {
     // English
-    i: ["1"],
+    a: ["@", "а"],
+    b: ["l3", "6", "в", "ь"],
+    c: ["с"],
+    e: ["е"],
+    i: ["1", "!"],
+    k: ["к", "i{", "|{"],
+    m: ["м"],
+    o: ["0", "о"],
+    p: ["р"],
+    s: ["$", "z"],
+    t: ["+", "7", "т"],
+    x: ["х", "}{"],
+    y: ["у"],
 
     // Russian
     а: ["a", "@"],
@@ -76,9 +88,10 @@ export class Profanity {
       hasProfanity = hasProfanity || hasProfanityWord;
       return filteredWord;
     };
-    const firstFilterText = this.splitText(text, "punctuation").map(mapFunction).join("");
-    const secondFilterText = this.splitText(firstFilterText, "punctuation-capital-letters").map(mapFunction).join("");
-    return { filteredText: secondFilterText, hasProfanity };
+    const firstPassText = this.splitText(text, "spaces+punctuation").map(mapFunction).join("");
+    const secondPassText = this.splitText(firstPassText, "spaces+punctuation+capital").map(mapFunction).join("");
+    const thirdPassText = this.splitText(secondPassText, "spaces").map(mapFunction).join("");
+    return { filteredText: thirdPassText, hasProfanity };
   }
 
   /**
@@ -87,7 +100,7 @@ export class Profanity {
    * @returns Escaped char
    */
   private escapeCharForRegExp(char: string): string {
-    const escapeChars: string[] = ["*", "$"];
+    const escapeChars: string[] = ["+", "*", "$", "|"];
     return char
       .split("")
       .map((c) => (escapeChars.includes(c) ? `\\${c}` : c))
@@ -170,12 +183,19 @@ export class Profanity {
    * @param variant Variant to split the text
    * @returns An array of separate words and punctuation
    */
-  private splitText(text: string, variant: "punctuation" | "punctuation-capital-letters"): string[] {
-    if (variant === "punctuation") {
-      // Regular expression to separate text into words, punctuation and spaces.
-      return text.split(/([\s.,/<>?:;'"|\\{}[\]!@#$%^&*\-+=`~№]+)/g).filter((p) => p);
+  private splitText(text: string, variant: "spaces" | "spaces+punctuation" | "spaces+punctuation+capital"): string[] {
+    switch (variant) {
+      case "spaces":
+        // Regular expression to separate text into words, punctuation and spaces.
+        return text.split(/(\s+)/g).filter((p) => p);
+      case "spaces+punctuation":
+        // Regular expression to separate text into words, punctuation and spaces.
+        return text.split(/([\s.,/<>?:;'"|\\{}[\]!@#$%^&*\-+=`~№]+)/g).filter((p) => p);
+      case "spaces+punctuation+capital":
+        // Regular expression to separate text into words, punctuation and spaces, including capital letters.
+        return text.split(/([А-ЯЁA-Z][а-яёa-z]*|[\s.,/<>?:;'"|\\{}[\]!@#$%^&*\-+=`~№]+)/g).filter((p) => p);
+      default:
+        throw new Error("Unknown variant for splitting text in profanity filter.");
     }
-    // Regular expression to separate text into words, punctuation and spaces, including capital letters.
-    return text.split(/([А-ЯЁA-Z][а-яёa-z]*|[\s.,/<>?:;'"|\\{}[\]!@#$%^&*\-+=`~№]+)/g).filter((p) => p);
   }
 }
