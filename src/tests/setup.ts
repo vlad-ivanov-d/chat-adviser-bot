@@ -35,7 +35,7 @@ export const server = setupServer(...handlers);
 
 // Start listeners
 beforeAll(() => {
-  server.listen();
+  server.listen({ onUnhandledRequest: "error" });
 });
 
 // Reset any request handlers that may be added during the tests, so they don't affect other tests.
