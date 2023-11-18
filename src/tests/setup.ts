@@ -40,6 +40,7 @@ beforeAll(() => {
 
 // Reset any request handlers that may be added during the tests, so they don't affect other tests.
 afterEach(() => {
+  jest.restoreAllMocks();
   server.resetHandlers();
 });
 
