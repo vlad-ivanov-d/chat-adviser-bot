@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.11.0 (2023-11-19)
+
+- Improvement: the profanity filter has become more accurate
+- Fix: incorrect display of dates depending on the language
+- Other: internal improvements
+
 ## 1.10.2 (2023-11-12)
 
 - Fix: incorrect display of the name of the chat with the bot

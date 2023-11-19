@@ -15,7 +15,19 @@ export class Profanity {
    */
   private readonly similarChars: Record<string, string[]> = {
     // English
-    i: ["1"],
+    a: ["@", "а"],
+    b: ["l3", "6", "в", "ь"],
+    c: ["с"],
+    e: ["е"],
+    i: ["1", "!"],
+    k: ["к", "i{", "|{"],
+    m: ["м"],
+    o: ["0", "о"],
+    p: ["р"],
+    s: ["$", "z"],
+    t: ["+", "7", "т"],
+    x: ["х", "}{"],
+    y: ["у"],
 
     // Russian
     а: ["a", "@"],
@@ -66,37 +78,20 @@ export class Profanity {
    */
   public filter(text: string): ProfanityResult {
     let hasProfanity = false;
-    const filteredText = this.splitText(text)
-      .map((word) => {
-        const cleanWord = this.cleanWord(word);
-        for (const profaneWord of this.profaneWords) {
-          const cleanProfaneWord = this.cleanWord(profaneWord);
-          const profanityRegExp = this.getProfanityRegExp(cleanProfaneWord, this.similarChars);
-          let hasWord = false;
-          const filteredWord = cleanWord.replace(profanityRegExp, (): string => {
-            hasProfanity = true;
-            hasWord = true;
-            return "*".repeat(word.length);
-          });
-          // Known issue with no-unnecessary-condition
-          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-          if (hasWord) {
-            return filteredWord;
-          }
-        }
-        return word;
-      })
-      .join("");
-    return { filteredText, hasProfanity };
-  }
-
-  /**
-   * Removes duplicated chars and converting the word to lowercase
-   * @param word Word to clean
-   * @returns Clean word
-   */
-  private cleanWord(word: string): string {
-    return this.removeDuplicateChars(word.toLowerCase());
+    /**
+     * Maps filter result
+     * @param word Word to filter
+     * @returns Filtered word
+     */
+    const mapFunction = (word: string): string => {
+      const { filteredText: filteredWord, hasProfanity: hasProfanityWord } = this.filterWord(word);
+      hasProfanity = hasProfanity || hasProfanityWord;
+      return filteredWord;
+    };
+    const firstPassText = this.splitText(text, "spaces+punctuation").map(mapFunction).join("");
+    const secondPassText = this.splitText(firstPassText, "spaces+punctuation+capital").map(mapFunction).join("");
+    const thirdPassText = this.splitText(secondPassText, "spaces").map(mapFunction).join("");
+    return { filteredText: thirdPassText, hasProfanity };
   }
 
   /**
@@ -105,11 +100,37 @@ export class Profanity {
    * @returns Escaped char
    */
   private escapeCharForRegExp(char: string): string {
-    const escapeChars: string[] = ["*", "$"];
+    const escapeChars: string[] = ["+", "*", "$", "|"];
     return char
       .split("")
       .map((c) => (escapeChars.includes(c) ? `\\${c}` : c))
       .join("");
+  }
+
+  /**
+   * Filters and checks profanity in the word
+   * @param word Word to filter
+   * @returns Profanity filter result
+   */
+  private filterWord(word: string): ProfanityResult {
+    let hasProfanity = false;
+    const cleanWord = this.removeDuplicateChars(word.toLowerCase());
+    for (const profaneWord of this.profaneWords) {
+      const cleanProfaneWord = this.removeDuplicateChars(profaneWord.toLowerCase());
+      const profanityRegExp = this.getProfanityRegExp(cleanProfaneWord, this.similarChars);
+      let hasWord = false;
+      const filteredText = cleanWord.replace(profanityRegExp, () => {
+        hasProfanity = true;
+        hasWord = true;
+        return "*".repeat(word.length);
+      });
+      // Known issue with no-unnecessary-condition
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (hasWord) {
+        return { filteredText, hasProfanity };
+      }
+    }
+    return { filteredText: word, hasProfanity };
   }
 
   /**
@@ -157,14 +178,24 @@ export class Profanity {
   }
 
   /**
-   * Splits text into words and punctuation
+   * Splits text by different variants
    * @param text Text to split
+   * @param variant Variant to split the text
    * @returns An array of separate words and punctuation
    */
-  private splitText(text: string): string[] {
-    // Regular expression to separate text into words, punctuation and spaces.
-    const wordsAndPunctuation = text.split(/([\s,.;!?]+)/);
-    // Removing empty elements that could appear due to several separators in a row
-    return wordsAndPunctuation.filter((item) => item !== "");
+  private splitText(text: string, variant: "spaces" | "spaces+punctuation" | "spaces+punctuation+capital"): string[] {
+    switch (variant) {
+      case "spaces":
+        // Regular expression to separate text into words, punctuation and spaces.
+        return text.split(/(\s+)/g).filter((p) => p);
+      case "spaces+punctuation":
+        // Regular expression to separate text into words, punctuation and spaces.
+        return text.split(/([\s.,/<>?:;'"|\\{}[\]!@#$%^&*\-+=`~№]+)/g).filter((p) => p);
+      case "spaces+punctuation+capital":
+        // Regular expression to separate text into words, punctuation and spaces, including capital letters.
+        return text.split(/([А-ЯЁA-Z][а-яёa-z]*|[\s.,/<>?:;'"|\\{}[\]!@#$%^&*\-+=`~№]+)/g).filter((p) => p);
+      default:
+        throw new Error("Unknown variant for splitting text in profanity filter.");
+    }
   }
 }

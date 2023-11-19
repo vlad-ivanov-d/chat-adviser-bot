@@ -56,7 +56,7 @@ export class TimeZone {
           ],
         },
       }),
-    ]).catch(() => undefined); // An expected error may happen if the message won't change during edit;
+    ]).catch(() => undefined); // An expected error may happen if the message won't change during edit
   }
 
   /**

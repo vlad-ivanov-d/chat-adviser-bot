@@ -359,7 +359,7 @@ export class Voteban {
         }),
         ctx.editMessageText([questionMsg, resultsMsg].join("\n\n"), { parse_mode: "HTML" }),
         ctx.reply(t("voteban:completed"), { reply_to_message_id: message.message_id }),
-        // An expected errors may happen if bot has no enough permissions, so catch below requests.
+        // An expected error may happen if there are no enough permissions
         isBan && typeof candidateMessageId === "number" && ctx.deleteMessage(candidateMessageId).catch(() => undefined),
         isBan && candidateSenderChat && ctx.banChatSenderChat(candidateSenderChat.id).catch(() => undefined),
         isBan && !candidateSenderChat && ctx.banChatMember(candidate.id).catch(() => undefined),

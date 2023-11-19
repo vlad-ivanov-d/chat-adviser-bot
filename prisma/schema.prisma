@@ -106,12 +106,12 @@ model SenderChat {
 
 model ProfaneWord {
   id        BigInt       @id @default(autoincrement())
-  authorId  Float
+  authorId  Float        @map("author_id")
   comment   String?
-  createdAt DateTime     @default(now())
-  editorId  Float
+  createdAt DateTime     @default(now()) @map("created_at")
+  editorId  Float        @map("editor_id")
   language  LanguageCode
-  updatedAt DateTime     @updatedAt
+  updatedAt DateTime     @updatedAt @map("updated_at")
   word      String
 
   author User @relation("ProfaneWordAuthor", fields: [authorId], references: [id])
@@ -186,11 +186,11 @@ model Voteban {
 
 model VotebanBanVoter {
   id        BigInt   @id @default(autoincrement())
-  authorId  Float
-  createdAt DateTime @default(now())
-  editorId  Float
-  updatedAt DateTime @updatedAt
-  votebanId BigInt
+  authorId  Float    @map("author_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  editorId  Float    @map("editor_id")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  votebanId BigInt   @map("voteban_id")
 
   author  User    @relation("VotebanBanVoterAuthor", fields: [authorId], references: [id])
   editor  User    @relation("VotebanBanVoterEditor", fields: [editorId], references: [id])
@@ -202,11 +202,11 @@ model VotebanBanVoter {
 
 model VotebanNoBanVoter {
   id        BigInt   @id @default(autoincrement())
-  authorId  Float
-  createdAt DateTime @default(now())
-  editorId  Float
-  updatedAt DateTime @updatedAt
-  votebanId BigInt
+  authorId  Float    @map("author_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  editorId  Float    @map("editor_id")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  votebanId BigInt   @map("voteban_id")
 
   author  User    @relation("VotebanNoBanVoterAuthor", fields: [authorId], references: [id])
   editor  User    @relation("VotebanNoBanVoterEditor", fields: [editorId], references: [id])

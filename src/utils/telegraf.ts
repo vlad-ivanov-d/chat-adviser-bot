@@ -2,12 +2,12 @@ import { ChatType as PrismaChatType, SenderChat as PrismaSenderChat, User as Pri
 import { Telegraf } from "telegraf";
 import { Chat, InlineKeyboardButton, User } from "telegraf/typings/core/types/typegram";
 import { encodeText } from "utils/encode";
-import { BOT_TOKEN } from "utils/envs";
+import { BOT_TOKEN, NODE_ENV } from "utils/envs";
 
 /**
  * Telegram bot client
  */
-export const bot = new Telegraf(BOT_TOKEN);
+export const bot = new Telegraf(BOT_TOKEN, { telegram: { testEnv: NODE_ENV === "test" } });
 
 export interface PaginationParams {
   /**
