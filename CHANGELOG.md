@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.11.0 (2023-11-xx)
+## 1.11.0 (2023-11-19)
 
 - Improvement: the profanity filter has become more accurate
 - Fix: incorrect display of dates depending on the language
