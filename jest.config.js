@@ -4,6 +4,7 @@ const { compilerOptions } = require("./tsconfig.json");
 const config = {
   modulePaths: [compilerOptions.baseUrl],
   preset: "ts-jest",
+  setupFiles: ["<rootDir>/src/tests/setEnvVars.ts"],
   setupFilesAfterEnv: ["<rootDir>/src/tests/setup.ts"],
 };
 
