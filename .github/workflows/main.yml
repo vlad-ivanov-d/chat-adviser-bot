@@ -62,5 +62,5 @@ jobs:
           chmod 700 ~/.ssh
           echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-          docker compose up --build --detach --force-recreate --remove-orphans
+          docker compose up --build --force-recreate --remove-orphans -d
         shell: bash
