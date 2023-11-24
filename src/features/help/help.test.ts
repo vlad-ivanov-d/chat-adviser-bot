@@ -1,6 +1,6 @@
 import { http, HttpHandler, HttpResponse } from "msw";
 import { mockBot } from "tests/mockBot";
-import { mockSupergroupChat } from "tests/mockChat";
+import { mockPrivateChat } from "tests/mockChat";
 import { mockUser } from "tests/mockUser";
 import { BASE_URL, initBotAndRunUpdates, server } from "tests/setup";
 import { bot } from "utils/telegraf";
@@ -11,7 +11,7 @@ const handler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
     result: [
       {
         message: {
-          chat: mockSupergroupChat(),
+          chat: mockPrivateChat(),
           date: 1577826000000,
           entities: [{ length: 5, offset: 0, type: "bot_command" }],
           from: mockUser(),
@@ -24,7 +24,7 @@ const handler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
   }),
 );
 
-test("the correctness of the response to the /help command in a group chat", async () => {
+test("the correctness of the response to the /help command in a private chat", async () => {
   let replySpy;
   server.use(...[handler]);
   bot.use(async (ctx, next) => {
@@ -40,6 +40,6 @@ test("the correctness of the response to the /help command in a group chat", asy
       "command /mychats and I will help you set up your chat\n\n<b>Feature list:</b> ban voting, profanity filter, " +
       "restriction on adding bots, support for different languages.\nI'll tell about each feature " +
       "in more detail during setup.\n\nYou can call this message again at any time using the /help command.",
-    { parse_mode: "HTML", reply_to_message_id: 1 },
+    { parse_mode: "HTML", reply_to_message_id: undefined },
   );
 });
