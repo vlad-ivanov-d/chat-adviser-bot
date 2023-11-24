@@ -7,7 +7,7 @@
     "dev": "docker compose -f compose.dev.yml up --force-recreate --remove-orphans -d && prisma migrate dev && nodemon src/index.ts",
     "lint": "eslint --fix .",
     "start": "docker compose --env-file=.env -f dist/compose.yml up --build --force-recreate --remove-orphans -d",
-    "test": "dotenv -e .env.test -- docker compose -f compose.test.yml up --force-recreate --remove-orphans --wait -d && dotenv -e .env.test -- prisma migrate deploy && jest --coverage --force-exit && docker-compose -f compose.test.yml down"
+    "test": "dotenv -e .env.test -- docker compose -f compose.test.yml up --force-recreate --remove-orphans --wait -d && dotenv -e .env.test -- prisma migrate deploy && jest --coverage --force-exit && dotenv -e .env.test -- docker-compose -f compose.test.yml down"
   },
   "author": "Vlad Ivanov",
   "bugs": {
