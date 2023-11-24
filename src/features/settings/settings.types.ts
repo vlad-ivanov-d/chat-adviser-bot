@@ -1,0 +1,15 @@
+export enum SettingsAction {
+  ADDING_BOTS = "cfg-addng-bts",
+  ADDING_BOTS_SAVE = "cfg-addng-bts-sv",
+  CHATS = "cfg-chats",
+  FEATURES = "cfg-ftrs",
+  LANGUAGE = "cfg-lng",
+  LANGUAGE_SAVE = "cfg-lng-sv",
+  PROFANITY_FILTER = "cfg-pf",
+  PROFANITY_FILTER_SAVE = "cfg-pf-sv",
+  REFRESH = "cfg-rfrsh",
+  TIME_ZONE = "cfg-tz",
+  TIME_ZONE_SAVE = "cfg-tz-sv",
+  VOTEBAN = "cfg-vtbn",
+  VOTEBAN_SAVE = "cfg-vtbn-sv",
+}

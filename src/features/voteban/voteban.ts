@@ -24,10 +24,7 @@ import {
   isCleanCommand,
 } from "utils/telegraf";
 
-export enum VotebanAction {
-  BAN = "voteban-ban",
-  NO_BAN = "voteban-no-ban",
-}
+import { VotebanAction } from "./voteban.types";
 
 export class Voteban {
   /**
