@@ -32,6 +32,9 @@ test("the correctness of the response to the /help command in a private chat", a
     await next();
   });
 
+  // eslint-disable-next-line no-console
+  console.log(process.env);
+
   await initBotAndRunUpdates(bot);
 
   expect(replySpy).toHaveBeenCalledWith(
