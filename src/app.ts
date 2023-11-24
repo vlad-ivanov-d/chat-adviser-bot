@@ -24,7 +24,7 @@ export const defaultNs = "common";
  * @param bot Telegraf bot
  * @returns Telegraf bot with all the features
  */
-export const initBotFeatures = (bot: Telegraf): Telegraf => {
+export const initBot = (bot: Telegraf): Telegraf => {
   // Localization
   void init({
     defaultNS: defaultNs,

@@ -35,6 +35,15 @@ npm run build
 
 Resulted `./dist` folder can be moved to your hosting.
 
+## Tests
+
+The tests were implemented using Jest and the MSW library for mocking the Telegram API. Use an environment variable
+`export DEBUG='telegraf:*'` to display in the console all running network requests to the Telegram API.
+
+```bash
+npm run test
+```
+
 ## Development Server
 
 ```bash

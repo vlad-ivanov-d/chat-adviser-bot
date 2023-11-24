@@ -1,31 +1,36 @@
+import { initBot } from "app";
 import { http, HttpHandler, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
+import { Telegraf } from "telegraf";
 import { prisma } from "utils/prisma";
+
+import { mockBot } from "./mockBot";
 
 /**
  * Base url for mocking API calls
  */
-export const BASE_URL = `https://api.telegram.org/bot${process.env.BOT_TOKEN}/test`;
+export const BASE_URL = `https://api.telegram.org/bot${process.env.BOT_TOKEN}`;
+
+/**
+ * Initiates bot features and runs updates
+ * @param bot Telegraf bot
+ * @returns Telegraf bot with all the features
+ */
+export const initBotAndRunUpdates = async (bot: Telegraf): Promise<Telegraf> => {
+  initBot(bot);
+  const updates = await bot.telegram.getUpdates(50, 100, 0, []);
+  for (const update of updates) {
+    await bot.handleUpdate(update);
+  }
+  return bot;
+};
 
 /**
  * MSW HTTP handlers
  */
 const handlers: HttpHandler[] = [
   http.post(`${BASE_URL}/getChatMembersCount`, () => HttpResponse.json({ ok: true, result: 2 })),
-  http.post(`${BASE_URL}/getMe`, () =>
-    HttpResponse.json({
-      ok: true,
-      result: {
-        can_join_groups: true,
-        can_read_all_group_messages: true,
-        first_name: "The Bot",
-        id: 100_000,
-        is_bot: true,
-        supports_inline_queries: false,
-        username: "the_bot",
-      },
-    }),
-  ),
+  http.post(`${BASE_URL}/getMe`, () => HttpResponse.json({ ok: true, result: mockBot() })),
 ];
 
 /**
