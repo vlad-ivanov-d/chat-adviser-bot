@@ -135,9 +135,6 @@ export const upsertPrismaChat = async (chat: TelegramChat, editor: TelegramUser)
   const title = "title" in chat ? chat.title : null;
   const username = "username" in chat ? chat.username ?? null : null;
 
-  // eslint-disable-next-line no-console
-  console.log(process.env.DATABASE_URL);
-
   const transaction = await prisma.$transaction([
     ...[editor, ...admins.map((a) => a.user)]
       .filter((u, i, arr) => arr.findIndex((au) => au.id === u.id) === i) // Trim duplicates
