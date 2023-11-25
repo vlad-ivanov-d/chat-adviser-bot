@@ -5,8 +5,8 @@ Notes for developers
 ## Prerequisites
 
 - Docker
-- NPM (check actual version in `engines` section of [package.json](./package.json) file)
-- Node.js (check actual version in `engines` section of [package.json](./package.json) file)
+- NPM (check the actual version in the `engines` section of the [package.json](./package.json) file)
+- Node.js (check the actual version in the `engines` section of the [package.json](./package.json) file)
 
 ## Extensions for IDE
 

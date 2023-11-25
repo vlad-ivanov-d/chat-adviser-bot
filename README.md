@@ -29,8 +29,8 @@ The bot can prevent users from adding bots to chat. This will help avoid spam or
 ### Prerequisites
 
 - Docker
-- NPM (check actual version in `engines` section of [package.json](./package.json) file)
-- Node.js (check actual version in `engines` section of [package.json](./package.json) file)
+- NPM (check the actual version in the `engines` section of the [package.json](./package.json) file)
+- Node.js (check the actual version in the `engines` section of the [package.json](./package.json) file)
 
 ### Production
 
