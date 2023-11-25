@@ -24,12 +24,6 @@ The bot can filter profanity in chat, including usernames. The filter won't be a
 
 The bot can prevent users from adding bots to chat. This will help avoid spam or, for example, collecting chat statistics without the approval of administrators. Additionally, the ban of the violator can be configured. The user who tried to add the bot will be banned. The bot needs administrator permissions for this feature.
 
-## Test Coverage
-
-| Statements                  | Branches                | Functions                 | Lines             |
-| --------------------------- | ----------------------- | ------------------------- | ----------------- |
-| ![Statements](https://img.shields.io/badge/statements-32.01%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-10.24%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-17.57%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-28.92%25-red.svg?style=flat) |
-
 ## Getting Started
 
 ### Prerequisites
@@ -52,6 +46,12 @@ The bot can prevent users from adding bots to chat. This will help avoid spam or
 - Run development server: `npm run dev`
 
 Get more details in [Contributing](./CONTRIBUTING.md)
+
+## Test Coverage
+
+| Statements                  | Branches                | Functions                 | Lines             |
+| --------------------------- | ----------------------- | ------------------------- | ----------------- |
+| ![Statements](https://img.shields.io/badge/statements-32.01%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-10.24%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-17.57%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-28.92%25-red.svg?style=flat) |
 
 ## License
 
