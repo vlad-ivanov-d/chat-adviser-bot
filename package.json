@@ -6,8 +6,12 @@
     "build": "eslint . && tsc -noEmit && node build.mjs",
     "dev": "docker compose -f compose.dev.yml up --force-recreate --remove-orphans -d && prisma migrate dev && nodemon src/index.ts",
     "lint": "eslint --fix .",
+    "make-badges": "istanbul-badges-readme",
     "start": "docker compose --env-file=.env -f dist/compose.yml up --build --force-recreate --remove-orphans -d",
-    "test": "dotenv -e .env.test -- docker compose -f compose.test.yml up --force-recreate --remove-orphans --wait -d && dotenv -e .env.test -- prisma migrate deploy && jest --coverage --force-exit && docker compose -f compose.test.yml down"
+    "test": "npm run test:ci && npm run make-badges",
+    "test:ci": "npm run test:env-up && dotenv -e .env.test -- prisma migrate deploy && jest --coverage --force-exit && npm run test:env-down",
+    "test:env-down": "docker compose -f compose.test.yml down",
+    "test:env-up": "dotenv -e .env.test -- docker compose -f compose.test.yml up --force-recreate --remove-orphans --wait -d"
   },
   "author": "Vlad Ivanov",
   "bugs": {
@@ -62,6 +66,7 @@
     "eslint-plugin-simple-import-sort": "10.0.0",
     "eslint-plugin-sonarjs": "0.23.0",
     "eslint-plugin-typescript-sort-keys": "3.1.0",
+    "istanbul-badges-readme": "1.8.5",
     "jest": "29.7.0",
     "msw": "2.0.9",
     "nodemon": "3.0.1",

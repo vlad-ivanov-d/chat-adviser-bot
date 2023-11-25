@@ -2,6 +2,7 @@ const { compilerOptions } = require("./tsconfig.json");
 
 /** @type {import('jest').Config} */
 const config = {
+  coverageReporters: ["clover", "json", "json-summary", "lcov", "text"],
   coverageThreshold: {
     global: {
       branches: 10,
