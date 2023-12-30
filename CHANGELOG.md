@@ -2,6 +2,7 @@
 
 ## 1.12.0 (2023-xx-xx)
 
+- Improvement: the profanity filter has become more accurate
 - Other: internal improvements
 
 ## 1.11.0 (2023-11-19)
