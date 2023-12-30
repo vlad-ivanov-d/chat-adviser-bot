@@ -14,12 +14,12 @@ await build({
   platform: "node",
   plugins: [
     copyStaticFiles({
-      dest: "./dist/node/libquery_engine-debian-openssl-3.0.x.so.node",
-      src: "./node_modules/.prisma/client/libquery_engine-debian-openssl-3.0.x.so.node",
+      dest: "./dist/node/libquery_engine-linux-musl-arm64-openssl-3.0.x.so.node",
+      src: "./node_modules/.prisma/client/libquery_engine-linux-musl-arm64-openssl-3.0.x.so.node",
     }),
     copyStaticFiles({
-      dest: "./dist/node/libquery_engine-linux-arm64-openssl-3.0.x.so.node",
-      src: "./node_modules/.prisma/client/libquery_engine-linux-arm64-openssl-3.0.x.so.node",
+      dest: "./dist/node/libquery_engine-linux-musl-openssl-3.0.x.so.node",
+      src: "./node_modules/.prisma/client/libquery_engine-linux-musl-openssl-3.0.x.so.node",
     }),
     copyStaticFiles({ dest: "./dist/prisma/", src: "./prisma/" }),
     copyStaticFiles({ dest: "./dist/compose.yml", src: "./compose.yml" }),
