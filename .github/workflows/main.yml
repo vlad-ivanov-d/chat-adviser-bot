@@ -11,7 +11,7 @@ jobs:
       - name: Setup node version
         uses: actions/setup-node@v3
         with:
-          node-version: "20.9.0"
+          node-version: "20.10.0"
       - name: Restore dependencies
         run: npm ci
       - name: Build sources
@@ -30,13 +30,11 @@ jobs:
       - name: Setup node version
         uses: actions/setup-node@v3
         with:
-          node-version: "20.9.0"
+          node-version: "20.10.0"
       - name: Restore dependencies
         run: npm ci
       - name: Run tests
         run: npm run test:ci
-      - name: Check test badges
-        run: npm run make-badges -- --ci
 
   deploy:
     environment: production
@@ -53,6 +51,7 @@ jobs:
           BOT_TOKEN: ${{secrets.BOT_TOKEN}}
           DATABASE_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
           DATABASE_PORT: ${{secrets.DATABASE_PORT}}
+          DATABASE_URL: ${{secrets.DATABASE_URL}}
           DATABASE_USER: ${{secrets.DATABASE_USER}}
           DOCKER_HOST: ${{secrets.DOCKER_HOST}}
           SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}

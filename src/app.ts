@@ -1,130 +1,74 @@
-import { LanguageCode } from "@prisma/client";
-import { addingBots } from "features/addingBots";
-import { cleanup } from "features/cleanup";
-import { help } from "features/help";
-import { language } from "features/language";
-import { profanityFilter } from "features/profanityFilter";
-import { settings, SettingsAction } from "features/settings";
-import { timeZone } from "features/timeZone";
-import { voteban, VotebanAction } from "features/voteban";
-import { init } from "i18next";
-import en from "languages/en.json";
-import ru from "languages/ru.json";
+import { AddingBots } from "modules/addingBots";
+import { Cleanup } from "modules/cleanup";
+import { Help } from "modules/help";
+import { Language } from "modules/language";
+import { ProfanityFilter } from "modules/profanityFilter";
+import { Settings } from "modules/settings";
+import { TimeZone } from "modules/timeZone";
+import { Voteban } from "modules/voteban";
 import { Telegraf } from "telegraf";
-import { callbackQuery, message } from "telegraf/filters";
-import { prisma } from "utils/prisma";
 
-/**
- * Default namespace for localization
- */
-export const defaultNs = "common";
+import { Database } from "./modules/database";
 
-/**
- * Initiates bot features
- * @param bot Telegraf bot
- * @returns Telegraf bot with all the features
- */
-export const initBot = (bot: Telegraf): Telegraf => {
-  // Localization
-  void init({
-    defaultNS: defaultNs,
-    fallbackLng: LanguageCode.EN,
-    interpolation: { escapeValue: false },
-    resources: { [LanguageCode.EN]: en, [LanguageCode.RU]: ru },
-  });
-
-  // Bot commands
-  bot.command("mychats", async (ctx, next) => {
-    await settings.command(ctx, "mychats");
-    await next();
-  });
-  bot.help(async (ctx, next) => {
-    await help.command(ctx, "help");
-    await next();
-  });
-  bot.start(async (ctx, next) => {
-    await help.command(ctx, "start");
-    await next();
-  });
-
-  // Bot events
-  bot.on(callbackQuery("data"), async (ctx) => {
-    const action = ctx.callbackQuery.data.split("?")[0];
-    const params = new URLSearchParams(ctx.callbackQuery.data.split("?")[1] ?? "");
-    const chatId = parseFloat(params.get("chatId") ?? "");
-    const skip = params.get("skip") ? parseFloat(params.get("skip") ?? "0") : undefined;
-    const value = params.get("v");
-    const valueNum = parseFloat(value ?? "");
-    switch (action) {
-      case SettingsAction.ADDING_BOTS:
-        return addingBots.renderSettings(ctx, chatId);
-      case SettingsAction.ADDING_BOTS_SAVE:
-        return addingBots.saveSettings(ctx, chatId, value);
-      case SettingsAction.CHATS:
-      case SettingsAction.REFRESH:
-        return settings.renderChats(ctx, skip);
-      case SettingsAction.FEATURES:
-        return settings.renderFeatures(ctx, chatId, skip);
-      case SettingsAction.LANGUAGE:
-        return language.renderSettings(ctx, chatId);
-      case SettingsAction.LANGUAGE_SAVE:
-        return language.saveSettings(ctx, chatId, value);
-      case SettingsAction.PROFANITY_FILTER:
-        return profanityFilter.renderSettings(ctx, chatId);
-      case SettingsAction.PROFANITY_FILTER_SAVE:
-        return profanityFilter.saveSettings(ctx, chatId, value);
-      case SettingsAction.TIME_ZONE:
-        return timeZone.renderSettings(ctx, chatId, skip);
-      case SettingsAction.TIME_ZONE_SAVE:
-        return timeZone.saveSettings(ctx, chatId, value);
-      case SettingsAction.VOTEBAN:
-        return voteban.renderSettings(ctx, chatId, valueNum);
-      case SettingsAction.VOTEBAN_SAVE:
-        return voteban.saveSettings(ctx, chatId, valueNum);
-      case VotebanAction.BAN:
-      case VotebanAction.NO_BAN:
-        return voteban.vote(ctx, action);
-      default:
-        return;
-    }
-  });
-  bot.on(message(), async (ctx, next) => {
-    const { message } = ctx.update;
-    const isBotKicked = "left_chat_member" in message && message.left_chat_member.id === ctx.botInfo.id;
-    const isProfanityRemoved = isBotKicked ? false : await profanityFilter.filter(ctx);
-    if ("new_chat_members" in message || !isProfanityRemoved) {
-      await next();
-    }
-  });
-  bot.on(message("group_chat_created"), (ctx) => settings.promptSettings(ctx));
-  bot.on(message("left_chat_member"), async ({ botInfo, chat, update: { message } }) => {
-    if (message.left_chat_member.id === botInfo.id) {
-      await prisma.chat.deleteMany({ where: { id: chat.id } }); // Clean up database when bot is removed from the chat
-    }
-  });
-  bot.on(message("new_chat_members"), async (ctx) => {
-    await addingBots.validate(ctx);
-    await settings.promptSettings(ctx);
-  });
-  bot.on(message("supergroup_chat_created"), (ctx) => settings.promptSettings(ctx));
-  bot.on(message("text"), (ctx) => voteban.command(ctx, "voteban"));
-
-  // Cron jobs
-  cleanup.startCronJob();
+export class App {
+  private addingBots?: AddingBots;
+  private cleanup?: Cleanup;
+  private database?: Database;
+  private help?: Help;
+  private language?: Language;
+  private profanityFilter?: ProfanityFilter;
+  private settings?: Settings;
+  private timeZone?: TimeZone;
+  private voteban?: Voteban;
 
   /**
-   * Shuts down the bot and all related services
-   * @param event Event name
+   * Creates app module
+   * @param bot Telegraf instance
    */
-  const shutdown = (event: NodeJS.Signals): void => {
-    cleanup.stopCronJob();
-    bot.stop(event);
-    void prisma.$disconnect();
-  };
+  public constructor(private readonly bot: Telegraf) {}
 
-  // Shutdown the bot when Node.js server is turned off
-  process.once("SIGINT", shutdown);
-  process.once("SIGTERM", shutdown);
+  /**
+   * Initiates app module
+   */
+  public async init(): Promise<void> {
+    this.database = new Database(this.bot);
+    await this.database.init();
 
-  return bot;
-};
+    this.settings = new Settings(this.bot, this.database);
+    this.settings.init();
+
+    this.profanityFilter = new ProfanityFilter(this.bot, this.database, this.settings);
+    this.profanityFilter.init();
+
+    this.addingBots = new AddingBots(this.bot, this.database, this.settings);
+    this.addingBots.init();
+
+    this.cleanup = new Cleanup(this.bot, this.database);
+    this.cleanup.init();
+
+    this.help = new Help(this.bot, this.database);
+    this.help.init();
+
+    this.language = new Language(this.bot, this.database, this.settings);
+    await this.language.init();
+
+    this.timeZone = new TimeZone(this.bot, this.database, this.settings);
+    this.timeZone.init();
+
+    this.voteban = new Voteban(this.bot, this.database, this.settings);
+    this.voteban.init();
+  }
+
+  /**
+   * Shutdowns app module
+   * @param stopBot Stops the bot
+   */
+  public async shutdown(stopBot?: boolean): Promise<void> {
+    this.cleanup?.shutdown();
+    this.voteban?.shutdown();
+    if (stopBot) {
+      this.bot.stop();
+    }
+    await this.database?.shutdown();
+  }
+}

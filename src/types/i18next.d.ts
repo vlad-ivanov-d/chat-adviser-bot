@@ -1,11 +1,10 @@
 import "i18next";
 
-import { defaultNs } from "index";
-import en from "languages/en.json";
+import { DEFAULT_NS, LanguageResources } from "modules/language";
 
 declare module "i18next" {
   interface CustomTypeOptions {
-    defaultNS: typeof defaultNs;
-    resources: typeof en;
+    defaultNS: typeof DEFAULT_NS;
+    resources: LanguageResources;
   }
 }

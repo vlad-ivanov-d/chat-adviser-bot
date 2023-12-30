@@ -1,3 +1,5 @@
+import escapeRegExp from "lodash.escaperegexp";
+
 export interface ProfanityResult {
   /**
    * Filtered text
@@ -95,19 +97,6 @@ export class Profanity {
   }
 
   /**
-   * Escapes char if it's necessary for correct regular expression
-   * @param char Char which should be escaped if necessary
-   * @returns Escaped char
-   */
-  private escapeCharForRegExp(char: string): string {
-    const escapeChars: string[] = ["+", "*", "$", "|"];
-    return char
-      .split("")
-      .map((c) => (escapeChars.includes(c) ? `\\${c}` : c))
-      .join("");
-  }
-
-  /**
    * Filters and checks profanity in the word
    * @param word Word to filter
    * @returns Profanity filter result
@@ -147,9 +136,9 @@ export class Profanity {
         if (char === "*" && (i === 0 || i === arr.length - 1)) {
           return ""; // Remove starting and ending "*" character
         }
-        const chars = [this.escapeCharForRegExp(char)];
+        const chars = [escapeRegExp(char)];
         if (char in similarChars) {
-          chars.push(...similarChars[char].map((c) => this.escapeCharForRegExp(c)));
+          chars.push(...similarChars[char].map(escapeRegExp));
         }
         return `(${chars.join("|")})`;
       })
