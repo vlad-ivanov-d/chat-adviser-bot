@@ -18,7 +18,7 @@ const privateChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =
           entities: [{ length: 5, offset: 0, type: "bot_command" }],
           from: mockUser(),
           message_id: 1,
-          text: "/help",
+          text: "/start",
         },
         update_id: 1,
       },
@@ -57,7 +57,7 @@ describe("Help", () => {
     bot = new Telegraf(BOT_TOKEN);
   });
 
-  it("responds to the /help command in a private chat", async () => {
+  it("answers to /start command in a private chat", async () => {
     server.use(...[privateChatHandler]);
     let replySpy;
     bot.use(async (ctx, next) => {
@@ -78,7 +78,7 @@ describe("Help", () => {
     );
   });
 
-  it("responds to the /help command in supergroup chat", async () => {
+  it("answers to /help command in supergroup chat", async () => {
     server.use(...[supergroupChatHandler]);
     let replySpy;
     bot.use(async (ctx, next) => {
