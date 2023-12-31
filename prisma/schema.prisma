@@ -40,23 +40,23 @@ enum ProfanityFilterRule {
 
 model Chat {
   id              Float                @id
-  addingBots      AddingBotsRule?
+  addingBots      AddingBotsRule?      @map("adding_bots")
   admins          User[]               @relation("ChatAdmins")
-  authorId        Float
-  createdAt       DateTime             @default(now())
-  displayTitle    String
-  editorId        Float
-  firstName       String?
+  authorId        Float                @map("author_id")
+  createdAt       DateTime             @default(now()) @map("created_at")
+  displayTitle    String               @map("display_title")
+  editorId        Float                @map("editor_id")
+  firstName       String?              @map("first_name")
   language        LanguageCode
-  lastName        String?
-  membersCount    Int
-  profanityFilter ProfanityFilterRule?
-  timeZone        String
+  lastName        String?              @map("last_name")
+  membersCount    Int                  @map("members_count")
+  profanityFilter ProfanityFilterRule? @map("profanity_filter")
+  timeZone        String               @map("time_zone")
   title           String?
   type            ChatType
-  updatedAt       DateTime             @updatedAt
+  updatedAt       DateTime             @updatedAt @map("updated_at")
   username        String?
-  votebanLimit    Int?
+  votebanLimit    Int?                 @map("voteban_limit")
 
   author              User                  @relation("ChatAuthor", fields: [authorId], references: [id])
   chatSettingsHistory ChatSettingsHistory[]
@@ -69,12 +69,12 @@ model Chat {
 
 model ChatSettingsHistory {
   id          BigInt          @id @default(autoincrement())
-  authorId    Float
-  chatId      Float
-  createdAt   DateTime        @default(now())
-  editorId    Float
-  settingName ChatSettingName
-  updatedAt   DateTime        @updatedAt
+  authorId    Float           @map("author_id")
+  chatId      Float           @map("chat_id")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  editorId    Float           @map("editor_id")
+  settingName ChatSettingName @map("setting_name")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
 
   author User @relation("ChatSettingsHistoryAuthor", fields: [authorId], references: [id])
   chat   Chat @relation(fields: [chatId], onDelete: Cascade, references: [id])
@@ -86,14 +86,14 @@ model ChatSettingsHistory {
 
 model SenderChat {
   id        Float    @id
-  authorId  Float
-  createdAt DateTime @default(now())
-  editorId  Float
-  firstName String?
-  lastName  String?
+  authorId  Float    @map("author_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  editorId  Float    @map("editor_id")
+  firstName String?  @map("first_name")
+  lastName  String?  @map("last_name")
   title     String?
   type      ChatType
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @updatedAt @map("updated_at")
   username  String?
 
   author                      User      @relation("SenderChatAuthor", fields: [authorId], references: [id])
@@ -123,13 +123,13 @@ model ProfaneWord {
 
 model User {
   id           Float    @id
-  authorId     Float
-  createdAt    DateTime @default(now())
-  editorId     Float
-  firstName    String
-  languageCode String?
-  lastName     String?
-  updatedAt    DateTime @updatedAt
+  authorId     Float    @map("author_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  editorId     Float    @map("editor_id")
+  firstName    String   @map("first_name")
+  languageCode String?  @map("language_code")
+  lastName     String?  @map("last_name")
+  updatedAt    DateTime @updatedAt @map("updated_at")
   username     String?
 
   author                     User                  @relation("UserAuthor", fields: [authorId], references: [id])
@@ -159,18 +159,18 @@ model User {
 
 model Voteban {
   id                    BigInt              @id @default(autoincrement())
-  authorId              Float
-  authorSenderChatId    Float?
+  authorId              Float               @map("author_id")
+  authorSenderChatId    Float?              @map("author_sender_chat_id")
   banVoters             VotebanBanVoter[]
-  candidateId           Float
-  candidateSenderChatId Float?
-  chatId                Float
-  createdAt             DateTime            @default(now())
-  editorId              Float
-  isCompleted           Boolean?
-  messageId             Float
+  candidateId           Float               @map("candidate_id")
+  candidateSenderChatId Float?              @map("candidate_sender_chat_id")
+  chatId                Float               @map("chat_id")
+  createdAt             DateTime            @default(now()) @map("created_at")
+  editorId              Float               @map("editor_id")
+  isCompleted           Boolean?            @map("is_completed")
+  messageId             Float               @map("message_id")
   noBanVoters           VotebanNoBanVoter[]
-  updatedAt             DateTime            @updatedAt
+  updatedAt             DateTime            @updatedAt @map("updated_at")
 
   author              User        @relation("VotebanAuthor", fields: [authorId], references: [id])
   authorSenderChat    SenderChat? @relation("VotebanAuthorSenderChat", fields: [authorSenderChatId], references: [id])
