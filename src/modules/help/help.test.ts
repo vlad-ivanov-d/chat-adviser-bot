@@ -45,6 +45,13 @@ const supergroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, (
   }),
 );
 
+const helpMessage =
+  "Hello! I'm a bot that helps to moderate chats.\n\n<b>Getting started:</b>\n1. add me to chat\n" +
+  `2. give me administrator permissions\n3. send a <a href="tg:user?id=${mockBot().id}">private message</a> ` +
+  "command /mychats and I will help you set up your chat\n\n<b>Feature list:</b> ban voting, profanity filter, " +
+  "restriction on adding bots, support for different languages.\nI'll tell about each feature " +
+  "in more detail during setup.\n\nYou can call this message again at any time using the /help command.";
+
 describe("Help", () => {
   let app: App;
   let bot: Telegraf;
@@ -68,14 +75,7 @@ describe("Help", () => {
     app = await runAppUpdates(bot);
 
     expect(replySpy).toHaveBeenCalledTimes(1);
-    expect(replySpy).toHaveBeenCalledWith(
-      "Hello! I'm a bot that helps to moderate chats.\n\n<b>Getting started:</b>\n1. add me to chat\n" +
-        `2. give me administrator permissions\n3. send a <a href="tg:user?id=${mockBot().id}">private message</a> ` +
-        "command /mychats and I will help you set up your chat\n\n<b>Feature list:</b> ban voting, profanity filter, " +
-        "restriction on adding bots, support for different languages.\nI'll tell about each feature " +
-        "in more detail during setup.\n\nYou can call this message again at any time using the /help command.",
-      { parse_mode: "HTML", reply_to_message_id: undefined },
-    );
+    expect(replySpy).toHaveBeenCalledWith(helpMessage, { parse_mode: "HTML", reply_to_message_id: undefined });
   });
 
   it("answers to /help command in supergroup chat", async () => {
@@ -89,13 +89,6 @@ describe("Help", () => {
     app = await runAppUpdates(bot);
 
     expect(replySpy).toHaveBeenCalledTimes(1);
-    expect(replySpy).toHaveBeenCalledWith(
-      "Hello! I'm a bot that helps to moderate chats.\n\n<b>Getting started:</b>\n1. add me to chat\n" +
-        `2. give me administrator permissions\n3. send a <a href="tg:user?id=${mockBot().id}">private message</a> ` +
-        "command /mychats and I will help you set up your chat\n\n<b>Feature list:</b> ban voting, profanity filter, " +
-        "restriction on adding bots, support for different languages.\nI'll tell about each feature " +
-        "in more detail during setup.\n\nYou can call this message again at any time using the /help command.",
-      { parse_mode: "HTML", reply_to_message_id: 1 },
-    );
+    expect(replySpy).toHaveBeenCalledWith(helpMessage, { parse_mode: "HTML", reply_to_message_id: 1 });
   });
 });
