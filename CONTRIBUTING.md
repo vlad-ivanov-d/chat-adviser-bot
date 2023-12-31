@@ -5,8 +5,8 @@ Notes for developers
 ## Prerequisites
 
 - Docker
-- NPM (check actual version in `engines` section of [package.json](./package.json) file)
-- Node.js (check actual version in `engines` section of [package.json](./package.json) file)
+- NPM (check the actual version in the `engines` section of the [package.json](./package.json) file)
+- Node.js (check the actual version in the `engines` section of the [package.json](./package.json) file)
 
 ## Extensions for IDE
 
@@ -35,13 +35,22 @@ npm run build
 
 Resulted `./dist` folder can be moved to your hosting.
 
+## Tests
+
+The tests were implemented using Jest and the MSW library for mocking the Telegram API. Use an environment variable
+`export DEBUG='telegraf:*'` to display in the console all running network requests to the Telegram API. Run tests before each commit, this will also update the test badges in [README](./README.md#Test-Coverage).
+
+```bash
+npm run test
+```
+
 ## Development Server
 
 ```bash
 npm run dev
 ```
 
-The command starts the local `dev` server, compiles and reloads changes.
+The command starts the local development server, compiles and reloads changes.
 
 ## Git Flow
 

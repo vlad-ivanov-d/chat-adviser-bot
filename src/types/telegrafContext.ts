@@ -5,7 +5,7 @@ export type CallbackCtx = NarrowedContext<Context, Update.CallbackQueryUpdate<Ca
 
 export type MessageCtx = NarrowedContext<Context, Update.MessageUpdate>;
 
-export type NewMembersCtx = NarrowedContext<Context, Update.MessageUpdate<Message.NewChatMembersMessage>>;
+export type NewChatMembersCtx = NarrowedContext<Context, Update.MessageUpdate<Message.NewChatMembersMessage>>;
 
 export type TextMessageCtx = NarrowedContext<
   Context,

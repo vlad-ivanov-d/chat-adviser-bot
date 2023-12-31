@@ -1,0 +1,1 @@
+export { Voteban } from "./voteban";

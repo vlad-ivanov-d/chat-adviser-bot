@@ -1,0 +1,10 @@
+name: "chat-adviser-bot-test"
+
+services:
+  db:
+    environment:
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_USER: ${DATABASE_USER}
+    image: postgres:16.1
+    ports:
+      - ${DATABASE_PORT:-}:5432

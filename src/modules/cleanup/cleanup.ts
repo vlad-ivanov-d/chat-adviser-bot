@@ -1,19 +1,38 @@
 import { CronJob } from "cron";
-import { prisma } from "utils/prisma";
+import { Database } from "modules/database";
+import { Telegraf } from "telegraf";
+import { message } from "telegraf/filters";
 
 export class Cleanup {
+  /**
+   * Cleanup cron job instance
+   */
   private cronJob?: CronJob;
 
   /**
-   * Starts cleanup cron job
+   * Creates cleanup module
+   * @param bot Telegraf bot instance
+   * @param database Database service
    */
-  public startCronJob(): void {
-    this.stopCronJob();
+  public constructor(
+    private readonly bot: Telegraf,
+    private readonly database: Database,
+  ) {}
+
+  /**
+   * Initiates cleanup module
+   */
+  public init(): void {
+    this.bot.on(message("left_chat_member"), async (ctx, next): Promise<void> => {
+      if (ctx.update.message.left_chat_member.id === ctx.botInfo.id) {
+        await this.database.chat.deleteMany({ where: { id: ctx.chat.id } });
+      }
+      await next();
+    });
     this.cronJob = new CronJob(
       "0 0 0 * * *", // Every day at 00:00:00
       () => {
         void (async () => {
-          await this.cleanupVoteban();
           await this.cleanupSenderChats();
           await this.cleanupUsers();
         })();
@@ -24,26 +43,17 @@ export class Cleanup {
   }
 
   /**
-   * Stops cleanup cron job
+   * Shutdowns cleanup module
    */
-  public stopCronJob(): void {
+  public shutdown(): void {
     this.cronJob?.stop();
-  }
-
-  /**
-   * Expires votings by removing old data
-   */
-  private async cleanupVoteban(): Promise<void> {
-    const monthAgoDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    // Remove expired votings from database
-    await prisma.voteban.deleteMany({ where: { createdAt: { lt: monthAgoDate } } });
   }
 
   /**
    * Removes unused sender chats
    */
   private async cleanupSenderChats(): Promise<void> {
-    await prisma.senderChat.deleteMany({
+    await this.database.senderChat.deleteMany({
       where: { AND: [{ votebanAuthorSenderChats: { none: {} } }, { votebanCandidateSenderChats: { none: {} } }] },
     });
   }
@@ -54,7 +64,7 @@ export class Cleanup {
   private async cleanupUsers(): Promise<void> {
     const monthAgoDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     // Remove unused users from database
-    await prisma.user.deleteMany({
+    await this.database.user.deleteMany({
       where: {
         AND: [
           { chatAdmins: { none: {} } },
@@ -79,7 +89,7 @@ export class Cleanup {
       },
     });
     // Find unused users which are authors and editors only for themselves
-    const maybeUnusedUsers = await prisma.user.findMany({
+    const maybeUnusedUsers = await this.database.user.findMany({
       select: { id: true, userAuthors: { select: { id: true } }, userEditors: { select: { id: true } } },
       where: {
         AND: [
@@ -112,8 +122,6 @@ export class Cleanup {
         userEditors.length === 1 &&
         userEditors.map((a) => a.id).includes(id),
     );
-    await prisma.user.deleteMany({ where: { id: { in: unusedUsers.map((u) => u.id) } } });
+    await this.database.user.deleteMany({ where: { id: { in: unusedUsers.map((u) => u.id) } } });
   }
 }
-
-export const cleanup = new Cleanup();

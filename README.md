@@ -29,8 +29,8 @@ The bot can prevent users from adding bots to chat. This will help avoid spam or
 ### Prerequisites
 
 - Docker
-- NPM (check actual version in `engines` section of [package.json](./package.json) file)
-- Node.js (check actual version in `engines` section of [package.json](./package.json) file)
+- NPM (check the actual version in the `engines` section of the [package.json](./package.json) file)
+- Node.js (check the actual version in the `engines` section of the [package.json](./package.json) file)
 
 ### Production
 
@@ -46,6 +46,12 @@ The bot can prevent users from adding bots to chat. This will help avoid spam or
 - Run development server: `npm run dev`
 
 Get more details in [Contributing](./CONTRIBUTING.md)
+
+## Test Coverage
+
+| Statements                  | Branches                | Functions                 | Lines             |
+| --------------------------- | ----------------------- | ------------------------- | ----------------- |
+| ![Statements](https://img.shields.io/badge/statements-31.98%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-14.66%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-31.35%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-30.25%25-red.svg?style=flat) |
 
 ## License
 

@@ -93,7 +93,7 @@
     "import/no-named-as-default-member": "error",
     "import/no-unresolved": "off",
     "jest/consistent-test-it": "error",
-    "jest/max-nested-describe": ["error", { "max": 0 }],
+    "jest/max-nested-describe": ["error", { "max": 1 }],
     "jsdoc/require-jsdoc": [
       "error",
       {

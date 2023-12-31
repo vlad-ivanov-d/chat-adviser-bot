@@ -1,3 +1,5 @@
+import escapeRegExp from "lodash.escaperegexp";
+
 export interface ProfanityResult {
   /**
    * Filtered text
@@ -56,9 +58,9 @@ export class Profanity {
     ч: ["ch"],
     ш: ["sh"],
     щ: ["sch"],
-    ъ: ["b", "ь"],
+    ъ: ["b", "ь", "'", "`"],
     ы: ["bi"],
-    ь: ["b", "ъ"],
+    ь: ["b", "ъ", "'", "`"],
     э: ["e", "е"],
     ю: ["io"],
     я: ["ya"],
@@ -92,19 +94,6 @@ export class Profanity {
     const secondPassText = this.splitText(firstPassText, "spaces+punctuation+capital").map(mapFunction).join("");
     const thirdPassText = this.splitText(secondPassText, "spaces").map(mapFunction).join("");
     return { filteredText: thirdPassText, hasProfanity };
-  }
-
-  /**
-   * Escapes char if it's necessary for correct regular expression
-   * @param char Char which should be escaped if necessary
-   * @returns Escaped char
-   */
-  private escapeCharForRegExp(char: string): string {
-    const escapeChars: string[] = ["+", "*", "$", "|"];
-    return char
-      .split("")
-      .map((c) => (escapeChars.includes(c) ? `\\${c}` : c))
-      .join("");
   }
 
   /**
@@ -147,9 +136,9 @@ export class Profanity {
         if (char === "*" && (i === 0 || i === arr.length - 1)) {
           return ""; // Remove starting and ending "*" character
         }
-        const chars = [this.escapeCharForRegExp(char)];
+        const chars = [escapeRegExp(char)];
         if (char in similarChars) {
-          chars.push(...similarChars[char].map((c) => this.escapeCharForRegExp(c)));
+          chars.push(...similarChars[char].map(escapeRegExp));
         }
         return `(${chars.join("|")})`;
       })

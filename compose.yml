@@ -7,7 +7,7 @@ services:
       - db
     environment:
       BOT_TOKEN: ${BOT_TOKEN}
-      DATABASE_URL: postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@db/${DATABASE_USER}
+      DATABASE_URL: ${DATABASE_URL}
     restart: unless-stopped
 
   db:

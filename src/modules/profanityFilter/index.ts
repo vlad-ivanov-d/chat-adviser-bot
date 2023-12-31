@@ -1,0 +1,1 @@
+export { ProfanityFilter } from "./profanityFilter";
