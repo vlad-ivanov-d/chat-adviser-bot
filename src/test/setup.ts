@@ -1,31 +1,13 @@
-import { App } from "app";
 import { http, HttpHandler, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
-import { Telegraf } from "telegraf";
 
+import { cleanupDatabase } from "./cleanupDatabase";
 import { mockBot } from "./mockBot";
 
 /**
  * Base url for mocking API calls
  */
 export const BASE_URL = `https://api.telegram.org/bot${process.env.BOT_TOKEN}`;
-
-/**
- * Runs bot updates
- * @param bot Telegraf bot instance
- * @returns App instance
- */
-export const runAppUpdates = async (bot: Telegraf): Promise<App> => {
-  const app = new App(bot);
-  await app.init();
-
-  const updates = await bot.telegram.getUpdates(50, 100, 0, []);
-  for (const update of updates) {
-    await bot.handleUpdate(update);
-  }
-
-  return app;
-};
 
 /**
  * MSW HTTP handlers
@@ -47,9 +29,10 @@ beforeAll(() => {
 });
 
 // Reset any request handlers that may be added during the tests, so they don't affect other tests.
-afterEach(() => {
+afterEach(async () => {
   jest.restoreAllMocks();
   server.resetHandlers();
+  await cleanupDatabase();
 });
 
 // Clean up after the tests are finished

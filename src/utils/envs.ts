@@ -10,3 +10,8 @@ if (!process.env.BOT_TOKEN) {
  * Telegram bot API token
  */
 export const BOT_TOKEN = process.env.BOT_TOKEN;
+
+/**
+ * Node environment
+ */
+export const NODE_ENV = process.env.NODE_ENV;

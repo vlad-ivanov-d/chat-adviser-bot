@@ -5,10 +5,10 @@ const config = {
   coverageReporters: ["json-summary", "lcov", "text-summary"],
   coverageThreshold: {
     global: {
-      branches: 14,
-      functions: 14,
-      lines: 14,
-      statements: 14,
+      branches: 20,
+      functions: 20,
+      lines: 20,
+      statements: 20,
     },
   },
   detectOpenHandles: true,

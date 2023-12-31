@@ -7,10 +7,13 @@ import { Settings } from "modules/settings";
 import { TimeZone } from "modules/timeZone";
 import { Voteban } from "modules/voteban";
 import { Telegraf } from "telegraf";
+import { BOT_TOKEN } from "utils/envs";
 
 import { Database } from "./modules/database";
 
 export class App {
+  public readonly bot: Telegraf;
+
   private addingBots?: AddingBots;
   private cleanup?: Cleanup;
   private database?: Database;
@@ -23,9 +26,10 @@ export class App {
 
   /**
    * Creates app module
-   * @param bot Telegraf instance
    */
-  public constructor(private readonly bot: Telegraf) {}
+  public constructor() {
+    this.bot = new Telegraf(BOT_TOKEN);
+  }
 
   /**
    * Initiates app module
@@ -57,6 +61,17 @@ export class App {
 
     this.voteban = new Voteban(this.bot, this.database, this.settings);
     this.voteban.init();
+  }
+
+  /**
+   * Initiates app module and process Telegram updates. Useful for tests.
+   */
+  public async initAndProcessUpdates(): Promise<void> {
+    await this.init();
+    const updates = await this.bot.telegram.getUpdates(50, 100, 0, []);
+    for (const update of updates) {
+      await this.bot.handleUpdate(update);
+    }
   }
 
   /**
