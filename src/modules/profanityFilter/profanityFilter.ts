@@ -143,7 +143,7 @@ export class ProfanityFilter {
       return getUserFullName(srcMessage.left_chat_member);
     }
     if ("new_chat_members" in srcMessage) {
-      return srcMessage.new_chat_members.map((u) => getUserFullName(u)).join(", ");
+      return srcMessage.new_chat_members.map(getUserFullName).join(", ");
     }
     if ("poll" in srcMessage) {
       return [srcMessage.poll.question, ...srcMessage.poll.options.map((o) => o.text)].join("\n");
