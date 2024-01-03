@@ -18,12 +18,12 @@ export class ProfanityFilter {
    * Creates profanity filter module
    * @param bot Telegraf bot instance
    * @param database Database
-   * @param settingsService Settings
+   * @param settings Settings
    */
   public constructor(
     private readonly bot: Telegraf,
     private readonly database: Database,
-    private readonly settingsService: Settings,
+    private readonly settings: Settings,
   ) {}
 
   /**
@@ -199,7 +199,7 @@ export class ProfanityFilter {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const prismaChat = await this.settingsService.resolvePrismaChat(ctx, chatId);
+    const prismaChat = await this.settings.resolvePrismaChat(ctx, chatId);
     if (!prismaChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -219,7 +219,7 @@ export class ProfanityFilter {
           inline_keyboard: [
             [{ callback_data: filterCbData, text: t("profanityFilter:enable") }],
             [{ callback_data: disableCbData, text: t("profanityFilter:disable") }],
-            this.settingsService.getBackToFeaturesButton(chatId),
+            this.settings.getBackToFeaturesButton(chatId),
           ],
         },
       }),
@@ -248,7 +248,7 @@ export class ProfanityFilter {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const prismaChat = await this.settingsService.resolvePrismaChat(ctx, chatId);
+    const prismaChat = await this.settings.resolvePrismaChat(ctx, chatId);
     if (!prismaChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -259,6 +259,6 @@ export class ProfanityFilter {
       this.database.chat.update({ data: { profanityFilter }, select: { id: true }, where: { id: chatId } }),
       this.database.upsertChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.PROFANITY_FILTER),
     ]);
-    await Promise.all([this.settingsService.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId)]);
+    await Promise.all([this.settings.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId)]);
   }
 }
