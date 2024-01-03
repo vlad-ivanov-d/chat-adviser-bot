@@ -44,7 +44,7 @@ const supergroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, (
   }),
 );
 
-const commonHelpMessage =
+const commonHelpMsg =
   "Hello! I'm a bot that helps to moderate chats.\n\n<b>Getting started:</b>\n1. add me to chat\n" +
   `2. give me administrator permissions\n3. send a <a href="tg:user?id=${mockBot().id}">private message</a> ` +
   "command /mychats and I will help you set up your chat\n\n<b>Feature list:</b> ban voting, profanity filter, " +
@@ -76,10 +76,10 @@ describe("Help", () => {
     await app.initAndProcessUpdates();
 
     expect(replySpy).toHaveBeenCalledTimes(1);
-    expect(replySpy).toHaveBeenCalledWith(commonHelpMessage, { parse_mode: "HTML", reply_to_message_id: undefined });
+    expect(replySpy).toHaveBeenCalledWith(commonHelpMsg, { parse_mode: "HTML", reply_to_message_id: undefined });
   });
 
-  it("answers to /help command in supergroup chat", async () => {
+  it("answers to /help command in a supergroup chat", async () => {
     server.use(...[supergroupChatHandler]);
 
     let replySpy;
@@ -91,6 +91,6 @@ describe("Help", () => {
     await app.initAndProcessUpdates();
 
     expect(replySpy).toHaveBeenCalledTimes(1);
-    expect(replySpy).toHaveBeenCalledWith(commonHelpMessage, { parse_mode: "HTML", reply_to_message_id: 1 });
+    expect(replySpy).toHaveBeenCalledWith(commonHelpMsg, { parse_mode: "HTML", reply_to_message_id: 1 });
   });
 });

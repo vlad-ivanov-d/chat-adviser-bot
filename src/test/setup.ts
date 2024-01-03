@@ -1,7 +1,7 @@
 import { http, HttpHandler, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 
-import { cleanupDatabase } from "./cleanupDatabase";
+import { cleanupDb, prisma } from "./database";
 import { mockBot } from "./mockBot";
 
 /**
@@ -32,10 +32,11 @@ beforeAll(() => {
 afterEach(async () => {
   jest.restoreAllMocks();
   server.resetHandlers();
-  await cleanupDatabase();
+  await cleanupDb();
 });
 
 // Clean up after the tests are finished
-afterAll(() => {
+afterAll(async () => {
   server.close();
+  await prisma.$disconnect();
 });

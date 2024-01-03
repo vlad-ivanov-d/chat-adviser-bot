@@ -1,6 +1,18 @@
 import { Chat } from "telegraf/typings/core/types/typegram";
 
 /**
+ * Mocks Telegram group chat
+ * @param chat Telegram group chat which will be merged with the default one
+ * @returns Telegram group chat
+ */
+export const mockGroupChat = (chat?: Partial<Chat.GroupChat>): Chat.GroupChat => ({
+  id: 11,
+  title: "Test Group",
+  type: "group",
+  ...chat,
+});
+
+/**
  * Mocks Telegram private chat
  * @param chat Telegram private chat which will be merged with the default one
  * @returns Telegram private chat
