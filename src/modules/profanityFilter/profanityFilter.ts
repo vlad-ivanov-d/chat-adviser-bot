@@ -50,7 +50,6 @@ export class ProfanityFilter {
    * Filters message
    * @param ctx Message context
    * @param next Function to continue processing
-   * @returns True if profanity is detected and removed
    */
   private async filterMessage(ctx: MessageCtx, next: () => Promise<void>): Promise<void> {
     const { message } = ctx.update;
