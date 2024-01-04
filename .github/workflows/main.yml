@@ -21,10 +21,10 @@ jobs:
       - name: Build sources
         run: npm run build
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: dist
-          path: dist
+          name: artifacts
+          path: dist/
 
   test:
     runs-on: ubuntu-latest
@@ -47,9 +47,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: dist
+          name: artifacts
       - name: Run docker compose
         env:
           BOT_TOKEN: ${{secrets.BOT_TOKEN}}
