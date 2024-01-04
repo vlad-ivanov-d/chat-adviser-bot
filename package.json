@@ -9,7 +9,7 @@
     "start": "docker compose --env-file=.env -f dist/compose.yml up --build --force-recreate --remove-orphans -d",
     "test": "npm run test:env-up && jest --coverage && npm run test:env-down && istanbul-badges-readme --silent",
     "test:ci": "npm run test:env-up && jest --coverage && npm run test:env-down && istanbul-badges-readme --ci --silent",
-    "test:env-down": "docker compose -f compose.test.yml down",
+    "test:env-down": "dotenv -e .env.test -- docker compose -f compose.test.yml down",
     "test:env-up": "dotenv -e .env.test -- docker compose -f compose.test.yml up --force-recreate --remove-orphans --wait -d && dotenv -e .env.test -- prisma migrate deploy",
     "test:watch": "npm run test:env-up && jest --watch"
   },
