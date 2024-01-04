@@ -108,7 +108,8 @@ const myChatsCommandSupergroupHandler: HttpHandler = http.post(`${BASE_URL}/getU
 );
 
 const settingsSelectChatsMsg =
-  "Select the chat for which you want to change the settings. You must be a chat administrator.\n\n" +
+  "Below is a list of chats that are available to me, and where you are an administrator. " +
+  "Select the chat for which you want to change the settings.\n\n" +
   "If the list doesn't contain the chat you need, try writing any message in it and clicking the " +
   "<b>↻ Refresh the list</b> button (the last button in this message).";
 const settingsInvitationMsg =
