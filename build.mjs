@@ -6,7 +6,7 @@ await rimraf("dist/*", { glob: true });
 
 await build({
   bundle: true,
-  entryPoints: [{ in: "src/index.ts", out: "node/index" }],
+  entryPoints: [{ in: "src/index.ts", out: "index" }],
   minifyIdentifiers: false,
   minifySyntax: true,
   minifyWhitespace: true,
@@ -14,17 +14,14 @@ await build({
   platform: "node",
   plugins: [
     copyStaticFiles({
-      dest: "./dist/node/libquery_engine-linux-musl-arm64-openssl-3.0.x.so.node",
+      dest: "./dist/libquery_engine-linux-musl-arm64-openssl-3.0.x.so.node",
       src: "./node_modules/.prisma/client/libquery_engine-linux-musl-arm64-openssl-3.0.x.so.node",
     }),
     copyStaticFiles({
-      dest: "./dist/node/libquery_engine-linux-musl-openssl-3.0.x.so.node",
+      dest: "./dist/libquery_engine-linux-musl-openssl-3.0.x.so.node",
       src: "./node_modules/.prisma/client/libquery_engine-linux-musl-openssl-3.0.x.so.node",
     }),
-    copyStaticFiles({ dest: "./dist/node/schema.prisma", src: "./prisma/schema.prisma" }),
-    copyStaticFiles({ dest: "./dist/prisma/", src: "./prisma/" }),
-    copyStaticFiles({ dest: "./dist/compose.yml", src: "./compose.yml" }),
-    copyStaticFiles({ dest: "./dist/Dockerfile", src: "./Dockerfile" }),
+    copyStaticFiles({ dest: "./dist/schema.prisma", src: "./prisma/schema.prisma" }),
   ],
   target: "esnext",
 });
