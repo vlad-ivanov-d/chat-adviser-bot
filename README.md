@@ -16,13 +16,21 @@ The bot can run votes to ban a user in a chat. The user will be banned and their
 
 The bot can communicate in different languages so that chat users can understand the bot.
 
+### Messages On Behalf Of Channels
+
+The bot can filter messages on behalf of channels (not to be confused with forwarded messages). Users who have their own Telegram channels can write in public chats on behalf of the channels. In this way, they can make additional advertising for themselves or simply anonymize messages without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel and write on his behalf.
+
 ### Profanity Filter
 
-The bot can filter profanity in chat, including usernames. The filter won't be applied to messages from administrators. The bot needs administrator permissions for this feature.
+The bot can filter profanity in chat, including usernames. The filter won't be applied to messages from administrators.
 
 ### Restriction On Adding Bots
 
-The bot can prevent users from adding bots to chat. This will help avoid spam or, for example, collecting chat statistics without the approval of administrators. Additionally, the ban of the violator can be configured. The user who tried to add the bot will be banned. The bot needs administrator permissions for this feature.
+The bot can prevent users from adding bots to chat. This will help avoid spam or, for example, collecting chat statistics without the approval of administrators. Additionally, the ban of the violator can be configured. The user who tried to add the bot will be banned.
+
+### Time Zone
+
+The bot can work in different time zones and display dates in the appropriate format.
 
 ## Getting Started
 
