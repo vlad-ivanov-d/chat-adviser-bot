@@ -11,16 +11,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup node version
-        uses: actions/setup-node@v3
+        uses: actions/checkout@v4
+      - name: Setup node
+        uses: actions/setup-node@v4
         with:
-          node-version: "20.10.0"
+          node-version: 20.10.0
       - name: Restore dependencies
         run: npm ci
       - name: Build sources
         run: npm run build
-      - name: Save dist
+      - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           name: dist
@@ -30,11 +30,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup node version
-        uses: actions/setup-node@v3
+        uses: actions/checkout@v4
+      - name: Setup node
+        uses: actions/setup-node@v4
         with:
-          node-version: "20.10.0"
+          node-version: 20.10.0
       - name: Restore dependencies
         run: npm ci
       - name: Run tests
@@ -46,7 +46,7 @@ jobs:
     needs: [build, test]
     runs-on: ubuntu-latest
     steps:
-      - name: Download dist
+      - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
           name: dist
