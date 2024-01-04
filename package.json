@@ -43,7 +43,7 @@
     "date-fns": "2.30.0",
     "date-fns-tz": "2.0.0",
     "dotenv": "16.3.1",
-    "i18next": "23.7.15",
+    "i18next": "23.7.16",
     "lodash.escaperegexp": "4.1.2",
     "telegraf": "4.15.3"
   },
