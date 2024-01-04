@@ -21,6 +21,7 @@ await build({
       dest: "./dist/node/libquery_engine-linux-musl-openssl-3.0.x.so.node",
       src: "./node_modules/.prisma/client/libquery_engine-linux-musl-openssl-3.0.x.so.node",
     }),
+    copyStaticFiles({ dest: "./dist/node/schema.prisma", src: "./prisma/schema.prisma" }),
     copyStaticFiles({ dest: "./dist/prisma/", src: "./prisma/" }),
     copyStaticFiles({ dest: "./dist/compose.yml", src: "./compose.yml" }),
     copyStaticFiles({ dest: "./dist/Dockerfile", src: "./Dockerfile" }),
