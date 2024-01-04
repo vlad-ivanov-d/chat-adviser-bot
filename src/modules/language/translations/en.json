@@ -20,6 +20,14 @@
     "featureName": "Language",
     "select": "<b>Language</b>\nI can communicate in different languages so that chat users can understand me.\n\nSelect a language for {{CHAT}} chat.\n\nCurrent language: <b>{{VALUE}}</b>"
   },
+  "messagesOnBehalfOfChannels": {
+    "disableFilter": "Disable filter",
+    "enableFilter": "Enable filter",
+    "featureName": "Messages On Behalf Of Channels",
+    "filterDisabled": "filter disabled",
+    "filterEnabled": "filter enabled",
+    "set": "<b>Messages On Behalf Of Channels</b>\nI can filter messages on behalf of channels (not to be confused with forwarded messages). Users who have their own Telegram channels can write in public chats on behalf of the channels. In this way, they can make additional advertising for themselves or simply anonymize messages without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel and write on his behalf.\n\nEnable message filter on behalf of channels in {{CHAT}} chat?\n\nCurrent value: <b>{{VALUE}}</b>"
+  },
   "settings": {
     "backToChats": "Back to chats",
     "backToFeatures": "Back to features",

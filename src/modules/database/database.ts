@@ -3,6 +3,7 @@ import {
   ChatSettingName,
   ChatType,
   LanguageCode,
+  MessagesOnBehalfOfChannelsRule,
   Prisma,
   PrismaClient,
   ProfanityFilterRule,
@@ -119,6 +120,7 @@ export class Database extends PrismaClient {
 
     const displayTitle = getChatDisplayTitle(chat);
     const firstName = "first_name" in chat ? chat.first_name : null;
+    const isGroupChat = chat.type === "group" || chat.type === "supergroup";
     const lastName = "last_name" in chat ? chat.last_name ?? null : null;
     const title = "title" in chat ? chat.title : null;
     const username = "username" in chat ? chat.username ?? null : null;
@@ -129,7 +131,7 @@ export class Database extends PrismaClient {
         .map((u) => this.upsertUser(u, editor)),
       this.chat.upsert({
         create: {
-          addingBots: chat.type === "group" || chat.type === "supergroup" ? AddingBotsRule.RESTRICT : undefined,
+          addingBots: isGroupChat ? AddingBotsRule.RESTRICT : undefined,
           admins: { connect: admins.map((a) => ({ id: a.user.id })) },
           authorId: editor.id,
           displayTitle,
@@ -139,7 +141,8 @@ export class Database extends PrismaClient {
           language: this.resolveLanguage(editor.language_code),
           lastName,
           membersCount,
-          profanityFilter: chat.type === "group" || chat.type === "supergroup" ? ProfanityFilterRule.FILTER : undefined,
+          messagesOnBehalfOfChannels: isGroupChat ? MessagesOnBehalfOfChannelsRule.FILTER : undefined,
+          profanityFilter: isGroupChat ? ProfanityFilterRule.FILTER : undefined,
           timeZone: this.resolveTimeZone(editor.language_code),
           title,
           type: this.resolveChatType(chat.type),

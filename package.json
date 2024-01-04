@@ -3,7 +3,7 @@
   "description": "Chat Adviser is an open source Telegram bot that helps to moderate chats.",
   "version": "1.13.0",
   "scripts": {
-    "build": "eslint . && tsc -noEmit && node build.mjs",
+    "build": "eslint . && tsc && node build.mjs",
     "dev": "docker compose -f compose.dev.yml up --force-recreate --remove-orphans -d && prisma migrate dev && nodemon src/index.ts",
     "lint": "eslint --fix .",
     "start": "docker compose --env-file=.env -f dist/compose.yml up --build --force-recreate --remove-orphans -d",

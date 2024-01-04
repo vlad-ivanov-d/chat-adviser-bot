@@ -2,6 +2,7 @@
 
 ## 1.13.0 (2024-xx-xx)
 
+- Improvement: Messages On Behalf Of Channels feature
 - Other: internal improvements
 
 ## 1.12.0 (2023-12-31)

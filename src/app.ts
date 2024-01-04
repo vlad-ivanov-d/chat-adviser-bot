@@ -2,6 +2,7 @@ import { AddingBots } from "modules/addingBots";
 import { Cleanup } from "modules/cleanup";
 import { Help } from "modules/help";
 import { Language } from "modules/language";
+import { MessagesOnBehalfOfChannels } from "modules/messagesOnBehalfOfChannels";
 import { ProfanityFilter } from "modules/profanityFilter";
 import { Settings } from "modules/settings";
 import { TimeZone } from "modules/timeZone";
@@ -19,6 +20,7 @@ export class App {
   private database?: Database;
   private help?: Help;
   private language?: Language;
+  private messagesOnBehalfOfChannels?: MessagesOnBehalfOfChannels;
   private profanityFilter?: ProfanityFilter;
   private settings?: Settings;
   private timeZone?: TimeZone;
@@ -55,6 +57,9 @@ export class App {
 
     this.language = new Language(this.bot, this.database, this.settings);
     await this.language.init();
+
+    this.messagesOnBehalfOfChannels = new MessagesOnBehalfOfChannels(this.bot, this.database, this.settings);
+    this.messagesOnBehalfOfChannels.init();
 
     this.timeZone = new TimeZone(this.bot, this.database, this.settings);
     this.timeZone.init();

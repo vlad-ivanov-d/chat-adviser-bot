@@ -1,6 +1,8 @@
 import { App } from "app";
+import { PAGE_SIZE } from "constants/pagination";
 import { http, HttpHandler, HttpResponse } from "msw";
 import { Telegraf } from "telegraf";
+import { MESSAGE_DATE } from "test/constants";
 import { createDbPrivateChat } from "test/database";
 import { mockBot } from "test/mockBot";
 import { mockGroupChat, mockPrivateChat, mockSupergroupChat } from "test/mockChat";
@@ -14,7 +16,7 @@ const addedToNewChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, (
       {
         message: {
           chat: mockSupergroupChat(),
-          date: 1577826000000,
+          date: MESSAGE_DATE,
           from: mockUser(),
           message_id: 1,
           new_chat_member: mockBot(),
@@ -38,7 +40,7 @@ const createdGroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`,
       {
         my_chat_member: {
           chat: { ...mockGroupChat(), all_members_are_administrators: false },
-          date: 1577826000000,
+          date: MESSAGE_DATE,
           from: mockUser(),
           new_chat_member: { status: "member", user: mockBot() },
           old_chat_member: { status: "left", user: mockBot() },
@@ -48,7 +50,7 @@ const createdGroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`,
       {
         message: {
           chat: { ...mockGroupChat(), all_members_are_administrators: true },
-          date: 1577826000000,
+          date: MESSAGE_DATE,
           from: mockUser(),
           group_chat_created: true,
           message_id: 540,
@@ -59,8 +61,12 @@ const createdGroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`,
   }),
 );
 
-const getPrivateChatHandler: HttpHandler = http.post(`${BASE_URL}/getChat`, () =>
-  HttpResponse.json({ ok: true, result: mockPrivateChat() }),
+const getGroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getChat`, () =>
+  HttpResponse.json({ ok: true, result: mockGroupChat() }),
+);
+
+const getSupergroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getChat`, () =>
+  HttpResponse.json({ ok: true, result: mockSupergroupChat() }),
 );
 
 const myChatsCommandPrivateHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
@@ -70,7 +76,7 @@ const myChatsCommandPrivateHandler: HttpHandler = http.post(`${BASE_URL}/getUpda
       {
         message: {
           chat: mockPrivateChat(),
-          date: 1577826000000,
+          date: MESSAGE_DATE,
           entities: [{ length: 5, offset: 0, type: "bot_command" }],
           from: mockUser(),
           message_id: 1,
@@ -89,7 +95,7 @@ const myChatsCommandSupergroupHandler: HttpHandler = http.post(`${BASE_URL}/getU
       {
         message: {
           chat: mockSupergroupChat(),
-          date: 1577826000000,
+          date: MESSAGE_DATE,
           entities: [{ length: 5, offset: 0, type: "bot_command" }],
           from: mockUser(),
           message_id: 1,
@@ -105,9 +111,6 @@ const settingsSelectChatsMsg =
   "Select the chat for which you want to change the settings. You must be a chat administrator.\n\n" +
   "If the list doesn't contain the chat you need, try writing any message in it and clicking the " +
   "<b>↻ Refresh the list</b> button (the last button in this message).";
-const settingsSelectFeatureMsg =
-  `Select the feature you want to configure for the @${mockBot().username} chat. ` +
-  "The list of features depends on the type of chat (channel, group, etc.).";
 const settingsInvitationMsg =
   "I see that you've added me to a new chat. Perhaps you want to immediately configure this chat? " +
   "Don't forget to give me admin permissions so that all my features are available.";
@@ -127,7 +130,7 @@ describe("Settings", () => {
 
   it("prompts admin to make settings when adding the bot to a new chat", async () => {
     await createDbPrivateChat();
-    server.use(...[addedToNewChatHandler, chatAdminsHandler, getPrivateChatHandler]);
+    server.use(...[addedToNewChatHandler, chatAdminsHandler, getSupergroupChatHandler]);
 
     let sendMessageSpy;
     bot.use(async (ctx, next) => {
@@ -139,22 +142,31 @@ describe("Settings", () => {
 
     expect(sendMessageSpy).toHaveBeenCalledTimes(2);
     expect(sendMessageSpy).toHaveBeenNthCalledWith(1, mockUser().id, settingsInvitationMsg);
-    expect(sendMessageSpy).toHaveBeenNthCalledWith(2, mockUser().id, settingsSelectFeatureMsg, {
-      parse_mode: "HTML",
-      reply_markup: {
-        inline_keyboard: [
-          [{ callback_data: `cfg-lng?chatId=${mockSupergroupChat().id}`, text: "Language" }],
-          [{ callback_data: `cfg-tz-sv?chatId=${mockSupergroupChat().id}`, text: "Time Zone" }],
-          [],
-          [{ callback_data: "cfg-chats", text: "« Back to chats" }],
-        ],
+    expect(sendMessageSpy).toHaveBeenNthCalledWith(
+      2,
+      mockUser().id,
+      `Select the feature you want to configure for the @${mockSupergroupChat().username} chat. ` +
+        "The list of features depends on the type of chat (channel, group, etc.).",
+      {
+        parse_mode: "HTML",
+        reply_markup: {
+          inline_keyboard: [
+            [{ callback_data: `cfg-vtbn?chatId=${mockSupergroupChat().id}`, text: "Ban Voting" }],
+            [{ callback_data: `cfg-lng?chatId=${mockSupergroupChat().id}`, text: "Language" }],
+            [{ callback_data: `cfg-moboc?chatId=${mockSupergroupChat().id}`, text: "Messages On Behalf Of Channels" }],
+            [{ callback_data: `cfg-pf?chatId=${mockSupergroupChat().id}`, text: "Profanity Filter" }],
+            [{ callback_data: `cfg-addng-bts?chatId=${mockSupergroupChat().id}`, text: "Restriction On Adding Bots" }],
+            [{ callback_data: `cfg-ftrs?chatId=${mockSupergroupChat().id}&skip=${PAGE_SIZE}`, text: "»" }],
+            [{ callback_data: "cfg-chats", text: "« Back to chats" }],
+          ],
+        },
       },
-    });
+    );
   });
 
   it("prompts admin to make settings when a new group chat has been created", async () => {
     await createDbPrivateChat();
-    server.use(...[createdGroupChatHandler, chatAdminsHandler, getPrivateChatHandler]);
+    server.use(...[createdGroupChatHandler, chatAdminsHandler, getGroupChatHandler]);
 
     let sendMessageSpy;
     bot.use(async (ctx, next) => {
@@ -166,17 +178,26 @@ describe("Settings", () => {
 
     expect(sendMessageSpy).toHaveBeenCalledTimes(2);
     expect(sendMessageSpy).toHaveBeenNthCalledWith(1, mockUser().id, settingsInvitationMsg);
-    expect(sendMessageSpy).toHaveBeenNthCalledWith(2, mockUser().id, settingsSelectFeatureMsg, {
-      parse_mode: "HTML",
-      reply_markup: {
-        inline_keyboard: [
-          [{ callback_data: `cfg-lng?chatId=${mockGroupChat().id}`, text: "Language" }],
-          [{ callback_data: `cfg-tz-sv?chatId=${mockGroupChat().id}`, text: "Time Zone" }],
-          [],
-          [{ callback_data: "cfg-chats", text: "« Back to chats" }],
-        ],
+    expect(sendMessageSpy).toHaveBeenNthCalledWith(
+      2,
+      mockUser().id,
+      `Select the feature you want to configure for the <b>${mockGroupChat().title}</b> chat. ` +
+        "The list of features depends on the type of chat (channel, group, etc.).",
+      {
+        parse_mode: "HTML",
+        reply_markup: {
+          inline_keyboard: [
+            [{ callback_data: `cfg-vtbn?chatId=${mockGroupChat().id}`, text: "Ban Voting" }],
+            [{ callback_data: `cfg-lng?chatId=${mockGroupChat().id}`, text: "Language" }],
+            [{ callback_data: `cfg-moboc?chatId=${mockGroupChat().id}`, text: "Messages On Behalf Of Channels" }],
+            [{ callback_data: `cfg-pf?chatId=${mockGroupChat().id}`, text: "Profanity Filter" }],
+            [{ callback_data: `cfg-addng-bts?chatId=${mockGroupChat().id}`, text: "Restriction On Adding Bots" }],
+            [{ callback_data: `cfg-ftrs?chatId=${mockGroupChat().id}&skip=${PAGE_SIZE}`, text: "»" }],
+            [{ callback_data: "cfg-chats", text: "« Back to chats" }],
+          ],
+        },
       },
-    });
+    );
   });
 
   it("renders chats as an answer to /mychats command in a private chat", async () => {

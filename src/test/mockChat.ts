@@ -1,6 +1,19 @@
 import { Chat } from "telegraf/typings/core/types/typegram";
 
 /**
+ * Mocks Telegram channel chat
+ * @param chat Telegram channel chat which will be merged with the default one
+ * @returns Telegram channel chat
+ */
+export const mockChannelChat = (chat?: Partial<Chat.ChannelChat>): Chat.ChannelChat => ({
+  id: 10,
+  title: "Test Channel",
+  type: "channel",
+  username: "test_channel",
+  ...chat,
+});
+
+/**
  * Mocks Telegram group chat
  * @param chat Telegram group chat which will be merged with the default one
  * @returns Telegram group chat
@@ -32,7 +45,7 @@ export const mockPrivateChat = (chat?: Partial<Chat.PrivateChat>): Chat.PrivateC
  * @returns Telegram supergroup chat
  */
 export const mockSupergroupChat = (chat?: Partial<Chat.SupergroupChat>): Chat.SupergroupChat => ({
-  id: 10,
+  id: 12,
   title: "Test Supergroup",
   type: "supergroup",
   username: "test_supergroup",

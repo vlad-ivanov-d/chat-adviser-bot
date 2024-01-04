@@ -3,7 +3,7 @@ import { Chat, User } from "telegraf/typings/core/types/typegram";
 import { NODE_ENV } from "utils/envs";
 import { getChatDisplayTitle } from "utils/telegraf";
 
-import { mockPrivateChat } from "./mockChat";
+import { mockPrivateChat, mockSupergroupChat } from "./mockChat";
 import { mockUser } from "./mockUser";
 
 /**
@@ -39,6 +39,30 @@ export const createDbPrivateChat = async (chat?: Partial<Chat.PrivateChat>): Pro
       membersCount: 2,
       timeZone: "UTC",
       type: ChatType.PRIVATE,
+      username: chatPayload.username,
+    },
+  });
+};
+
+/**
+ * Creates database supergroup chat
+ * @param chat Telegram supergroup chat which will be merged with the default one
+ */
+export const createDbSupergroupChat = async (chat?: Partial<Chat.SupergroupChat>): Promise<void> => {
+  await createDbUser();
+  const chatPayload: Chat.SupergroupChat = { ...mockSupergroupChat(), ...chat };
+  await prisma.chat.create({
+    data: {
+      admins: { connect: { id: mockUser().id } },
+      authorId: mockUser().id,
+      displayTitle: getChatDisplayTitle(chatPayload),
+      editorId: mockUser().id,
+      id: chatPayload.id,
+      language: LanguageCode.EN,
+      membersCount: 2,
+      timeZone: "UTC",
+      title: chatPayload.title,
+      type: ChatType.SUPERGROUP,
       username: chatPayload.username,
     },
   });

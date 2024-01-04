@@ -5,6 +5,7 @@ import { changeLanguage, t } from "i18next";
 import { AddingBotsAction } from "modules/addingBots/addingBots.types";
 import { Database, PrismaChat } from "modules/database";
 import { LanguageAction } from "modules/language/language.types";
+import { MessagesOnBehalfOfChannelsAction } from "modules/messagesOnBehalfOfChannels/messagesOnBehalfOfChannels.types";
 import { ProfanityFilterAction } from "modules/profanityFilter/profanityFilter.types";
 import { TimeZoneAction } from "modules/timeZone/timeZone.types";
 import { VotebanAction } from "modules/voteban/voteban.types";
@@ -232,6 +233,12 @@ export class Settings {
     const languageButton: InlineKeyboardButton[] = [
       { callback_data: `${LanguageAction.SETTINGS}?chatId=${chatId}`, text: t("language:featureName") },
     ];
+    const messagesOnBehalfOfChannelsButton: InlineKeyboardButton[] = [
+      {
+        callback_data: `${MessagesOnBehalfOfChannelsAction.SETTINGS}?chatId=${chatId}`,
+        text: t("messagesOnBehalfOfChannels:featureName"),
+      },
+    ];
     const profanityFilterButton: InlineKeyboardButton[] = [
       { callback_data: `${ProfanityFilterAction.SETTINGS}?chatId=${chatId}`, text: t("profanityFilter:featureName") },
     ];
@@ -243,10 +250,24 @@ export class Settings {
     ];
     const allFeatures: Record<ChatType, InlineKeyboardButton[][]> = {
       [ChatType.CHANNEL]: [languageButton, timeZoneButton],
-      [ChatType.GROUP]: [addingBotsButton, languageButton, profanityFilterButton, timeZoneButton, votebanButton],
+      [ChatType.GROUP]: [
+        addingBotsButton,
+        languageButton,
+        messagesOnBehalfOfChannelsButton,
+        profanityFilterButton,
+        timeZoneButton,
+        votebanButton,
+      ],
       [ChatType.PRIVATE]: [languageButton, timeZoneButton],
-      [ChatType.SUPERGROUP]: [addingBotsButton, languageButton, profanityFilterButton, timeZoneButton, votebanButton],
-      [ChatType.UNKNOWN]: [languageButton],
+      [ChatType.SUPERGROUP]: [
+        addingBotsButton,
+        languageButton,
+        messagesOnBehalfOfChannelsButton,
+        profanityFilterButton,
+        timeZoneButton,
+        votebanButton,
+      ],
+      [ChatType.UNKNOWN]: [],
     };
     const features = [...allFeatures[prismaChat.type]].sort((a, b) => a[0]?.text.localeCompare(b[0]?.text));
 
