@@ -1,4 +1,4 @@
-import { http, HttpHandler, HttpResponse } from "msw";
+import { http, type HttpHandler, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 
 import { cleanupDb, prisma } from "./database";

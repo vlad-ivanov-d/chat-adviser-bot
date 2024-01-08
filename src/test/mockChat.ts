@@ -1,4 +1,4 @@
-import { Chat } from "telegraf/typings/core/types/typegram";
+import type { Chat } from "telegraf/typings/core/types/typegram";
 
 /**
  * Mocks Telegram channel chat

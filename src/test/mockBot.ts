@@ -1,4 +1,4 @@
-import { User, UserFromGetMe } from "telegraf/typings/core/types/typegram";
+import type { User, UserFromGetMe } from "telegraf/typings/core/types/typegram";
 
 /**
  * Mocks Telegram bot

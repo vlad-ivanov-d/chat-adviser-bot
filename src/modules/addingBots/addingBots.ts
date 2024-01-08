@@ -1,10 +1,10 @@
 import { AddingBotsRule, ChatSettingName } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
-import { Database } from "modules/database";
-import { Settings } from "modules/settings";
-import { Telegraf } from "telegraf";
+import type { Database } from "modules/database";
+import type { Settings } from "modules/settings";
+import type { Telegraf } from "telegraf";
 import { callbackQuery, message } from "telegraf/filters";
-import { CallbackCtx, NewChatMembersCtx } from "types/telegrafContext";
+import type { CallbackCtx, NewChatMembersCtx } from "types/telegrafContext";
 import { getCallbackQueryParams, getChatHtmlLink, getUserHtmlLink, kickChatMember } from "utils/telegraf";
 
 import { AddingBotsAction } from "./addingBots.types";

@@ -1,18 +1,18 @@
 import { ChatType } from "@prisma/client";
-import { InlineKeyboardMarkup } from "@telegraf/types";
+import type { InlineKeyboardMarkup } from "@telegraf/types";
 import { PAGE_SIZE } from "constants/pagination";
 import { changeLanguage, t } from "i18next";
 import { AddingBotsAction } from "modules/addingBots/addingBots.types";
-import { Database, PrismaChat } from "modules/database";
+import type { Database, PrismaChat } from "modules/database";
 import { LanguageAction } from "modules/language/language.types";
 import { MessagesOnBehalfOfChannelsAction } from "modules/messagesOnBehalfOfChannels/messagesOnBehalfOfChannels.types";
 import { ProfanityFilterAction } from "modules/profanityFilter/profanityFilter.types";
 import { TimeZoneAction } from "modules/timeZone/timeZone.types";
 import { VotebanAction } from "modules/voteban/voteban.types";
-import { Telegraf } from "telegraf";
+import type { Telegraf } from "telegraf";
 import { callbackQuery, message } from "telegraf/filters";
-import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
-import { CallbackCtx, MessageCtx, TextMessageCtx } from "types/telegrafContext";
+import type { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
+import type { CallbackCtx, MessageCtx, TextMessageCtx } from "types/telegrafContext";
 import { getCallbackQueryParams, getChatHtmlLink, getErrorCode, getPagination } from "utils/telegraf";
 
 import { SettingsAction } from "./settings.types";

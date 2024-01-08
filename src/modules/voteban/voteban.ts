@@ -1,12 +1,12 @@
-import { ChatSettingName, ChatType, User } from "@prisma/client";
+import { ChatSettingName, ChatType, type User } from "@prisma/client";
 import { CronJob } from "cron";
-import { changeLanguage, t, TOptions } from "i18next";
-import { Database, MAX_INT } from "modules/database";
-import { Settings } from "modules/settings";
-import { Telegraf } from "telegraf";
+import { changeLanguage, t, type TOptions } from "i18next";
+import { type Database, MAX_INT } from "modules/database";
+import type { Settings } from "modules/settings";
+import type { Telegraf } from "telegraf";
 import { callbackQuery } from "telegraf/filters";
-import { User as TelegramUser } from "telegraf/typings/core/types/typegram";
-import { CallbackCtx, TextMessageCtx } from "types/telegrafContext";
+import type { User as TelegramUser } from "telegraf/typings/core/types/typegram";
+import type { CallbackCtx, TextMessageCtx } from "types/telegrafContext";
 import {
   getCallbackQueryParams,
   getChatHtmlLink,

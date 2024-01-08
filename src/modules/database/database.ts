@@ -1,22 +1,22 @@
 import {
   AddingBotsRule,
-  ChatSettingName,
+  type ChatSettingName,
   ChatType,
   LanguageCode,
   MessagesOnBehalfOfChannelsRule,
-  Prisma,
+  type Prisma,
   PrismaClient,
   ProfanityFilterRule,
-  User,
+  type User,
 } from "@prisma/client";
 import { DATE_FORMAT, DATE_LOCALES } from "constants/dates";
 import { formatInTimeZone } from "date-fns-tz";
 import i18next, { t } from "i18next";
-import { Telegraf } from "telegraf";
-import { Chat as TelegramChat, User as TelegramUser } from "telegraf/typings/core/types/typegram";
+import type { Telegraf } from "telegraf";
+import type { Chat as TelegramChat, User as TelegramUser } from "telegraf/typings/core/types/typegram";
 import { getChatDisplayTitle, getUserDisplayName, getUserHtmlLink } from "utils/telegraf";
 
-import { PrismaChat } from "./database.types";
+import type { PrismaChat } from "./database.types";
 
 export class Database extends PrismaClient {
   /**

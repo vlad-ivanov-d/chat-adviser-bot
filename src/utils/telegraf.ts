@@ -1,7 +1,11 @@
-import { ChatType as PrismaChatType, SenderChat as PrismaSenderChat, User as PrismaUser } from "@prisma/client";
-import { Telegraf, Telegram } from "telegraf";
-import { Chat, InlineKeyboardButton, User } from "telegraf/typings/core/types/typegram";
-import { CallbackCtx } from "types/telegrafContext";
+import {
+  ChatType as PrismaChatType,
+  type SenderChat as PrismaSenderChat,
+  type User as PrismaUser,
+} from "@prisma/client";
+import type { Telegraf, Telegram } from "telegraf";
+import type { Chat, InlineKeyboardButton, User } from "telegraf/typings/core/types/typegram";
+import type { CallbackCtx } from "types/telegrafContext";
 
 export interface CallbackQueryParams {
   /**

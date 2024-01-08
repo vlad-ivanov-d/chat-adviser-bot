@@ -1,7 +1,7 @@
 import { changeLanguage, t } from "i18next";
-import { Database } from "modules/database";
-import { Telegraf } from "telegraf";
-import { TextMessageCtx } from "types/telegrafContext";
+import type { Database } from "modules/database";
+import type { Telegraf } from "telegraf";
+import type { TextMessageCtx } from "types/telegrafContext";
 
 export class Help {
   /**

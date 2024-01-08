@@ -1,4 +1,4 @@
-import { Chat, ChatSettingsHistory, User } from "@prisma/client";
+import type { Chat, ChatSettingsHistory, User } from "@prisma/client";
 
 export interface PrismaChat extends Chat {
   /**

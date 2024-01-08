@@ -1,8 +1,8 @@
 import { App } from "app";
 import { DATE_FORMAT } from "constants/dates";
 import { formatInTimeZone } from "date-fns-tz";
-import { http, HttpHandler, HttpResponse } from "msw";
-import { Telegraf } from "telegraf";
+import { http, type HttpHandler, HttpResponse } from "msw";
+import type { Telegraf } from "telegraf";
 import { MESSAGE_DATE } from "test/constants";
 import { createDbSupergroupChat } from "test/database";
 import { mockBot, mockChannelBot } from "test/mockBot";

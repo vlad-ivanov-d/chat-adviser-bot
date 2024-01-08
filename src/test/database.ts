@@ -1,5 +1,5 @@
-import { Chat, ChatType, LanguageCode, PrismaClient } from "@prisma/client";
-import { User } from "telegraf/typings/core/types/typegram";
+import { type Chat, ChatType, LanguageCode, PrismaClient } from "@prisma/client";
+import type { User } from "telegraf/typings/core/types/typegram";
 import { NODE_ENV } from "utils/envs";
 import { getChatDisplayTitle } from "utils/telegraf";
 

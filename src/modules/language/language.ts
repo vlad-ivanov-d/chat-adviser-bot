@@ -1,10 +1,10 @@
 import { ChatSettingName, LanguageCode } from "@prisma/client";
 import { changeLanguage, init, t } from "i18next";
-import { Database } from "modules/database";
-import { Settings } from "modules/settings";
-import { Telegraf } from "telegraf";
+import type { Database } from "modules/database";
+import type { Settings } from "modules/settings";
+import type { Telegraf } from "telegraf";
 import { callbackQuery } from "telegraf/filters";
-import { CallbackCtx } from "types/telegrafContext";
+import type { CallbackCtx } from "types/telegrafContext";
 import { getCallbackQueryParams, getChatHtmlLink } from "utils/telegraf";
 
 import { DEFAULT_NS } from "./language.constants";

@@ -1,6 +1,6 @@
 import { CronJob } from "cron";
-import { Database } from "modules/database";
-import { Telegraf } from "telegraf";
+import type { Database } from "modules/database";
+import type { Telegraf } from "telegraf";
 import { message } from "telegraf/filters";
 
 export class Cleanup {

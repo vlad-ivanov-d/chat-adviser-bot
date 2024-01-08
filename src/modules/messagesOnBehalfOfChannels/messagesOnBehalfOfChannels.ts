@@ -1,10 +1,10 @@
 import { ChatSettingName, MessagesOnBehalfOfChannelsRule } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
-import { Database } from "modules/database";
-import { Settings } from "modules/settings";
-import { Telegraf } from "telegraf";
+import type { Database } from "modules/database";
+import type { Settings } from "modules/settings";
+import type { Telegraf } from "telegraf";
 import { callbackQuery, message } from "telegraf/filters";
-import { CallbackCtx, MessageCtx } from "types/telegrafContext";
+import type { CallbackCtx, MessageCtx } from "types/telegrafContext";
 import { getCallbackQueryParams, getChatHtmlLink } from "utils/telegraf";
 
 import { MessagesOnBehalfOfChannelsAction } from "./messagesOnBehalfOfChannels.types";

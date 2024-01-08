@@ -1,4 +1,4 @@
-import { User } from "telegraf/typings/core/types/typegram";
+import type { User } from "telegraf/typings/core/types/typegram";
 
 /**
  * Mocks Telegram user

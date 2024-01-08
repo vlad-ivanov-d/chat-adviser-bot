@@ -2,12 +2,12 @@ import { ChatSettingName } from "@prisma/client";
 import { PAGE_SIZE } from "constants/pagination";
 import { format, getTimezoneOffset } from "date-fns-tz";
 import { changeLanguage, t } from "i18next";
-import { Database } from "modules/database";
-import { Settings } from "modules/settings";
-import { Telegraf } from "telegraf";
+import type { Database } from "modules/database";
+import type { Settings } from "modules/settings";
+import type { Telegraf } from "telegraf";
 import { callbackQuery } from "telegraf/filters";
-import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
-import { CallbackCtx } from "types/telegrafContext";
+import type { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
+import type { CallbackCtx } from "types/telegrafContext";
 import { getCallbackQueryParams, getChatHtmlLink, getPagination } from "utils/telegraf";
 
 import { TimeZoneAction } from "./timeZone.types";

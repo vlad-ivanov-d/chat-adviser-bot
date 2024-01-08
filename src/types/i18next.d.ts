@@ -1,6 +1,6 @@
 import "i18next";
 
-import { DEFAULT_NS, LanguageResources } from "modules/language";
+import type { DEFAULT_NS, LanguageResources } from "modules/language";
 
 declare module "i18next" {
   interface CustomTypeOptions {
