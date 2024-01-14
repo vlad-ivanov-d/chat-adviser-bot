@@ -12,12 +12,13 @@ import { VotebanAction } from "modules/voteban/voteban.types";
 import type { Telegraf } from "telegraf";
 import { callbackQuery, message } from "telegraf/filters";
 import type { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
+import type { BasicModule } from "types/basicModule";
 import type { CallbackCtx, MessageCtx, TextMessageCtx } from "types/telegrafContext";
 import { getCallbackQueryParams, getChatHtmlLink, getErrorCode, getPagination } from "utils/telegraf";
 
 import { SettingsAction } from "./settings.types";
 
-export class Settings {
+export class Settings implements BasicModule {
   /**
    * Creates settings module
    * @param bot Telegraf bot instance

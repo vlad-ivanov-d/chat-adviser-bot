@@ -2,8 +2,9 @@ import { CronJob } from "cron";
 import type { Database } from "modules/database";
 import type { Telegraf } from "telegraf";
 import { message } from "telegraf/filters";
+import type { BasicModule } from "types/basicModule";
 
-export class Cleanup {
+export class Cleanup implements BasicModule {
   /**
    * Cleanup cron job instance
    */

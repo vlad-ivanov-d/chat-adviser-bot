@@ -4,6 +4,7 @@ import type { Database } from "modules/database";
 import type { Settings } from "modules/settings";
 import type { Telegraf } from "telegraf";
 import { callbackQuery } from "telegraf/filters";
+import type { BasicModule } from "types/basicModule";
 import type { CallbackCtx } from "types/telegrafContext";
 import { getCallbackQueryParams, getChatHtmlLink } from "utils/telegraf";
 
@@ -12,7 +13,7 @@ import { LanguageAction } from "./language.types";
 import en from "./translations/en.json";
 import ru from "./translations/ru.json";
 
-export class Language {
+export class Language implements BasicModule {
   /**
    * Creates language module
    * @param bot Telegraf bot instance

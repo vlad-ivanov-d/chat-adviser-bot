@@ -4,12 +4,13 @@ import type { Database } from "modules/database";
 import type { Settings } from "modules/settings";
 import type { Telegraf } from "telegraf";
 import { callbackQuery, message } from "telegraf/filters";
+import type { BasicModule } from "types/basicModule";
 import type { CallbackCtx, MessageCtx } from "types/telegrafContext";
 import { getCallbackQueryParams, getChatHtmlLink } from "utils/telegraf";
 
 import { MessagesOnBehalfOfChannelsAction } from "./messagesOnBehalfOfChannels.types";
 
-export class MessagesOnBehalfOfChannels {
+export class MessagesOnBehalfOfChannels implements BasicModule {
   /**
    * Creates messages on behalf of channels module
    * @param bot Telegraf bot instance

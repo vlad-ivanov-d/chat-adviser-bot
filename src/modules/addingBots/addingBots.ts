@@ -4,12 +4,13 @@ import type { Database } from "modules/database";
 import type { Settings } from "modules/settings";
 import type { Telegraf } from "telegraf";
 import { callbackQuery, message } from "telegraf/filters";
+import type { BasicModule } from "types/basicModule";
 import type { CallbackCtx, NewChatMembersCtx } from "types/telegrafContext";
 import { getCallbackQueryParams, getChatHtmlLink, getUserHtmlLink, kickChatMember } from "utils/telegraf";
 
 import { AddingBotsAction } from "./addingBots.types";
 
-export class AddingBots {
+export class AddingBots implements BasicModule {
   /**
    * Creates adding bots module
    * @param bot Telegraf bot instance

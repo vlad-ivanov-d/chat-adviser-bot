@@ -7,12 +7,13 @@ import type { Settings } from "modules/settings";
 import type { Telegraf } from "telegraf";
 import { callbackQuery } from "telegraf/filters";
 import type { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
+import type { BasicModule } from "types/basicModule";
 import type { CallbackCtx } from "types/telegrafContext";
 import { getCallbackQueryParams, getChatHtmlLink, getPagination } from "utils/telegraf";
 
 import { TimeZoneAction } from "./timeZone.types";
 
-export class TimeZone {
+export class TimeZone implements BasicModule {
   /**
    * Creates time zone module
    * @param bot Telegraf bot instance

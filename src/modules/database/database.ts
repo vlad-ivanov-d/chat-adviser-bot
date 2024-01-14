@@ -14,11 +14,12 @@ import { formatInTimeZone } from "date-fns-tz";
 import i18next, { t } from "i18next";
 import type { Telegraf } from "telegraf";
 import type { Chat as TelegramChat, User as TelegramUser } from "telegraf/typings/core/types/typegram";
+import type { BasicModule } from "types/basicModule";
 import { getChatDisplayTitle, getUserDisplayName, getUserHtmlLink } from "utils/telegraf";
 
 import type { PrismaChat } from "./database.types";
 
-export class Database extends PrismaClient {
+export class Database extends PrismaClient implements BasicModule {
   /**
    * Creates database module
    * @param bot Telegraf bot instance

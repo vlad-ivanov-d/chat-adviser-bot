@@ -6,6 +6,7 @@ import type { Settings } from "modules/settings";
 import type { Telegraf } from "telegraf";
 import { callbackQuery } from "telegraf/filters";
 import type { User as TelegramUser } from "telegraf/typings/core/types/typegram";
+import type { BasicModule } from "types/basicModule";
 import type { CallbackCtx, TextMessageCtx } from "types/telegrafContext";
 import {
   getCallbackQueryParams,
@@ -19,7 +20,7 @@ import {
 import { EXPIRED_VOTEBAN_TIMEOUT } from "./voteban.constants";
 import { VotebanAction } from "./voteban.types";
 
-export class Voteban {
+export class Voteban implements BasicModule {
   private cleanupCronJob?: CronJob;
 
   /**

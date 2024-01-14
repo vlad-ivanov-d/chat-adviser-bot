@@ -2,11 +2,12 @@ import { CronJob } from "cron";
 import type { Database } from "modules/database";
 import type { Telegraf } from "telegraf";
 import { message } from "telegraf/filters";
+import type { BasicModule } from "types/basicModule";
 import type { MessageCtx } from "types/telegrafContext";
 
 import { OUTDATED_MESSAGE_TIMEOUT } from "./messages.constants";
 
-export class Messages {
+export class Messages implements BasicModule {
   private cleanupCronJob?: CronJob;
 
   /**

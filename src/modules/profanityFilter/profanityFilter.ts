@@ -4,13 +4,14 @@ import type { Database } from "modules/database";
 import type { Settings } from "modules/settings";
 import type { Telegraf } from "telegraf";
 import { callbackQuery, message } from "telegraf/filters";
+import type { BasicModule } from "types/basicModule";
 import type { CallbackCtx, MessageCtx } from "types/telegrafContext";
 import { Profanity } from "utils/profanity";
 import { getCallbackQueryParams, getChatHtmlLink, getUserFullName } from "utils/telegraf";
 
 import { ProfanityFilterAction } from "./profanityFilter.types";
 
-export class ProfanityFilter {
+export class ProfanityFilter implements BasicModule {
   private profaneWords?: string[];
   private profaneWordsDate: Date = new Date();
 
