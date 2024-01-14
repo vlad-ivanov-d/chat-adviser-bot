@@ -90,15 +90,16 @@ export class Voteban implements BasicModule {
           where: { chatId: ctx.chat?.id, mediaGroupId, messageId: { not: messageId } },
         })
       : [];
-    const toDeleteIds = [messageId, ...mediaGroupMessages.map((m) => m.messageId)].reduce(
-      (result: number[], id) => (typeof id === "number" ? [...result, id] : result),
-      [],
+    const toDeleteIds = [messageId, ...mediaGroupMessages.map((m) => m.messageId)].filter(
+      (id): id is number => typeof id === "number",
     );
-    const deletionResult = await Promise.all(toDeleteIds.map((id) => ctx.deleteMessage(id).catch(() => false)));
-    const deletedIds = toDeleteIds.reduce(
-      (result: number[], id, index) => (deletionResult[index] ? [...result, id] : result),
-      [],
+    const deletionResult = await Promise.all(
+      toDeleteIds.map(async (id) => {
+        const isDeleted = await ctx.deleteMessage(id).catch(() => false);
+        return isDeleted ? id : undefined;
+      }),
     );
+    const deletedIds = deletionResult.filter((id): id is number => typeof id === "number");
     if (deletedIds.length > 0) {
       await this.database.message.deleteMany({ where: { messageId: { in: deletedIds } } });
     }

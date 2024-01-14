@@ -129,23 +129,26 @@ export class Profanity {
    * @returns Profanity regular expression
    */
   private getProfanityRegExp(profaneWord: string, similarCharsMap: Map<string, string[]>): RegExp {
-    const profanityRegExpStr = profaneWord
+    const regExpPattern = profaneWord
       .split("")
-      .map((char, i, arr) => {
-        if (char === "*" && (i === 0 || i === arr.length - 1)) {
-          return ""; // Remove starting and ending "*" character
+      .reduce<string[]>((result, char, i) => {
+        if ((i === 0 || i === profaneWord.length - 1) && char === "*") {
+          return result;
         }
-        const chars = [escapeRegExp(char)];
-        const similarChars = similarCharsMap.get(char);
-        if (similarChars) {
-          chars.push(...similarChars.map(escapeRegExp));
+        if (i === 0) {
+          result.push("^");
         }
-        return `(${chars.join("|")})`;
-      })
+        const similarChars = [escapeRegExp(char), ...(similarCharsMap.get(char) ?? []).map(escapeRegExp)];
+        result.push(`(${similarChars.join("|")})`);
+        if (i === profaneWord.length - 1) {
+          result.push("$");
+        }
+        return result;
+      }, [])
       .join("");
-    return new RegExp(
-      `${profaneWord.startsWith("*") ? "" : "^"}${profanityRegExpStr}${profaneWord.endsWith("*") ? "" : "$"}`,
-    );
+    // Expected constructor for profanity RegExp
+    // eslint-disable-next-line security/detect-non-literal-regexp
+    return new RegExp(regExpPattern);
   }
 
   /**

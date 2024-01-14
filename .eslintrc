@@ -12,6 +12,7 @@
     "plugin:import/typescript",
     "plugin:jsdoc/recommended-error",
     "plugin:promise/recommended",
+    "plugin:security/recommended-legacy",
     "plugin:sonarjs/recommended",
     "plugin:prettier/recommended"
   ],
