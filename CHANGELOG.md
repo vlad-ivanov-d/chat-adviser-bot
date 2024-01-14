@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.14.0 (2024-xx-xx)
+
+- Other: internal improvements
+
 ## 1.13.0 (2024-01-14)
 
 - Improvement: Messages On Behalf Of Channels feature
