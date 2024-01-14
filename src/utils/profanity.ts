@@ -15,56 +15,55 @@ export class Profanity {
   /**
    * Similar chars which can be used to workaround filter. Chars must be defined in lower case.
    */
-  private readonly similarChars: Record<string, string[]> = {
+  private readonly similarCharsMap = new Map([
     // English
-    a: ["@", "а"],
-    b: ["l3", "6", "в", "ь"],
-    c: ["с"],
-    e: ["е"],
-    i: ["1", "!"],
-    k: ["к", "i{", "|{"],
-    m: ["м"],
-    o: ["0", "о"],
-    p: ["р"],
-    s: ["$", "z"],
-    t: ["+", "7", "т"],
-    x: ["х", "}{"],
-    y: ["у"],
-
+    ["a", ["@", "а"]],
+    ["b", ["l3", "6", "в", "ь"]],
+    ["c", ["с"]],
+    ["e", ["е"]],
+    ["i", ["1", "!"]],
+    ["k", ["к", "i{", "|{"]],
+    ["m", ["м"]],
+    ["o", ["0", "о"]],
+    ["p", ["р"]],
+    ["s", ["$", "z"]],
+    ["t", ["+", "7", "т"]],
+    ["x", ["х", "}{"]],
+    ["y", ["у"]],
     // Russian
-    а: ["a", "@"],
-    б: ["b", "6"],
-    в: ["b", "v"],
-    г: ["g", "r"],
-    д: ["d", "g"],
-    е: ["e", "ё", "йе", "йо"],
-    ж: ["zh", "*"],
-    з: ["z", "3"],
-    и: ["i", "u"],
-    й: ["i", "u", "y", "и"],
-    к: ["k", "i{", "|{"],
-    л: ["l", "ji"],
-    м: ["m"],
-    н: ["h", "n"],
-    о: ["o", "0"],
-    п: ["п", "n", "p"],
-    р: ["p", "r"],
-    с: ["c", "s", "$"],
-    т: ["m", "t"],
-    у: ["u", "y"],
-    ф: ["f"],
-    х: ["h", "x", "}{"],
-    ц: ["c", "u,"],
-    ч: ["ch"],
-    ш: ["sh"],
-    щ: ["sch"],
-    ъ: ["b", "ь", "'", "`"],
-    ы: ["bi"],
-    ь: ["b", "ъ", "'", "`"],
-    э: ["e", "е"],
-    ю: ["io"],
-    я: ["ya"],
-  };
+    ["а", ["a", "@"]],
+    ["б", ["b", "6"]],
+    ["в", ["b", "v"]],
+    ["г", ["g", "r"]],
+    ["д", ["d", "g"]],
+    ["е", ["e", "ё", "йе", "йо"]],
+    ["ж", ["zh", "*"]],
+    ["з", ["z", "3"]],
+    ["и", ["i", "u"]],
+    ["й", ["i", "u", "y", "и"]],
+    ["к", ["k", "i{", "|{"]],
+    ["л", ["l", "ji"]],
+    ["м", ["m"]],
+    ["н", ["h", "n"]],
+    ["о", ["o", "0"]],
+    ["п", ["п", "n", "p"]],
+    ["р", ["p", "r"]],
+    ["с", ["c", "s", "$"]],
+    ["т", ["m", "t"]],
+    ["у", ["u", "y"]],
+    ["ф", ["f"]],
+    ["х", ["h", "x", "}{"]],
+    ["ц", ["c", "u,"]],
+    ["ч", ["ch"]],
+    ["ш", ["sh"]],
+    ["щ", ["sch"]],
+    ["ъ", ["b", "ь", "'", "`"]],
+    ["ы", ["bi"]],
+    ["ь", ["b", "ъ", "'", "`"]],
+    ["э", ["e", "е"]],
+    ["ю", ["io"]],
+    ["я", ["ya"]],
+  ]);
 
   /**
    * Creates the class to work with profane words
@@ -106,7 +105,7 @@ export class Profanity {
     const cleanWord = this.removeDuplicateChars(word.toLowerCase());
     for (const profaneWord of this.profaneWords) {
       const cleanProfaneWord = this.removeDuplicateChars(profaneWord.toLowerCase());
-      const profanityRegExp = this.getProfanityRegExp(cleanProfaneWord, this.similarChars);
+      const profanityRegExp = this.getProfanityRegExp(cleanProfaneWord, this.similarCharsMap);
       let hasWord = false;
       const filteredText = cleanWord.replace(profanityRegExp, () => {
         hasProfanity = true;
@@ -126,10 +125,10 @@ export class Profanity {
    * Gets profanity regular expression
    * @param profaneWord Profane word. If a word begins or ends with the char *,
    * then instead of the char * there can be any sequence of letters.
-   * @param similarChars Similar chars which can be used to workaround regular expression
+   * @param similarCharsMap Similar chars which can be used to workaround regular expression
    * @returns Profanity regular expression
    */
-  private getProfanityRegExp(profaneWord: string, similarChars: Record<string, string[]>): RegExp {
+  private getProfanityRegExp(profaneWord: string, similarCharsMap: Map<string, string[]>): RegExp {
     const profanityRegExpStr = profaneWord
       .split("")
       .map((char, i, arr) => {
@@ -137,8 +136,9 @@ export class Profanity {
           return ""; // Remove starting and ending "*" character
         }
         const chars = [escapeRegExp(char)];
-        if (char in similarChars) {
-          chars.push(...similarChars[char].map(escapeRegExp));
+        const similarChars = similarCharsMap.get(char);
+        if (similarChars) {
+          chars.push(...similarChars.map(escapeRegExp));
         }
         return `(${chars.join("|")})`;
       })
@@ -154,13 +154,10 @@ export class Profanity {
    * @returns Clean text without duplicate chars
    */
   private removeDuplicateChars(text: string): string {
-    if (!text) {
-      return text;
-    }
-    let result = text[0];
-    for (let i = 1; i < text.length; i++) {
-      if (text[i] !== text[i - 1]) {
-        result += text[i]; // Add a character to the result if it differs from the previous one
+    let result = "";
+    for (const char of text) {
+      if (result[result.length] !== char) {
+        result += char;
       }
     }
     return result;

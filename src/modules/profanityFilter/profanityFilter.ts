@@ -9,6 +9,7 @@ import type { CallbackCtx, MessageCtx } from "types/telegrafContext";
 import { Profanity } from "utils/profanity";
 import { getCallbackQueryParams, getChatHtmlLink, getUserFullName } from "utils/telegraf";
 
+import { WORDS_CACHE_TIMEOUT } from "./profanityFilter.constants";
 import { ProfanityFilterAction } from "./profanityFilter.types";
 
 export class ProfanityFilter implements BasicModule {
@@ -107,8 +108,7 @@ export class ProfanityFilter implements BasicModule {
    * @returns Cached profane words
    */
   private async getCachedProfaneWords(): Promise<string[]> {
-    const cacheTimeout = 15 * 60 * 1000; // 15 minutes
-    if (!this.profaneWords || this.profaneWordsDate.getTime() < Date.now() - cacheTimeout) {
+    if (!this.profaneWords || this.profaneWordsDate.getTime() < Date.now() - WORDS_CACHE_TIMEOUT) {
       const profaneWords = await this.database.profaneWord.findMany({ select: { word: true } });
       this.profaneWords = profaneWords.map(({ word }) => word);
       this.profaneWordsDate = new Date();
