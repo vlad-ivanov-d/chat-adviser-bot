@@ -9,12 +9,13 @@ import {
   ProfanityFilterRule,
   type User,
 } from "@prisma/client";
-import { DATE_FORMAT, DATE_LOCALES } from "constants/dates";
+import { DATE_FORMAT } from "constants/dates";
 import { formatInTimeZone } from "date-fns-tz";
 import i18next, { t } from "i18next";
 import type { Telegraf } from "telegraf";
 import type { Chat, User as TelegramUser } from "telegraf/typings/core/types/typegram";
 import type { BasicModule } from "types/basicModule";
+import { getDateLocale } from "utils/dates";
 import { getChatDisplayTitle, getUserDisplayName, getUserHtmlLink } from "utils/telegraf";
 
 import type { UpsertedChat } from "./database.types";
@@ -70,12 +71,12 @@ export class Database extends PrismaClient implements BasicModule {
   public joinModifiedInfo(text: string, settingName: ChatSettingName, chat: UpsertedChat): string {
     const { chatSettingsHistory, timeZone } = chat;
     const historyItem = chatSettingsHistory.find((s) => s.settingName === settingName);
-    const language = this.resolveLanguage(i18next.language);
+    const locale = getDateLocale(i18next.language);
     return [
       text,
       historyItem
         ? t("settings:modified", {
-            DATE: formatInTimeZone(historyItem.updatedAt, timeZone, DATE_FORMAT, { locale: DATE_LOCALES[language] }),
+            DATE: formatInTimeZone(historyItem.updatedAt, timeZone, DATE_FORMAT, { locale }),
             USER: getUserHtmlLink(historyItem.editor),
           })
         : "",
@@ -98,8 +99,8 @@ export class Database extends PrismaClient implements BasicModule {
    */
   public resolveLanguage(languageCode: string | undefined): LanguageCode {
     switch (languageCode) {
-      case LanguageCode.RU:
       case "ru":
+      case LanguageCode.RU:
         return LanguageCode.RU;
       default:
         return LanguageCode.EN;
