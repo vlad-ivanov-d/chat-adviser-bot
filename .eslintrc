@@ -12,6 +12,7 @@
     "plugin:import/typescript",
     "plugin:jsdoc/recommended-error",
     "plugin:promise/recommended",
+    "plugin:security/recommended-legacy",
     "plugin:sonarjs/recommended",
     "plugin:prettier/recommended"
   ],
@@ -52,6 +53,7 @@
   ],
   "rules": {
     "@typescript-eslint/consistent-type-assertions": ["error", { "assertionStyle": "never" }],
+    "@typescript-eslint/consistent-type-imports": ["error", { "fixStyle": "inline-type-imports" }],
     "@typescript-eslint/explicit-function-return-type": [
       "error",
       {
@@ -78,6 +80,7 @@
       }
     ],
     "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/no-import-type-side-effects": "error",
     "@typescript-eslint/no-unsafe-enum-comparison": "off",
     "@typescript-eslint/no-unused-vars": "error",
     "@typescript-eslint/prefer-for-of": "error",

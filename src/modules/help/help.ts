@@ -1,9 +1,10 @@
 import { changeLanguage, t } from "i18next";
-import { Database } from "modules/database";
-import { Telegraf } from "telegraf";
-import { TextMessageCtx } from "types/telegrafContext";
+import type { Database } from "modules/database";
+import type { Telegraf } from "telegraf";
+import type { BasicModule } from "types/basicModule";
+import type { TextMessageCtx } from "types/telegrafContext";
 
-export class Help {
+export class Help implements BasicModule {
   /**
    * Creates help module
    * @param bot Telegraf bot instance

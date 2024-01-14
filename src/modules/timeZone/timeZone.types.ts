@@ -1,4 +1,4 @@
 export enum TimeZoneAction {
-  SAVE = "cfg-tz",
-  SETTINGS = "cfg-tz-sv",
+  SAVE = "cfg-tz-sv",
+  SETTINGS = "cfg-tz",
 }

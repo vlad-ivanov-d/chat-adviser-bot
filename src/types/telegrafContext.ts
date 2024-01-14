@@ -1,5 +1,5 @@
-import { Context, NarrowedContext } from "telegraf";
-import { CallbackQuery, Message, Update } from "telegraf/typings/core/types/typegram";
+import type { Context, NarrowedContext } from "telegraf";
+import type { CallbackQuery, Message, Update } from "telegraf/typings/core/types/typegram";
 
 export type CallbackCtx = NarrowedContext<Context, Update.CallbackQueryUpdate<CallbackQuery.DataQuery>>;
 

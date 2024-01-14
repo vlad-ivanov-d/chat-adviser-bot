@@ -1,10 +1,11 @@
 import { ChatSettingName, LanguageCode } from "@prisma/client";
 import { changeLanguage, init, t } from "i18next";
-import { Database } from "modules/database";
-import { Settings } from "modules/settings";
-import { Telegraf } from "telegraf";
+import type { Database } from "modules/database";
+import type { Settings } from "modules/settings";
+import type { Telegraf } from "telegraf";
 import { callbackQuery } from "telegraf/filters";
-import { CallbackCtx } from "types/telegrafContext";
+import type { BasicModule } from "types/basicModule";
+import type { CallbackCtx } from "types/telegrafContext";
 import { getCallbackQueryParams, getChatHtmlLink } from "utils/telegraf";
 
 import { DEFAULT_NS } from "./language.constants";
@@ -12,7 +13,7 @@ import { LanguageAction } from "./language.types";
 import en from "./translations/en.json";
 import ru from "./translations/ru.json";
 
-export class Language {
+export class Language implements BasicModule {
   /**
    * Creates language module
    * @param bot Telegraf bot instance
@@ -73,20 +74,20 @@ export class Language {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const prismaChat = await this.settings.resolvePrismaChat(ctx, chatId);
-    if (!prismaChat) {
+    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
-    const chatLink = getChatHtmlLink(prismaChat);
+    const chatLink = getChatHtmlLink(dbChat);
     const enText = this.getOptions().find((l) => l.code === LanguageCode.EN)?.title ?? "";
     const ruText = this.getOptions().find((l) => l.code === LanguageCode.RU)?.title ?? "";
-    const value = this.getOptions().find((l) => l.code === prismaChat.language)?.title ?? "";
+    const value = this.getOptions().find((l) => l.code === dbChat.language)?.title ?? "";
     const msg = t("language:select", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(this.database.joinModifiedInfo(msg, ChatSettingName.LANGUAGE, prismaChat), {
+      ctx.editMessageText(this.database.joinModifiedInfo(msg, ChatSettingName.LANGUAGE, dbChat), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
@@ -121,8 +122,8 @@ export class Language {
 
     const { language: lng } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(lng);
-    const prismaChat = await this.settings.resolvePrismaChat(ctx, chatId);
-    if (!prismaChat) {
+    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 

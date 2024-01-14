@@ -1,4 +1,4 @@
-import en from "./translations/en.json";
+import type en from "./translations/en.json";
 
 export enum LanguageAction {
   SAVE = "cfg-lng-sv",

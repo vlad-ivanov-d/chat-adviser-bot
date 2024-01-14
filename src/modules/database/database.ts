@@ -1,23 +1,26 @@
 import {
   AddingBotsRule,
-  ChatSettingName,
+  type ChatSettingName,
   ChatType,
   LanguageCode,
-  Prisma,
+  MessagesOnBehalfOfChannelsRule,
+  type Prisma,
   PrismaClient,
   ProfanityFilterRule,
-  User,
+  type User,
 } from "@prisma/client";
-import { DATE_FORMAT, DATE_LOCALES } from "constants/dates";
+import { DATE_FORMAT } from "constants/dates";
 import { formatInTimeZone } from "date-fns-tz";
 import i18next, { t } from "i18next";
-import { Telegraf } from "telegraf";
-import { Chat as TelegramChat, User as TelegramUser } from "telegraf/typings/core/types/typegram";
+import type { Telegraf } from "telegraf";
+import type { Chat, User as TelegramUser } from "telegraf/typings/core/types/typegram";
+import type { BasicModule } from "types/basicModule";
+import { getDateLocale } from "utils/dates";
 import { getChatDisplayTitle, getUserDisplayName, getUserHtmlLink } from "utils/telegraf";
 
-import { PrismaChat } from "./database.types";
+import type { UpsertedChat } from "./database.types";
 
-export class Database extends PrismaClient {
+export class Database extends PrismaClient implements BasicModule {
   /**
    * Creates database module
    * @param bot Telegraf bot instance
@@ -35,16 +38,16 @@ export class Database extends PrismaClient {
 
   /**
    * Checks the user is a chat admin
-   * @param prismaChat Prisma chat
+   * @param chat Chat
    * @param userId User id
    * @param senderChatId Sender chat id. A message can be send on behalf of current chat.
    * @returns True if admin
    */
-  public isChatAdmin(prismaChat: PrismaChat, userId: number, senderChatId?: number): boolean {
+  public isChatAdmin(chat: UpsertedChat, userId: number, senderChatId?: number): boolean {
     return (
-      userId === prismaChat.id || // Private chat has the same id as a user
-      senderChatId === prismaChat.id || // A message can be send on behalf of current chat
-      prismaChat.admins.some((a) => a.id === userId) // Check admin list. IMPORTANT: other bots won't be in this array.
+      userId === chat.id || // Private chat has the same id as a user
+      senderChatId === chat.id || // A message can be send on behalf of current chat
+      chat.admins.some((a) => a.id === userId) // Check admin list. IMPORTANT: other bots won't be in this array.
     );
   }
 
@@ -54,26 +57,26 @@ export class Database extends PrismaClient {
    * @returns True if chat exists
    */
   public async isChatExists(chatId: number): Promise<boolean> {
-    const prismaChat = await this.chat.findUnique({ select: { id: true }, where: { id: chatId } });
-    return prismaChat !== null;
+    const chat = await this.chat.findUnique({ select: { id: true }, where: { id: chatId } });
+    return chat !== null;
   }
 
   /**
    * Adds modified info to the text
    * @param text Text
    * @param settingName Setting name
-   * @param prismaChat Prisma chat
+   * @param chat Chat
    * @returns Text with modified information if available
    */
-  public joinModifiedInfo(text: string, settingName: ChatSettingName, prismaChat: PrismaChat): string {
-    const { chatSettingsHistory, timeZone } = prismaChat;
+  public joinModifiedInfo(text: string, settingName: ChatSettingName, chat: UpsertedChat): string {
+    const { chatSettingsHistory, timeZone } = chat;
     const historyItem = chatSettingsHistory.find((s) => s.settingName === settingName);
-    const language = this.resolveLanguage(i18next.language);
+    const locale = getDateLocale(i18next.language);
     return [
       text,
       historyItem
         ? t("settings:modified", {
-            DATE: formatInTimeZone(historyItem.updatedAt, timeZone, DATE_FORMAT, { locale: DATE_LOCALES[language] }),
+            DATE: formatInTimeZone(historyItem.updatedAt, timeZone, DATE_FORMAT, { locale }),
             USER: getUserHtmlLink(historyItem.editor),
           })
         : "",
@@ -90,14 +93,14 @@ export class Database extends PrismaClient {
   }
 
   /**
-   * Resolves language based on Telegram or Prisma language code
-   * @param languageCode Telegram or Prisma language code
+   * Resolves supported language code
+   * @param languageCode Language code
    * @returns Language code which is supported by the bot
    */
   public resolveLanguage(languageCode: string | undefined): LanguageCode {
     switch (languageCode) {
-      case LanguageCode.RU:
       case "ru":
+      case LanguageCode.RU:
         return LanguageCode.RU;
       default:
         return LanguageCode.EN;
@@ -108,17 +111,19 @@ export class Database extends PrismaClient {
    * Gets the chat from the database. The chat will be created if it's not exists.
    * @param chat Telegram chat or chat id
    * @param editor Telegram user who makes upsert
-   * @returns Prisma chat
+   * @returns Chat
    */
-  public async upsertChat(chat: TelegramChat, editor: TelegramUser): Promise<PrismaChat> {
+  public async upsertChat(chat: Chat, editor: TelegramUser): Promise<UpsertedChat> {
+    const { botInfo, telegram } = this.bot;
     const [admins, membersCount] = await Promise.all([
       // An expected error may happen if administrators are hidden
-      chat.type === "private" ? [] : this.bot.telegram.getChatAdministrators(chat.id).catch(() => []),
-      this.bot.telegram.getChatMembersCount(chat.id),
+      chat.type === "private" ? [] : telegram.getChatAdministrators(chat.id).catch(() => []),
+      telegram.getChatMembersCount(chat.id),
     ]);
 
     const displayTitle = getChatDisplayTitle(chat);
     const firstName = "first_name" in chat ? chat.first_name : null;
+    const isGroupChat = chat.type === "group" || chat.type === "supergroup";
     const lastName = "last_name" in chat ? chat.last_name ?? null : null;
     const title = "title" in chat ? chat.title : null;
     const username = "username" in chat ? chat.username ?? null : null;
@@ -129,7 +134,7 @@ export class Database extends PrismaClient {
         .map((u) => this.upsertUser(u, editor)),
       this.chat.upsert({
         create: {
-          addingBots: chat.type === "group" || chat.type === "supergroup" ? AddingBotsRule.RESTRICT : undefined,
+          addingBots: isGroupChat ? AddingBotsRule.RESTRICT : undefined,
           admins: { connect: admins.map((a) => ({ id: a.user.id })) },
           authorId: editor.id,
           displayTitle,
@@ -139,7 +144,8 @@ export class Database extends PrismaClient {
           language: this.resolveLanguage(editor.language_code),
           lastName,
           membersCount,
-          profanityFilter: chat.type === "group" || chat.type === "supergroup" ? ProfanityFilterRule.FILTER : undefined,
+          messagesOnBehalfOfChannels: isGroupChat ? MessagesOnBehalfOfChannelsRule.FILTER : undefined,
+          profanityFilter: isGroupChat ? ProfanityFilterRule.FILTER : undefined,
           timeZone: this.resolveTimeZone(editor.language_code),
           title,
           type: this.resolveChatType(chat.type),
@@ -161,23 +167,19 @@ export class Database extends PrismaClient {
       }),
     ]);
 
-    const prismaChat = transaction[transaction.length - 1];
-    if (!("admins" in prismaChat)) {
+    const upsertedChat = transaction[transaction.length - 1];
+    if (!("admins" in upsertedChat)) {
       throw new Error("Something went wrong during chat upsertion.");
     }
 
-    return this.bot.botInfo && chat.id === editor.id
+    return botInfo && chat.id === editor.id
       ? // Patch display title of the chat with the bot
-        {
-          ...prismaChat,
-          displayTitle: getUserDisplayName(this.bot.botInfo, "full"),
-          username: this.bot.botInfo.username,
-        }
-      : prismaChat;
+        { ...upsertedChat, displayTitle: getUserDisplayName(botInfo, "full"), username: botInfo.username }
+      : upsertedChat;
   }
 
   /**
-   * Upserts prisma chat settings history
+   * Upserts chat settings history
    * @param chatId Chat id
    * @param editorId User id
    * @param settingName Chat setting name
@@ -200,14 +202,14 @@ export class Database extends PrismaClient {
    * Creates or updates (if still not exist) sender chat in database.
    * @param chat Telegram chat
    * @param editor Telegram user who makes upsert
-   * @returns Prisma sender chat id
+   * @returns Sender chat id
    */
-  public async upsertSenderChat(chat: TelegramChat, editor: TelegramUser): Promise<number> {
+  public async upsertSenderChat(chat: Chat, editor: TelegramUser): Promise<number> {
     const firstName = "first_name" in chat ? chat.first_name : null;
     const lastName = "last_name" in chat ? chat.last_name ?? null : null;
     const title = "title" in chat ? chat.title : null;
     const username = "username" in chat ? chat.username ?? null : null;
-    const [, prismaSenderChat] = await this.$transaction([
+    const [, senderChat] = await this.$transaction([
       this.upsertUser(editor, editor),
       this.senderChat.upsert({
         create: {
@@ -225,7 +227,7 @@ export class Database extends PrismaClient {
         where: { id: chat.id },
       }),
     ]);
-    return prismaSenderChat.id;
+    return senderChat.id;
   }
 
   /**
@@ -261,7 +263,7 @@ export class Database extends PrismaClient {
    * @param chatType Telegram chat type
    * @returns Chat type which is supported by the bot
    */
-  private resolveChatType(chatType: TelegramChat["type"]): ChatType {
+  private resolveChatType(chatType: Chat["type"]): ChatType {
     switch (chatType) {
       case "channel":
         return ChatType.CHANNEL;

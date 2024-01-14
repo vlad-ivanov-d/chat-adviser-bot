@@ -16,13 +16,21 @@ The bot can run votes to ban a user in a chat. The user will be banned and their
 
 The bot can communicate in different languages so that chat users can understand the bot.
 
+### Messages On Behalf Of Channels
+
+The bot can filter messages on behalf of channels (not to be confused with forwarded messages). Users who have their own Telegram channels can write in public chats on behalf of the channels. In this way, they can make additional advertising for themselves or simply anonymize messages without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel and write on its behalf.
+
 ### Profanity Filter
 
-The bot can filter profanity in chat, including usernames. The filter won't be applied to messages from administrators. The bot needs administrator permissions for this feature.
+The bot can filter profanity in chat, including usernames. The filter won't be applied to messages from administrators.
 
 ### Restriction On Adding Bots
 
-The bot can prevent users from adding bots to chat. This will help avoid spam or, for example, collecting chat statistics without the approval of administrators. Additionally, the ban of the violator can be configured. The user who tried to add the bot will be banned. The bot needs administrator permissions for this feature.
+The bot can prevent users from adding bots to chat. This will help avoid spam or, for example, collecting chat statistics without the approval of administrators. Additionally, the ban of the violator can be configured. The user who tried to add the bot will be banned.
+
+### Time Zone
+
+The bot can work in different time zones and display dates in the appropriate format.
 
 ## Getting Started
 
@@ -51,7 +59,7 @@ Get more details in [Contributing](./CONTRIBUTING.md)
 
 | Statements                  | Branches                | Functions                 | Lines             |
 | --------------------------- | ----------------------- | ------------------------- | ----------------- |
-| ![Statements](https://img.shields.io/badge/statements-31.98%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-14.66%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-31.35%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-30.25%25-red.svg?style=flat) |
+| ![Statements](https://img.shields.io/badge/statements-58.86%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-39.11%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-61.53%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-57.26%25-red.svg?style=flat) |
 
 ## License
 

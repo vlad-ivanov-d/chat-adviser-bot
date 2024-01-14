@@ -1,9 +1,10 @@
 import { CronJob } from "cron";
-import { Database } from "modules/database";
-import { Telegraf } from "telegraf";
+import type { Database } from "modules/database";
+import type { Telegraf } from "telegraf";
 import { message } from "telegraf/filters";
+import type { BasicModule } from "types/basicModule";
 
-export class Cleanup {
+export class Cleanup implements BasicModule {
   /**
    * Cleanup cron job instance
    */
@@ -62,7 +63,6 @@ export class Cleanup {
    * Removes unused users
    */
   private async cleanupUsers(): Promise<void> {
-    const monthAgoDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     // Remove unused users from database
     await this.database.user.deleteMany({
       where: {
@@ -72,6 +72,8 @@ export class Cleanup {
           { chatEditors: { none: {} } },
           { chatSettingsHistoryAuthors: { none: {} } },
           { chatSettingsHistoryEditors: { none: {} } },
+          { messageAuthors: { none: {} } },
+          { messageEditors: { none: {} } },
           { profaneWordAuthors: { none: {} } },
           { profaneWordEditors: { none: {} } },
           { senderChatAuthors: { none: {} } },
@@ -93,12 +95,13 @@ export class Cleanup {
       select: { id: true, userAuthors: { select: { id: true } }, userEditors: { select: { id: true } } },
       where: {
         AND: [
-          { updatedAt: { lt: monthAgoDate } },
           { chatAdmins: { none: {} } },
           { chatAuthors: { none: {} } },
           { chatEditors: { none: {} } },
           { chatSettingsHistoryAuthors: { none: {} } },
           { chatSettingsHistoryEditors: { none: {} } },
+          { messageAuthors: { none: {} } },
+          { messageEditors: { none: {} } },
           { profaneWordAuthors: { none: {} } },
           { profaneWordEditors: { none: {} } },
           { senderChatAuthors: { none: {} } },

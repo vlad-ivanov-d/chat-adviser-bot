@@ -2,35 +2,43 @@ name: Continuous Integration
 
 on: [push]
 
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Setup node version
-        uses: actions/setup-node@v3
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup node
+        uses: actions/setup-node@v4
         with:
-          node-version: "20.10.0"
+          node-version: 20.11.0
       - name: Restore dependencies
         run: npm ci
       - name: Build sources
         run: npm run build
-      - name: Save dist
-        uses: actions/upload-artifact@v3
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
         with:
-          name: dist
-          path: dist
+          name: app
+          path: |
+            Dockerfile
+            compose.yml
+            dist
+            prisma
 
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Setup node version
-        uses: actions/setup-node@v3
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup node
+        uses: actions/setup-node@v4
         with:
-          node-version: "20.10.0"
+          node-version: 20.11.0
       - name: Restore dependencies
         run: npm ci
       - name: Run tests
@@ -42,10 +50,10 @@ jobs:
     needs: [build, test]
     runs-on: ubuntu-latest
     steps:
-      - name: Download dist
-        uses: actions/download-artifact@v3
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
         with:
-          name: dist
+          name: app
       - name: Run docker compose
         env:
           BOT_TOKEN: ${{secrets.BOT_TOKEN}}

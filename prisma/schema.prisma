@@ -14,11 +14,12 @@ enum AddingBotsRule {
 }
 
 enum ChatSettingName {
-  ADDING_BOTS      @map("adding_bots")
-  LANGUAGE         @map("language")
-  PROFANITY_FILTER @map("profanity_filter")
-  TIME_ZONE        @map("time_zone")
-  VOTEBAN_LIMIT    @map("voteban_limit")
+  ADDING_BOTS                    @map("adding_bots")
+  LANGUAGE                       @map("language")
+  MESSAGES_ON_BEHALF_OF_CHANNELS @map("messages_on_behalf_of_channels")
+  PROFANITY_FILTER               @map("profanity_filter")
+  TIME_ZONE                      @map("time_zone")
+  VOTEBAN_LIMIT                  @map("voteban_limit")
 }
 
 enum ChatType {
@@ -34,33 +35,39 @@ enum LanguageCode {
   RU @map("ru")
 }
 
+enum MessagesOnBehalfOfChannelsRule {
+  FILTER @map("filter")
+}
+
 enum ProfanityFilterRule {
   FILTER @map("filter")
 }
 
 model Chat {
-  id              Float                @id
-  addingBots      AddingBotsRule?      @map("adding_bots")
-  admins          User[]               @relation("ChatAdmins")
-  authorId        Float                @map("author_id")
-  createdAt       DateTime             @default(now()) @map("created_at")
-  displayTitle    String               @map("display_title")
-  editorId        Float                @map("editor_id")
-  firstName       String?              @map("first_name")
-  language        LanguageCode
-  lastName        String?              @map("last_name")
-  membersCount    Int                  @map("members_count")
-  profanityFilter ProfanityFilterRule? @map("profanity_filter")
-  timeZone        String               @map("time_zone")
-  title           String?
-  type            ChatType
-  updatedAt       DateTime             @updatedAt @map("updated_at")
-  username        String?
-  votebanLimit    Int?                 @map("voteban_limit")
+  id                         Float                           @id
+  addingBots                 AddingBotsRule?                 @map("adding_bots")
+  admins                     User[]                          @relation("ChatAdmins")
+  authorId                   Float                           @map("author_id")
+  createdAt                  DateTime                        @default(now()) @map("created_at")
+  displayTitle               String                          @map("display_title")
+  editorId                   Float                           @map("editor_id")
+  firstName                  String?                         @map("first_name")
+  language                   LanguageCode
+  lastName                   String?                         @map("last_name")
+  membersCount               Int                             @map("members_count")
+  messagesOnBehalfOfChannels MessagesOnBehalfOfChannelsRule? @map("messages_on_behalf_of_channels")
+  profanityFilter            ProfanityFilterRule?            @map("profanity_filter")
+  timeZone                   String                          @map("time_zone")
+  title                      String?
+  type                       ChatType
+  updatedAt                  DateTime                        @updatedAt @map("updated_at")
+  username                   String?
+  votebanLimit               Int?                            @map("voteban_limit")
 
   author              User                  @relation("ChatAuthor", fields: [authorId], references: [id])
   chatSettingsHistory ChatSettingsHistory[]
   editor              User                  @relation("ChatEditor", fields: [editorId], references: [id])
+  messages            Message[]
   votebans            Voteban[]
 
   @@index([displayTitle])
@@ -82,6 +89,26 @@ model ChatSettingsHistory {
 
   @@unique([chatId, settingName])
   @@map("chat_settings_history")
+}
+
+model Message {
+  authorId     Float    @map("author_id")
+  chatId       Float    @map("chat_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  editorId     Float    @map("editor_id")
+  mediaGroupId String?  @map("media_group_id")
+  messageId    Float    @map("message_id")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  author User @relation("MessageAuthor", fields: [authorId], references: [id])
+  chat   Chat @relation(fields: [chatId], onDelete: Cascade, references: [id])
+  editor User @relation("MessageEditor", fields: [editorId], references: [id])
+
+  @@unique([chatId, messageId])
+  @@index([chatId])
+  @@index([createdAt])
+  @@index([mediaGroupId])
+  @@map("messages")
 }
 
 model SenderChat {
@@ -139,6 +166,8 @@ model User {
   chatSettingsHistoryAuthors ChatSettingsHistory[] @relation("ChatSettingsHistoryAuthor")
   chatSettingsHistoryEditors ChatSettingsHistory[] @relation("ChatSettingsHistoryEditor")
   editor                     User                  @relation("UserEditor", fields: [editorId], references: [id])
+  messageAuthors             Message[]             @relation("MessageAuthor")
+  messageEditors             Message[]             @relation("MessageEditor")
   profaneWordAuthors         ProfaneWord[]         @relation("ProfaneWordAuthor")
   profaneWordEditors         ProfaneWord[]         @relation("ProfaneWordEditor")
   senderChatAuthors          SenderChat[]          @relation("SenderChatAuthor")
@@ -153,7 +182,6 @@ model User {
   votebanNoBanVoterAuthors   VotebanNoBanVoter[]   @relation("VotebanNoBanVoterAuthor")
   votebanNoBanVoterEditors   VotebanNoBanVoter[]   @relation("VotebanNoBanVoterEditor")
 
-  @@index([updatedAt])
   @@map("users")
 }
 
@@ -168,6 +196,7 @@ model Voteban {
   createdAt             DateTime            @default(now()) @map("created_at")
   editorId              Float               @map("editor_id")
   isCompleted           Boolean?            @map("is_completed")
+  mediaGroupId          String?             @map("media_group_id")
   messageId             Float               @map("message_id")
   noBanVoters           VotebanNoBanVoter[]
   updatedAt             DateTime            @updatedAt @map("updated_at")

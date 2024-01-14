@@ -1,11 +1,11 @@
 import { App } from "app";
-import { http, HttpHandler, HttpResponse } from "msw";
-import { Telegraf } from "telegraf";
+import { http, type HttpHandler, HttpResponse } from "msw";
+import type { Telegraf } from "telegraf";
+import { MESSAGE_DATE } from "test/constants";
 import { mockBot } from "test/mockBot";
 import { mockPrivateChat, mockSupergroupChat } from "test/mockChat";
 import { mockUser } from "test/mockUser";
-import { BASE_URL, runAppUpdates, server } from "test/setup";
-import { BOT_TOKEN } from "utils/envs";
+import { BASE_URL, server } from "test/setup";
 
 const privateChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
   HttpResponse.json({
@@ -14,7 +14,7 @@ const privateChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =
       {
         message: {
           chat: mockPrivateChat(),
-          date: 1577826000000,
+          date: MESSAGE_DATE,
           entities: [{ length: 5, offset: 0, type: "bot_command" }],
           from: mockUser(),
           message_id: 1,
@@ -33,7 +33,7 @@ const supergroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, (
       {
         message: {
           chat: mockSupergroupChat(),
-          date: 1577826000000,
+          date: MESSAGE_DATE,
           entities: [{ length: 5, offset: 0, type: "bot_command" }],
           from: mockUser(),
           message_id: 1,
@@ -45,7 +45,7 @@ const supergroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, (
   }),
 );
 
-const helpMessage =
+const commonHelpMsg =
   "Hello! I'm a bot that helps to moderate chats.\n\n<b>Getting started:</b>\n1. add me to chat\n" +
   `2. give me administrator permissions\n3. send a <a href="tg:user?id=${mockBot().id}">private message</a> ` +
   "command /mychats and I will help you set up your chat\n\n<b>Feature list:</b> ban voting, profanity filter, " +
@@ -61,34 +61,37 @@ describe("Help", () => {
   });
 
   beforeEach(() => {
-    bot = new Telegraf(BOT_TOKEN);
+    app = new App();
+    bot = app.bot;
   });
 
   it("answers to /start command in a private chat", async () => {
-    server.use(...[privateChatHandler]);
+    server.use(privateChatHandler);
+
     let replySpy;
     bot.use(async (ctx, next) => {
       replySpy = jest.spyOn(ctx, "reply").mockImplementation();
       await next();
     });
 
-    app = await runAppUpdates(bot);
+    await app.initAndProcessUpdates();
 
     expect(replySpy).toHaveBeenCalledTimes(1);
-    expect(replySpy).toHaveBeenCalledWith(helpMessage, { parse_mode: "HTML", reply_to_message_id: undefined });
+    expect(replySpy).toHaveBeenCalledWith(commonHelpMsg, { parse_mode: "HTML", reply_to_message_id: undefined });
   });
 
-  it("answers to /help command in supergroup chat", async () => {
-    server.use(...[supergroupChatHandler]);
+  it("answers to /help command in a supergroup chat", async () => {
+    server.use(supergroupChatHandler);
+
     let replySpy;
     bot.use(async (ctx, next) => {
       replySpy = jest.spyOn(ctx, "reply").mockImplementation();
       await next();
     });
 
-    app = await runAppUpdates(bot);
+    await app.initAndProcessUpdates();
 
     expect(replySpy).toHaveBeenCalledTimes(1);
-    expect(replySpy).toHaveBeenCalledWith(helpMessage, { parse_mode: "HTML", reply_to_message_id: 1 });
+    expect(replySpy).toHaveBeenCalledWith(commonHelpMsg, { parse_mode: "HTML", reply_to_message_id: 1 });
   });
 });

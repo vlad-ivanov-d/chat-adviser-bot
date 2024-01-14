@@ -3,14 +3,7 @@ const { compilerOptions } = require("./tsconfig.json");
 /** @type {import('jest').Config} */
 const config = {
   coverageReporters: ["json-summary", "lcov", "text-summary"],
-  coverageThreshold: {
-    global: {
-      branches: 14,
-      functions: 14,
-      lines: 14,
-      statements: 14,
-    },
-  },
+  coverageThreshold: { global: { branches: 39, functions: 61, lines: 57, statements: 58 } },
   detectOpenHandles: true,
   forceExit: true,
   modulePaths: [compilerOptions.baseUrl],

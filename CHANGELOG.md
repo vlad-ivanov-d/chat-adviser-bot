@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.13.0 (2024-01-14)
+
+- Improvement: Messages On Behalf Of Channels feature
+- Improvement: based on the results of voting for a ban, related messages will be deleted as well (if there are several images in the message)
+- Improvement: updated tooltip for using the voteban command
+- Other: internal improvements
+
 ## 1.12.0 (2023-12-31)
 
 - Improvement: the profanity filter has become more accurate

@@ -1,15 +1,16 @@
 import { AddingBotsRule, ChatSettingName } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
-import { Database } from "modules/database";
-import { Settings } from "modules/settings";
-import { Telegraf } from "telegraf";
+import type { Database } from "modules/database";
+import type { Settings } from "modules/settings";
+import type { Telegraf } from "telegraf";
 import { callbackQuery, message } from "telegraf/filters";
-import { CallbackCtx, NewChatMembersCtx } from "types/telegrafContext";
+import type { BasicModule } from "types/basicModule";
+import type { CallbackCtx, NewChatMembersCtx } from "types/telegrafContext";
 import { getCallbackQueryParams, getChatHtmlLink, getUserHtmlLink, kickChatMember } from "utils/telegraf";
 
 import { AddingBotsAction } from "./addingBots.types";
 
-export class AddingBots {
+export class AddingBots implements BasicModule {
   /**
    * Creates adding bots module
    * @param bot Telegraf bot instance
@@ -66,22 +67,22 @@ export class AddingBots {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const prismaChat = await this.settings.resolvePrismaChat(ctx, chatId);
-    if (!prismaChat) {
+    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
     const allowedCbData = `${AddingBotsAction.SAVE}?chatId=${chatId}`;
     const banCbData = `${AddingBotsAction.SAVE}?chatId=${chatId}&v=${AddingBotsRule.BAN}`;
     const restrictCbData = `${AddingBotsAction.SAVE}?chatId=${chatId}&v=${AddingBotsRule.RESTRICT}`;
-    const chatLink = getChatHtmlLink(prismaChat);
-    const sanitizedValue = this.sanitizeValue(prismaChat.addingBots);
+    const chatLink = getChatHtmlLink(dbChat);
+    const sanitizedValue = this.sanitizeValue(dbChat.addingBots);
     const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";
     const msg = t("addingBots:set", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(this.database.joinModifiedInfo(msg, ChatSettingName.ADDING_BOTS, prismaChat), {
+      ctx.editMessageText(this.database.joinModifiedInfo(msg, ChatSettingName.ADDING_BOTS, dbChat), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
@@ -108,8 +109,8 @@ export class AddingBots {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const prismaChat = await this.settings.resolvePrismaChat(ctx, chatId);
-    if (!prismaChat) {
+    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
@@ -150,27 +151,27 @@ export class AddingBots {
       return; // No bots were added, return.
     }
 
-    const prismaChat = await this.database.upsertChat(chat, from);
-    await changeLanguage(prismaChat.language);
+    const dbChat = await this.database.upsertChat(chat, from);
+    await changeLanguage(dbChat.language);
 
     if (
-      this.database.isChatAdmin(prismaChat, from.id, senderChat?.id) || // Current user is an admin
-      !this.database.isChatAdmin(prismaChat, ctx.botInfo.id) // Bot is not an admin
+      this.database.isChatAdmin(dbChat, from.id, senderChat?.id) || // Current user is an admin
+      !this.database.isChatAdmin(dbChat, ctx.botInfo.id) // Bot is not an admin
     ) {
       await next();
       return;
     }
 
     try {
-      if (prismaChat.addingBots === AddingBotsRule.RESTRICT) {
+      if (dbChat.addingBots === AddingBotsRule.RESTRICT) {
         await Promise.all(newBots.map(async ({ id }) => kickChatMember(this.bot, chat.id, id)));
       }
-      if (prismaChat.addingBots === AddingBotsRule.BAN && senderChat) {
+      if (dbChat.addingBots === AddingBotsRule.BAN && senderChat) {
         const msg = t("addingBots:userBanned", { USER: getChatHtmlLink(senderChat) });
         await ctx.banChatSenderChat(senderChat.id);
         await ctx.reply(msg, { parse_mode: "HTML" });
       }
-      if (prismaChat.addingBots === AddingBotsRule.BAN && !senderChat) {
+      if (dbChat.addingBots === AddingBotsRule.BAN && !senderChat) {
         const msg = t("addingBots:userBanned", { USER: getUserHtmlLink(from) });
         await ctx.banChatMember(from.id);
         await ctx.reply(msg, { parse_mode: "HTML" });

@@ -1,22 +1,24 @@
 import { ChatType } from "@prisma/client";
-import { InlineKeyboardMarkup } from "@telegraf/types";
+import type { InlineKeyboardMarkup } from "@telegraf/types";
 import { PAGE_SIZE } from "constants/pagination";
 import { changeLanguage, t } from "i18next";
 import { AddingBotsAction } from "modules/addingBots/addingBots.types";
-import { Database, PrismaChat } from "modules/database";
+import type { Database, UpsertedChat } from "modules/database";
 import { LanguageAction } from "modules/language/language.types";
+import { MessagesOnBehalfOfChannelsAction } from "modules/messagesOnBehalfOfChannels/messagesOnBehalfOfChannels.types";
 import { ProfanityFilterAction } from "modules/profanityFilter/profanityFilter.types";
 import { TimeZoneAction } from "modules/timeZone/timeZone.types";
 import { VotebanAction } from "modules/voteban/voteban.types";
-import { Telegraf } from "telegraf";
+import type { Telegraf } from "telegraf";
 import { callbackQuery, message } from "telegraf/filters";
-import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
-import { CallbackCtx, MessageCtx, TextMessageCtx } from "types/telegrafContext";
+import type { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
+import type { BasicModule } from "types/basicModule";
+import type { CallbackCtx, MessageCtx, TextMessageCtx } from "types/telegrafContext";
 import { getCallbackQueryParams, getChatHtmlLink, getErrorCode, getPagination } from "utils/telegraf";
 
 import { SettingsAction } from "./settings.types";
 
-export class Settings {
+export class Settings implements BasicModule {
   /**
    * Creates settings module
    * @param bot Telegraf bot instance
@@ -77,17 +79,17 @@ export class Settings {
    * @param chatId Chat id
    * @returns True if validation is successfully passed
    */
-  public async resolvePrismaChat(ctx: CallbackCtx | MessageCtx, chatId: number): Promise<PrismaChat | undefined> {
+  public async resolveDatabaseChat(ctx: CallbackCtx | MessageCtx, chatId: number): Promise<UpsertedChat | undefined> {
     const from = "message" in ctx.update ? ctx.update.message.from : ctx.callbackQuery?.from;
     if (!from) {
-      throw new Error("User is not defined to resolve prisma chat.");
+      throw new Error("User is not defined to resolve database chat.");
     }
 
     try {
       const chat = await ctx.telegram.getChat(chatId);
-      const prismaChat = await this.database.upsertChat(chat, from);
-      if (this.database.isChatAdmin(prismaChat, from.id)) {
-        return prismaChat;
+      const dbChat = await this.database.upsertChat(chat, from);
+      if (this.database.isChatAdmin(dbChat, from.id)) {
+        return dbChat;
       }
     } catch (e) {
       const errorCode = getErrorCode(e);
@@ -162,7 +164,7 @@ export class Settings {
       throw new Error('Parameter "skip" is not correct to render chats.');
     }
 
-    const [chats, count, prismaChat] = await Promise.all([
+    const [chats, count, dbChat] = await Promise.all([
       this.database.chat.findMany({
         orderBy: { displayTitle: "asc" },
         select: { displayTitle: true, id: true },
@@ -173,10 +175,10 @@ export class Settings {
       this.database.chat.count({ where: { admins: { some: { id: from.id } } } }),
       this.database.upsertChat(ctx.chat, from),
     ]);
-    await changeLanguage(prismaChat.language);
+    await changeLanguage(dbChat.language);
 
     if (skip === 0) {
-      chats.unshift(prismaChat);
+      chats.unshift(dbChat);
     }
     const replyMarkup: InlineKeyboardMarkup = {
       inline_keyboard: [
@@ -214,15 +216,15 @@ export class Settings {
       throw new Error('Parameter "skip" is not correct to render features.');
     }
 
-    const destPrismaChat = await (callbackQuery
+    const destDbChat = await (callbackQuery
       ? this.database.upsertChat(chat, from)
-      : this.resolvePrismaChat(ctx, from.id));
-    if (!destPrismaChat) {
+      : this.resolveDatabaseChat(ctx, from.id));
+    if (!destDbChat) {
       throw new Error("Target chat is not defined to render features.");
     }
-    await changeLanguage(destPrismaChat.language);
-    const prismaChat = await this.resolvePrismaChat(ctx, chatId);
-    if (!prismaChat) {
+    await changeLanguage(destDbChat.language);
+    const dbChat = await this.resolveDatabaseChat(ctx, chatId);
+    if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
@@ -231,6 +233,12 @@ export class Settings {
     ];
     const languageButton: InlineKeyboardButton[] = [
       { callback_data: `${LanguageAction.SETTINGS}?chatId=${chatId}`, text: t("language:featureName") },
+    ];
+    const messagesOnBehalfOfChannelsButton: InlineKeyboardButton[] = [
+      {
+        callback_data: `${MessagesOnBehalfOfChannelsAction.SETTINGS}?chatId=${chatId}`,
+        text: t("messagesOnBehalfOfChannels:featureName"),
+      },
     ];
     const profanityFilterButton: InlineKeyboardButton[] = [
       { callback_data: `${ProfanityFilterAction.SETTINGS}?chatId=${chatId}`, text: t("profanityFilter:featureName") },
@@ -243,14 +251,28 @@ export class Settings {
     ];
     const allFeatures: Record<ChatType, InlineKeyboardButton[][]> = {
       [ChatType.CHANNEL]: [languageButton, timeZoneButton],
-      [ChatType.GROUP]: [addingBotsButton, languageButton, profanityFilterButton, timeZoneButton, votebanButton],
+      [ChatType.GROUP]: [
+        addingBotsButton,
+        languageButton,
+        messagesOnBehalfOfChannelsButton,
+        profanityFilterButton,
+        timeZoneButton,
+        votebanButton,
+      ],
       [ChatType.PRIVATE]: [languageButton, timeZoneButton],
-      [ChatType.SUPERGROUP]: [addingBotsButton, languageButton, profanityFilterButton, timeZoneButton, votebanButton],
-      [ChatType.UNKNOWN]: [languageButton],
+      [ChatType.SUPERGROUP]: [
+        addingBotsButton,
+        languageButton,
+        messagesOnBehalfOfChannelsButton,
+        profanityFilterButton,
+        timeZoneButton,
+        votebanButton,
+      ],
+      [ChatType.UNKNOWN]: [],
     };
-    const features = [...allFeatures[prismaChat.type]].sort((a, b) => a[0]?.text.localeCompare(b[0]?.text));
+    const features = [...allFeatures[dbChat.type]].sort((a, b) => a[0]?.text.localeCompare(b[0]?.text));
 
-    const chatLink = getChatHtmlLink(prismaChat);
+    const chatLink = getChatHtmlLink(dbChat);
     const msg = t("settings:selectFeature", { CHAT: chatLink });
     const replyMarkup: InlineKeyboardMarkup = {
       inline_keyboard: [
