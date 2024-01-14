@@ -15,7 +15,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 20.10.0
+          node-version: 20.11.0
       - name: Restore dependencies
         run: npm ci
       - name: Build sources
@@ -38,7 +38,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 20.10.0
+          node-version: 20.11.0
       - name: Restore dependencies
         run: npm ci
       - name: Run tests
