@@ -16,6 +16,7 @@ import {
   isChatMember,
 } from "utils/telegraf";
 
+import { EXPIRED_VOTEBAN_TIMEOUT } from "./voteban.constants";
 import { VotebanAction } from "./voteban.types";
 
 export class Voteban {
@@ -41,9 +42,8 @@ export class Voteban {
       "0 0 0 * * *", // Every day at 00:00:00
       () => {
         void (async () => {
-          // Remove expired votings from database
-          const monthAgoDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-          await this.database.voteban.deleteMany({ where: { createdAt: { lt: monthAgoDate } } });
+          const date = new Date(Date.now() - EXPIRED_VOTEBAN_TIMEOUT);
+          await this.database.voteban.deleteMany({ where: { createdAt: { lt: date } } });
         })();
       },
       null,
@@ -74,6 +74,33 @@ export class Voteban {
    */
   public shutdown(): void {
     this.cleanupCronJob?.stop();
+  }
+
+  /**
+   * Deletes messages which are related to message id and media group id
+   * @param ctx Callback context
+   * @param messageId Message id which should be deleted
+   * @param mediaGroupId Media group id should will be deleted
+   */
+  private async deleteMessages(ctx: CallbackCtx, messageId?: number, mediaGroupId?: string | null): Promise<void> {
+    const mediaGroupMessages = mediaGroupId
+      ? await this.database.message.findMany({
+          select: { messageId: true },
+          where: { chatId: ctx.chat?.id, mediaGroupId, messageId: { not: messageId } },
+        })
+      : [];
+    const toDeleteIds = [messageId, ...mediaGroupMessages.map((m) => m.messageId)].reduce(
+      (result: number[], id) => (typeof id === "number" ? [...result, id] : result),
+      [],
+    );
+    const deletionResult = await Promise.all(toDeleteIds.map((id) => ctx.deleteMessage(id).catch(() => false)));
+    const deletedIds = toDeleteIds.reduce(
+      (result: number[], id, index) => (deletionResult[index] ? [...result, id] : result),
+      [],
+    );
+    if (deletedIds.length > 0) {
+      await this.database.message.deleteMany({ where: { messageId: { in: deletedIds } } });
+    }
   }
 
   /**
@@ -207,6 +234,7 @@ export class Voteban {
           banVoters: { orderBy: { createdAt: "asc" }, select: { author: true } },
           candidate: true,
           candidateSenderChat: true,
+          mediaGroupId: true,
           noBanVoters: { orderBy: { createdAt: "asc" }, select: { author: true } },
         },
         where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
@@ -214,7 +242,7 @@ export class Voteban {
     ]);
     await changeLanguage(chat.language);
 
-    const { author, authorSenderChat, banVoters, candidate, candidateSenderChat, noBanVoters } = voting;
+    const { author, authorSenderChat, banVoters, candidate, candidateSenderChat, mediaGroupId, noBanVoters } = voting;
     const authorLink = getUserOrChatHtmlLink(author, authorSenderChat);
     const candidateLink = getUserOrChatHtmlLink(candidate, candidateSenderChat);
     const isBan = banVoters.length > noBanVoters.length;
@@ -252,7 +280,7 @@ export class Voteban {
         ctx.editMessageText([questionMsg, resultsMsg].join("\n\n"), { parse_mode: "HTML" }),
         ctx.reply(t("voteban:completed"), { reply_to_message_id: message.message_id }),
         // An expected error may happen if there are no enough permissions
-        isBan && typeof candidateMessageId === "number" && ctx.deleteMessage(candidateMessageId).catch(() => undefined),
+        isBan && this.deleteMessages(ctx, candidateMessageId, mediaGroupId),
         isBan && candidateSenderChat && ctx.banChatSenderChat(candidateSenderChat.id).catch(() => undefined),
         isBan && !candidateSenderChat && ctx.banChatMember(candidate.id).catch(() => undefined),
       ]);
@@ -349,9 +377,9 @@ export class Voteban {
    * @param ctx Text message context
    */
   private async votebanCommand(ctx: TextMessageCtx): Promise<void> {
-    const { from, message_id: messageId, sender_chat: fromSenderChat } = ctx.message;
-    const candidate = ctx.message.reply_to_message?.from;
-    const candidateSenderChat = ctx.message.reply_to_message?.sender_chat;
+    const { from, message_id: messageId, sender_chat: fromSenderChat, reply_to_message: replyToMessage } = ctx.message;
+    const candidate = replyToMessage?.from;
+    const candidateSenderChat = replyToMessage?.sender_chat;
 
     const [chat, isCandidateAdmin] = await Promise.all([
       this.database.upsertChat(ctx.chat, from),
@@ -402,7 +430,7 @@ export class Voteban {
             [{ callback_data: VotebanAction.NO_BAN, text: noBanButtonText }],
           ],
         },
-        reply_to_message_id: ctx.message.reply_to_message?.message_id,
+        reply_to_message_id: replyToMessage.message_id,
       }),
       candidateSenderChat && this.database.upsertSenderChat(candidateSenderChat, from),
       fromSenderChat && this.database.upsertSenderChat(fromSenderChat, from),
@@ -420,6 +448,7 @@ export class Voteban {
           candidateSenderChatId: candidateSenderChat?.id,
           chatId: chat.id,
           editorId: from.id,
+          mediaGroupId: "media_group_id" in replyToMessage ? replyToMessage.media_group_id : undefined,
           messageId: reply.message_id,
         },
         select: { id: true },

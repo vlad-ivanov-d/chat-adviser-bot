@@ -151,7 +151,7 @@ describe("MessagesOnBehalfOfChannels", () => {
   });
 
   it("filters messages on behalf of channels in a new supergroup chat", async () => {
-    server.use(...[supergroupChatHandler]);
+    server.use(supergroupChatHandler);
 
     let banChatSenderChatSpy;
     let deleteMessageSpy;
@@ -171,7 +171,7 @@ describe("MessagesOnBehalfOfChannels", () => {
 
   it("doesn't filter messages on behalf of channels if the feature is disabled", async () => {
     await createDbSupergroupChat();
-    server.use(...[supergroupChatHandler]);
+    server.use(supergroupChatHandler);
 
     let banChatSenderChatSpy;
     let deleteMessageSpy;
@@ -189,7 +189,7 @@ describe("MessagesOnBehalfOfChannels", () => {
 
   it("renders settings", async () => {
     await createDbSupergroupChat();
-    server.use(...[cbSettingsHandler, chatAdminsHandler, getSupergroupChatHandler]);
+    server.use(cbSettingsHandler, chatAdminsHandler, getSupergroupChatHandler);
 
     let answerCbQuerySpy;
     let editMessageTextSpy;
@@ -227,7 +227,7 @@ describe("MessagesOnBehalfOfChannels", () => {
 
   it("saves settings", async () => {
     await createDbSupergroupChat();
-    server.use(...[cbSaveSettingsHandler, chatAdminsHandler, getSupergroupChatHandler]);
+    server.use(cbSaveSettingsHandler, chatAdminsHandler, getSupergroupChatHandler);
 
     let answerCbQuerySpy;
     let editMessageTextSpy;
@@ -267,7 +267,7 @@ describe("MessagesOnBehalfOfChannels", () => {
   });
 
   it("throws an error if chat id is incorrect during settings rendering", async () => {
-    server.use(...[cbSettingsErrorHandler]);
+    server.use(cbSettingsErrorHandler);
     const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
 
     await expect(() => app.initAndProcessUpdates()).rejects.toThrow(
@@ -277,7 +277,7 @@ describe("MessagesOnBehalfOfChannels", () => {
   });
 
   it("throws an error if chat id is incorrect during settings saving", async () => {
-    server.use(...[cbSaveSettingsErrorHandler]);
+    server.use(cbSaveSettingsErrorHandler);
     const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
 
     await expect(() => app.initAndProcessUpdates()).rejects.toThrow(

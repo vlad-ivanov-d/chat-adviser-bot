@@ -1,4 +1,4 @@
-import { http, type HttpHandler, HttpResponse } from "msw";
+import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 
 import { cleanupDb, prisma } from "./database";
@@ -10,18 +10,13 @@ import { mockBot } from "./mockBot";
 export const BASE_URL = `https://api.telegram.org/bot${process.env.BOT_TOKEN}`;
 
 /**
- * MSW HTTP handlers
+ * MSW server
  */
-const handlers: HttpHandler[] = [
+export const server = setupServer(
   http.post(`${BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
   http.post(`${BASE_URL}/getChatMembersCount`, () => HttpResponse.json({ ok: true, result: 2 })),
   http.post(`${BASE_URL}/getMe`, () => HttpResponse.json({ ok: true, result: mockBot() })),
-];
-
-/**
- * MSW server
- */
-export const server = setupServer(...handlers);
+);
 
 // Start listeners
 beforeAll(() => {

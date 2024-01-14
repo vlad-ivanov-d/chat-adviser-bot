@@ -2,6 +2,7 @@ import { AddingBots } from "modules/addingBots";
 import { Cleanup } from "modules/cleanup";
 import { Help } from "modules/help";
 import { Language } from "modules/language";
+import { Messages } from "modules/messages";
 import { MessagesOnBehalfOfChannels } from "modules/messagesOnBehalfOfChannels";
 import { ProfanityFilter } from "modules/profanityFilter";
 import { Settings } from "modules/settings";
@@ -20,6 +21,7 @@ export class App {
   private database?: Database;
   private help?: Help;
   private language?: Language;
+  private messages?: Messages;
   private messagesOnBehalfOfChannels?: MessagesOnBehalfOfChannels;
   private profanityFilter?: ProfanityFilter;
   private settings?: Settings;
@@ -61,6 +63,9 @@ export class App {
     this.messagesOnBehalfOfChannels = new MessagesOnBehalfOfChannels(this.bot, this.database, this.settings);
     this.messagesOnBehalfOfChannels.init();
 
+    this.messages = new Messages(this.bot, this.database);
+    this.messages.init();
+
     this.timeZone = new TimeZone(this.bot, this.database, this.settings);
     this.timeZone.init();
 
@@ -85,10 +90,12 @@ export class App {
    */
   public async shutdown(stopBot?: boolean): Promise<void> {
     this.cleanup?.shutdown();
+    this.messages?.shutdown();
     this.voteban?.shutdown();
     if (stopBot) {
       this.bot.stop();
     }
+    // The connection to the database must be closed after all other modules
     await this.database?.shutdown();
   }
 }

@@ -4,7 +4,7 @@
   "version": "1.13.0",
   "scripts": {
     "build": "eslint . && tsc && node build.mjs",
-    "dev": "docker compose -f compose.dev.yml up --force-recreate --remove-orphans -d && prisma migrate dev && nodemon src/index.ts",
+    "dev": "docker compose -f compose.dev.yml up --force-recreate --remove-orphans --wait -d && prisma migrate dev && nodemon src/index.ts",
     "lint": "eslint --fix .",
     "start": "docker compose up --build --force-recreate --remove-orphans -d",
     "test": "npm run test:env-up && jest --coverage && npm run test:env-down && istanbul-badges-readme --silent",

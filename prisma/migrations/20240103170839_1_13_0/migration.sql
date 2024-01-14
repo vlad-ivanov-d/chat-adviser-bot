@@ -22,10 +22,13 @@ CREATE TABLE "messages" (
 );
 
 -- CreateIndex
-CREATE INDEX "messages_chat_id_media_group_id_idx" ON "messages"("chat_id", "media_group_id");
+CREATE INDEX "messages_chat_id_idx" ON "messages"("chat_id");
 
 -- CreateIndex
 CREATE INDEX "messages_created_at_idx" ON "messages"("created_at");
+
+-- CreateIndex
+CREATE INDEX "messages_media_group_id_idx" ON "messages"("media_group_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "messages_chat_id_message_id_key" ON "messages"("chat_id", "message_id");
@@ -38,3 +41,6 @@ ALTER TABLE "messages" ADD CONSTRAINT "messages_chat_id_fkey" FOREIGN KEY ("chat
 
 -- AddForeignKey
 ALTER TABLE "messages" ADD CONSTRAINT "messages_editor_id_fkey" FOREIGN KEY ("editor_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- DropIndex
+DROP INDEX "users_updated_at_idx";

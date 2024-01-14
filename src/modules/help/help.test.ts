@@ -66,7 +66,7 @@ describe("Help", () => {
   });
 
   it("answers to /start command in a private chat", async () => {
-    server.use(...[privateChatHandler]);
+    server.use(privateChatHandler);
 
     let replySpy;
     bot.use(async (ctx, next) => {
@@ -81,7 +81,7 @@ describe("Help", () => {
   });
 
   it("answers to /help command in a supergroup chat", async () => {
-    server.use(...[supergroupChatHandler]);
+    server.use(supergroupChatHandler);
 
     let replySpy;
     bot.use(async (ctx, next) => {

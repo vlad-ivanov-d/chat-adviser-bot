@@ -105,8 +105,9 @@ model Message {
   editor User @relation("MessageEditor", fields: [editorId], references: [id])
 
   @@unique([chatId, messageId])
-  @@index([chatId, mediaGroupId])
+  @@index([chatId])
   @@index([createdAt])
+  @@index([mediaGroupId])
   @@map("messages")
 }
 
@@ -181,7 +182,6 @@ model User {
   votebanNoBanVoterAuthors   VotebanNoBanVoter[]   @relation("VotebanNoBanVoterAuthor")
   votebanNoBanVoterEditors   VotebanNoBanVoter[]   @relation("VotebanNoBanVoterEditor")
 
-  @@index([updatedAt])
   @@map("users")
 }
 

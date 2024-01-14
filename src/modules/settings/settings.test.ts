@@ -131,7 +131,7 @@ describe("Settings", () => {
 
   it("prompts admin to make settings when adding the bot to a new chat", async () => {
     await createDbPrivateChat();
-    server.use(...[addedToNewChatHandler, chatAdminsHandler, getSupergroupChatHandler]);
+    server.use(addedToNewChatHandler, chatAdminsHandler, getSupergroupChatHandler);
 
     let sendMessageSpy;
     bot.use(async (ctx, next) => {
@@ -167,7 +167,7 @@ describe("Settings", () => {
 
   it("prompts admin to make settings when a new group chat has been created", async () => {
     await createDbPrivateChat();
-    server.use(...[createdGroupChatHandler, chatAdminsHandler, getGroupChatHandler]);
+    server.use(createdGroupChatHandler, chatAdminsHandler, getGroupChatHandler);
 
     let sendMessageSpy;
     bot.use(async (ctx, next) => {
@@ -202,7 +202,7 @@ describe("Settings", () => {
   });
 
   it("renders chats as an answer to /mychats command in a private chat", async () => {
-    server.use(...[myChatsCommandPrivateHandler]);
+    server.use(myChatsCommandPrivateHandler);
 
     let replySpy;
     bot.use(async (ctx, next) => {
@@ -226,7 +226,7 @@ describe("Settings", () => {
   });
 
   it("doesn't render chats as an answer to /mychats command in a supergroup chat", async () => {
-    server.use(...[myChatsCommandSupergroupHandler]);
+    server.use(myChatsCommandSupergroupHandler);
 
     let replySpy;
     bot.use(async (ctx, next) => {
