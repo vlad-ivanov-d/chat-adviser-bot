@@ -7,11 +7,11 @@
     "dev": "docker compose -f compose.dev.yml up --force-recreate --remove-orphans --wait -d && prisma migrate dev && nodemon src/index.ts",
     "lint": "eslint --fix .",
     "start": "docker compose up --build --force-recreate --remove-orphans -d",
-    "test": "npm run test:env-up && jest --coverage && npm run test:env-down && istanbul-badges-readme --silent",
-    "test:ci": "npm run test:env-up && jest --coverage && npm run test:env-down && istanbul-badges-readme --ci --silent",
+    "test": "npm run test:env-up && jest --coverage -i && npm run test:env-down && istanbul-badges-readme --silent",
+    "test:ci": "npm run test:env-up && jest --coverage -i && npm run test:env-down && istanbul-badges-readme --ci --silent",
     "test:env-down": "docker compose --env-file=.env.test -f compose.test.yml down",
     "test:env-up": "docker compose --env-file=.env.test -f compose.test.yml up --force-recreate --remove-orphans --wait -d && dotenv -e .env.test -- prisma migrate deploy",
-    "test:watch": "npm run test:env-up && jest --watch"
+    "test:watch": "npm run test:env-up && jest --watch -i"
   },
   "author": "Vlad Ivanov",
   "bugs": {
