@@ -114,10 +114,11 @@ export class Database extends PrismaClient implements BasicModule {
    * @returns Chat
    */
   public async upsertChat(chat: Chat, editor: TelegramUser): Promise<UpsertedChat> {
+    const { botInfo, telegram } = this.bot;
     const [admins, membersCount] = await Promise.all([
       // An expected error may happen if administrators are hidden
-      chat.type === "private" ? [] : this.bot.telegram.getChatAdministrators(chat.id).catch(() => []),
-      this.bot.telegram.getChatMembersCount(chat.id),
+      chat.type === "private" ? [] : telegram.getChatAdministrators(chat.id).catch(() => []),
+      telegram.getChatMembersCount(chat.id),
     ]);
 
     const displayTitle = getChatDisplayTitle(chat);
@@ -171,13 +172,9 @@ export class Database extends PrismaClient implements BasicModule {
       throw new Error("Something went wrong during chat upsertion.");
     }
 
-    return this.bot.botInfo && chat.id === editor.id
+    return botInfo && chat.id === editor.id
       ? // Patch display title of the chat with the bot
-        {
-          ...upsertedChat,
-          displayTitle: getUserDisplayName(this.bot.botInfo, "full"),
-          username: this.bot.botInfo.username,
-        }
+        { ...upsertedChat, displayTitle: getUserDisplayName(botInfo, "full"), username: botInfo.username }
       : upsertedChat;
   }
 
