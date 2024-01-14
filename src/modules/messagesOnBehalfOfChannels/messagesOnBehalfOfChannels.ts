@@ -96,34 +96,31 @@ export class MessagesOnBehalfOfChannels implements BasicModule {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const prismaChat = await this.settings.resolvePrismaChat(ctx, chatId);
-    if (!prismaChat) {
+    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
-    const chatLink = getChatHtmlLink(prismaChat);
+    const chatLink = getChatHtmlLink(dbChat);
     const disableCbData = `${MessagesOnBehalfOfChannelsAction.SAVE}?chatId=${chatId}`;
     const filterCbData =
       MessagesOnBehalfOfChannelsAction.SAVE + `?chatId=${chatId}&v=${MessagesOnBehalfOfChannelsRule.FILTER}`;
-    const sanitizedValue = this.sanitizeValue(prismaChat.messagesOnBehalfOfChannels);
+    const sanitizedValue = this.sanitizeValue(dbChat.messagesOnBehalfOfChannels);
     const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";
     const msg = t("messagesOnBehalfOfChannels:set", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(
-        this.database.joinModifiedInfo(msg, ChatSettingName.MESSAGES_ON_BEHALF_OF_CHANNELS, prismaChat),
-        {
-          parse_mode: "HTML",
-          reply_markup: {
-            inline_keyboard: [
-              [{ callback_data: filterCbData, text: t("messagesOnBehalfOfChannels:enableFilter") }],
-              [{ callback_data: disableCbData, text: t("messagesOnBehalfOfChannels:disableFilter") }],
-              this.settings.getBackToFeaturesButton(chatId),
-            ],
-          },
+      ctx.editMessageText(this.database.joinModifiedInfo(msg, ChatSettingName.MESSAGES_ON_BEHALF_OF_CHANNELS, dbChat), {
+        parse_mode: "HTML",
+        reply_markup: {
+          inline_keyboard: [
+            [{ callback_data: filterCbData, text: t("messagesOnBehalfOfChannels:enableFilter") }],
+            [{ callback_data: disableCbData, text: t("messagesOnBehalfOfChannels:disableFilter") }],
+            this.settings.getBackToFeaturesButton(chatId),
+          ],
         },
-      ),
+      }),
     ]).catch(() => undefined); // An expected error may happen if the message won't change during edit
   }
 
@@ -149,8 +146,8 @@ export class MessagesOnBehalfOfChannels implements BasicModule {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const prismaChat = await this.settings.resolvePrismaChat(ctx, chatId);
-    if (!prismaChat) {
+    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 

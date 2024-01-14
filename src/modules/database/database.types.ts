@@ -1,6 +1,6 @@
 import type { Chat, ChatSettingsHistory, User } from "@prisma/client";
 
-export interface PrismaChat extends Chat {
+export interface UpsertedChat extends Chat {
   /**
    * Chat admins. Doesn't include bots except current.
    */

@@ -74,20 +74,20 @@ export class Language implements BasicModule {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const prismaChat = await this.settings.resolvePrismaChat(ctx, chatId);
-    if (!prismaChat) {
+    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
-    const chatLink = getChatHtmlLink(prismaChat);
+    const chatLink = getChatHtmlLink(dbChat);
     const enText = this.getOptions().find((l) => l.code === LanguageCode.EN)?.title ?? "";
     const ruText = this.getOptions().find((l) => l.code === LanguageCode.RU)?.title ?? "";
-    const value = this.getOptions().find((l) => l.code === prismaChat.language)?.title ?? "";
+    const value = this.getOptions().find((l) => l.code === dbChat.language)?.title ?? "";
     const msg = t("language:select", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(this.database.joinModifiedInfo(msg, ChatSettingName.LANGUAGE, prismaChat), {
+      ctx.editMessageText(this.database.joinModifiedInfo(msg, ChatSettingName.LANGUAGE, dbChat), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
@@ -122,8 +122,8 @@ export class Language implements BasicModule {
 
     const { language: lng } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(lng);
-    const prismaChat = await this.settings.resolvePrismaChat(ctx, chatId);
-    if (!prismaChat) {
+    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 

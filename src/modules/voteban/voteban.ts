@@ -139,20 +139,20 @@ export class Voteban implements BasicModule {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const prismaChat = await this.settings.resolvePrismaChat(ctx, chatId);
-    if (!prismaChat) {
+    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
-    const chatLink = getChatHtmlLink(prismaChat);
-    const { votebanLimit } = prismaChat;
+    const chatLink = getChatHtmlLink(dbChat);
+    const { votebanLimit } = dbChat;
     const newValue = this.sanitizeValue(typeof value === "undefined" || isNaN(value) ? votebanLimit : value);
     const tip = t("voteban:tip");
     const msg = t("voteban:setLimit", { CHAT: chatLink, TIP: tip, count: newValue });
 
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(this.database.joinModifiedInfo(msg, ChatSettingName.VOTEBAN_LIMIT, prismaChat), {
+      ctx.editMessageText(this.database.joinModifiedInfo(msg, ChatSettingName.VOTEBAN_LIMIT, dbChat), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
@@ -203,8 +203,8 @@ export class Voteban implements BasicModule {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const prismaChat = await this.settings.resolvePrismaChat(ctx, chatId);
-    if (!prismaChat) {
+    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 

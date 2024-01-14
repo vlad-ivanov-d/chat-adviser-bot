@@ -81,22 +81,22 @@ export class TimeZone implements BasicModule {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const prismaChat = await this.settings.resolvePrismaChat(ctx, chatId);
-    if (!prismaChat) {
+    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
-    const chatLink = getChatHtmlLink(prismaChat);
+    const chatLink = getChatHtmlLink(dbChat);
     const timeZones = this.getAllTimeZones();
-    const valueIndex = timeZones.indexOf(prismaChat.timeZone);
+    const valueIndex = timeZones.indexOf(dbChat.timeZone);
     // Use provided skip or the index of the current value. Use 0 as the last fallback.
     const patchedSkip = skip ?? (valueIndex > -1 ? valueIndex : 0);
-    const value = `${format(new Date(), "O", { timeZone: prismaChat.timeZone })} ${prismaChat.timeZone}`;
+    const value = `${format(new Date(), "O", { timeZone: dbChat.timeZone })} ${dbChat.timeZone}`;
     const msg = t("timeZone:select", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(this.database.joinModifiedInfo(msg, ChatSettingName.TIME_ZONE, prismaChat), {
+      ctx.editMessageText(this.database.joinModifiedInfo(msg, ChatSettingName.TIME_ZONE, dbChat), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
@@ -140,8 +140,8 @@ export class TimeZone implements BasicModule {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const prismaChat = await this.settings.resolvePrismaChat(ctx, chatId);
-    if (!prismaChat) {
+    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 

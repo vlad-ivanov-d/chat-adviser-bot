@@ -1,8 +1,4 @@
-import {
-  ChatType as PrismaChatType,
-  type SenderChat as PrismaSenderChat,
-  type User as PrismaUser,
-} from "@prisma/client";
+import { ChatType, type SenderChat, type User as PrismaUser } from "@prisma/client";
 import type { Telegraf, Telegram } from "telegraf";
 import type { Chat, InlineKeyboardButton, User } from "telegraf/typings/core/types/typegram";
 import type { CallbackCtx } from "types/telegrafContext";
@@ -83,18 +79,18 @@ export const getPagination = (action: string, { count, skip, take }: PaginationP
 
 /**
  * Gets chat display title
- * @param chat Telegram chat or Prisma sender chat
+ * @param chat Chat or sender chat
  * @returns Returns display title
  */
-export const getChatDisplayTitle = (chat: Chat | PrismaSenderChat): string => {
+export const getChatDisplayTitle = (chat: Chat | SenderChat): string => {
   switch (chat.type) {
     case "channel":
     case "supergroup":
-    case PrismaChatType.CHANNEL:
-    case PrismaChatType.SUPERGROUP:
+    case ChatType.CHANNEL:
+    case ChatType.SUPERGROUP:
       return chat.username ? `@${chat.username}` : chat.title ?? "";
     case "private":
-    case PrismaChatType.PRIVATE: {
+    case ChatType.PRIVATE: {
       const privateChatAsUser: User = {
         first_name: "firstName" in chat ? chat.firstName ?? "" : chat.first_name,
         id: chat.id,
@@ -111,10 +107,10 @@ export const getChatDisplayTitle = (chat: Chat | PrismaSenderChat): string => {
 
 /**
  * Gets chat link
- * @param chat Telegram chat or Prisma sender chat
+ * @param chat Chat or sender chat
  * @returns Returns link
  */
-export const getChatHtmlLink = (chat: Chat | PrismaSenderChat): string => {
+export const getChatHtmlLink = (chat: Chat | SenderChat): string => {
   if ("username" in chat && chat.username) {
     return `@${chat.username}`;
   }
@@ -144,7 +140,7 @@ export const getErrorCode = (error: unknown): number | undefined => {
 
 /**
  * Gets user display name
- * @param user Telegram or Prisma user
+ * @param user User
  * @param format Name format
  * @returns User display name
  */
@@ -162,7 +158,7 @@ export const getUserDisplayName = (user: User | PrismaUser, format: "full" | "sh
 
 /**
  * Gets user full name
- * @param user Telegram or Prisma user
+ * @param user User
  * @returns User full name
  */
 export const getUserFullName = (user: User | PrismaUser): string => {
@@ -173,7 +169,7 @@ export const getUserFullName = (user: User | PrismaUser): string => {
 
 /**
  * Gets the link to user
- * @param user Telegram or Prisma user
+ * @param user User
  * @returns Returns user link HTML
  */
 export const getUserHtmlLink = (user: User | PrismaUser): string => {
@@ -183,11 +179,11 @@ export const getUserHtmlLink = (user: User | PrismaUser): string => {
 
 /**
  * Gets chat or user link. Chat will be used as a priority if defined.
- * @param user Telegram or Prisma user
- * @param chat Telegram chat or Prisma sender chat
+ * @param user User
+ * @param chat Chat or sender chat
  * @returns Returns user link HTML
  */
-export const getUserOrChatHtmlLink = (user: User | PrismaUser, chat?: Chat | PrismaSenderChat | null): string =>
+export const getUserOrChatHtmlLink = (user: User | PrismaUser, chat?: Chat | SenderChat | null): string =>
   chat ? getChatHtmlLink(chat) : getUserHtmlLink(user);
 
 /**

@@ -68,12 +68,11 @@ export class ProfanityFilter implements BasicModule {
       return;
     }
 
-    const prismaChat = await this.database.upsertChat(chat, from);
-
+    const dbChat = await this.database.upsertChat(chat, from);
     if (
-      !prismaChat.profanityFilter || // Filter is disabled
-      this.database.isChatAdmin(prismaChat, from.id, senderChat?.id) || // Current user is an admin
-      !this.database.isChatAdmin(prismaChat, ctx.botInfo.id) // Bot is not an admin
+      !dbChat.profanityFilter || // Filter is disabled
+      this.database.isChatAdmin(dbChat, from.id, senderChat?.id) || // Current user is an admin
+      !this.database.isChatAdmin(dbChat, ctx.botInfo.id) // Bot is not an admin
     ) {
       await next();
       return;
@@ -199,21 +198,21 @@ export class ProfanityFilter implements BasicModule {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const prismaChat = await this.settings.resolvePrismaChat(ctx, chatId);
-    if (!prismaChat) {
+    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
-    const chatLink = getChatHtmlLink(prismaChat);
+    const chatLink = getChatHtmlLink(dbChat);
     const disableCbData = `${ProfanityFilterAction.SAVE}?chatId=${chatId}`;
     const filterCbData = `${ProfanityFilterAction.SAVE}?chatId=${chatId}&v=${ProfanityFilterRule.FILTER}`;
-    const sanitizedValue = this.sanitizeValue(prismaChat.profanityFilter);
+    const sanitizedValue = this.sanitizeValue(dbChat.profanityFilter);
     const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";
     const msg = t("profanityFilter:set", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(this.database.joinModifiedInfo(msg, ChatSettingName.PROFANITY_FILTER, prismaChat), {
+      ctx.editMessageText(this.database.joinModifiedInfo(msg, ChatSettingName.PROFANITY_FILTER, dbChat), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
@@ -248,8 +247,8 @@ export class ProfanityFilter implements BasicModule {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const prismaChat = await this.settings.resolvePrismaChat(ctx, chatId);
-    if (!prismaChat) {
+    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
