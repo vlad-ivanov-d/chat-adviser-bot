@@ -210,7 +210,7 @@ describe("MessagesOnBehalfOfChannels", () => {
         "Users who have their own Telegram channels can write in public chats on behalf of the channels. " +
         "In this way, they can make additional advertising for themselves or simply anonymize messages " +
         "without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel " +
-        "and write on his behalf.\n\nEnable message filter on behalf of channels in " +
+        "and write on its behalf.\n\nEnable message filter on behalf of channels in " +
         `@${mockSupergroupChat().username} chat?\n\nCurrent value: <b>filter disabled</b>`,
       {
         parse_mode: "HTML",
@@ -249,7 +249,7 @@ describe("MessagesOnBehalfOfChannels", () => {
         "Users who have their own Telegram channels can write in public chats on behalf of the channels. " +
         "In this way, they can make additional advertising for themselves or simply anonymize messages " +
         "without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel " +
-        "and write on his behalf.\n\nEnable message filter on behalf of channels in " +
+        "and write on its behalf.\n\nEnable message filter on behalf of channels in " +
         `@${mockSupergroupChat().username} chat?\n\nCurrent value: <b>filter enabled</b>\n` +
         `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
         `by <a href="tg:user?id=${mockUser().id}">@${mockUser().username}</a>`,
