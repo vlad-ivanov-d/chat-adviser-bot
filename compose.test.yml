@@ -5,6 +5,6 @@ services:
     environment:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_USER: ${DATABASE_USER}
-    image: postgres:16.1
+    image: postgres:16.1-alpine
     ports:
       - ${DATABASE_PORT:-}:5432
