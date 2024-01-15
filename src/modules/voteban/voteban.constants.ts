@@ -1,4 +1,4 @@
 /**
- * The voteban is considered expired after this number of milliseconds have passed - 30 days.
+ * The voteban is considered expired after this number of milliseconds have passed - 48 hours.
  */
-export const EXPIRED_VOTEBAN_TIMEOUT = 30 * 24 * 60 * 60 * 1000;
+export const EXPIRED_VOTEBAN_TIMEOUT = 48 * 60 * 60 * 1000;
