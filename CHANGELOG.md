@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.14.0 (2024-xx-xx)
+## 1.14.0 (2024-01-16)
 
 - Improvement: voteban is now valid for 48 hours
 - Other: internal improvements
