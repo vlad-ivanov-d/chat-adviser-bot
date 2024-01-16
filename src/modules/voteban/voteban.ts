@@ -313,8 +313,8 @@ export class Voteban implements BasicModule {
       throw new Error("Message is not defined to save the vote for voteban.");
     }
 
-    const [isChatExists, isVoterChatMember, voting] = await Promise.all([
-      this.database.isChatExists(message.chat.id),
+    const [existedChat, isVoterChatMember, voting] = await Promise.all([
+      this.database.chat.findUnique({ select: { id: true }, where: { id: message.chat.id } }),
       isChatMember(ctx.telegram, message.chat.id, from.id),
       this.database.voteban.findUnique({
         select: {
@@ -327,7 +327,7 @@ export class Voteban implements BasicModule {
     ]);
 
     // Do not upsert chat if it's not found. It means that bot was removed from the chat.
-    const chat = isChatExists ? await this.database.upsertChat(message.chat, from) : undefined;
+    const chat = existedChat ? await this.database.upsertChat(message.chat, from) : undefined;
     const lng = chat?.language ?? this.database.resolveLanguage(from.language_code);
     await changeLanguage(lng);
     if (!chat || !voting) {

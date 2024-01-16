@@ -52,16 +52,6 @@ export class Database extends PrismaClient implements BasicModule {
   }
 
   /**
-   * Checks if chat exists in database
-   * @param chatId Chat id
-   * @returns True if chat exists
-   */
-  public async isChatExists(chatId: number): Promise<boolean> {
-    const chat = await this.chat.findUnique({ select: { id: true }, where: { id: chatId } });
-    return chat !== null;
-  }
-
-  /**
    * Adds modified info to the text
    * @param text Text
    * @param settingName Setting name

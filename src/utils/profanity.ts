@@ -15,7 +15,7 @@ export class Profanity {
   /**
    * Similar chars which can be used to workaround filter. Chars must be defined in lower case.
    */
-  private readonly similarCharsMap = new Map([
+  private readonly similarCharsMap = new Map<string, string[]>([
     // English
     ["a", ["@", "а"]],
     ["b", ["l3", "6", "в", "ь"]],
