@@ -4,9 +4,9 @@ import { formatInTimeZone } from "date-fns-tz";
 import { http, type HttpHandler, HttpResponse } from "msw";
 import type { Telegraf } from "telegraf";
 import { MESSAGE_DATE } from "test/constants";
-import { createDbSupergroupChat } from "test/database";
 import { mockBot, mockChannelBot } from "test/mockBot";
 import { mockChannelChat, mockPrivateChat, mockSupergroupChat } from "test/mockChat";
+import { createDbSupergroupChat } from "test/mockDatabase";
 import { mockUser } from "test/mockUser";
 import { BASE_URL, server } from "test/setup";
 

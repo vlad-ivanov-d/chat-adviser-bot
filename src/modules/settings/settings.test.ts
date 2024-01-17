@@ -3,9 +3,9 @@ import { PAGE_SIZE } from "constants/pagination";
 import { http, type HttpHandler, HttpResponse } from "msw";
 import type { Telegraf } from "telegraf";
 import { MESSAGE_DATE } from "test/constants";
-import { createDbPrivateChat } from "test/database";
 import { mockBot } from "test/mockBot";
 import { mockGroupChat, mockPrivateChat, mockSupergroupChat } from "test/mockChat";
+import { createDbPrivateChat } from "test/mockDatabase";
 import { mockUser } from "test/mockUser";
 import { BASE_URL, server } from "test/setup";
 

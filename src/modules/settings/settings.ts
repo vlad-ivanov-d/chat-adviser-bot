@@ -79,7 +79,7 @@ export class Settings implements BasicModule {
    * @param chatId Chat id
    * @returns True if validation is successfully passed
    */
-  public async resolveDatabaseChat(ctx: CallbackCtx | MessageCtx, chatId: number): Promise<UpsertedChat | undefined> {
+  public async resolveChat(ctx: CallbackCtx | MessageCtx, chatId: number): Promise<UpsertedChat | undefined> {
     const from = "message" in ctx.update ? ctx.update.message.from : ctx.callbackQuery?.from;
     if (!from) {
       throw new Error("User is not defined to resolve database chat.");
@@ -94,7 +94,8 @@ export class Settings implements BasicModule {
     } catch (e) {
       const errorCode = getErrorCode(e);
       if (errorCode === 400 || errorCode === 403) {
-        // Chat was deleted, remove it from database.
+        // Chat was deleted, remove it from the cache and database.
+        this.database.removeUpsertChatCache(chatId);
         await this.database.chat.deleteMany({ where: { id: chatId } });
       }
     }
@@ -126,16 +127,16 @@ export class Settings implements BasicModule {
    */
   private async promptSettings(ctx: MessageCtx, next: () => Promise<void>): Promise<void> {
     const botId = ctx.botInfo.id;
-    const { message } = ctx.update;
+    const { message: msg } = ctx.update;
 
     const [chat, userChat] = await Promise.all([
-      this.database.upsertChat(ctx.chat, message.from),
-      this.database.chat.findUnique({ select: { id: true, language: true }, where: { id: message.from.id } }),
+      this.database.upsertChat(ctx.chat, msg.from),
+      this.database.chat.findUnique({ select: { id: true, language: true }, where: { id: msg.from.id } }),
     ]);
 
-    const isBotAdded = "new_chat_members" in message && message.new_chat_members.some((m) => m.id === botId);
-    const isChatCreated = "group_chat_created" in message || "supergroup_chat_created" in message;
-    const isUserAdmin = this.database.isChatAdmin(chat, message.from.id, message.sender_chat?.id);
+    const isBotAdded = "new_chat_members" in msg && msg.new_chat_members.some((m) => m.id === botId);
+    const isChatCreated = "group_chat_created" in msg || "supergroup_chat_created" in msg;
+    const isUserAdmin = this.database.isChatAdmin(chat, msg.from.id, msg.sender_chat?.id);
 
     if (userChat && isUserAdmin && (isBotAdded || isChatCreated)) {
       await changeLanguage(userChat.language);
@@ -204,8 +205,8 @@ export class Settings implements BasicModule {
    * @param skip Skip count
    */
   private async renderFeatures(ctx: CallbackCtx | MessageCtx, chatId: number, skip = 0): Promise<void> {
-    const { callbackQuery, chat, telegram, update } = ctx;
-    const from = "message" in update ? update.message.from : callbackQuery?.from;
+    const { callbackQuery: cbQuery, chat, telegram, update } = ctx;
+    const from = "message" in update ? update.message.from : cbQuery?.from;
     if (!from) {
       throw new Error("User is not defined to render features.");
     }
@@ -216,14 +217,12 @@ export class Settings implements BasicModule {
       throw new Error('Parameter "skip" is not correct to render features.');
     }
 
-    const destDbChat = await (callbackQuery
-      ? this.database.upsertChat(chat, from)
-      : this.resolveDatabaseChat(ctx, from.id));
+    const destDbChat = await (cbQuery ? this.database.upsertChat(chat, from) : this.resolveChat(ctx, from.id));
     if (!destDbChat) {
       throw new Error("Target chat is not defined to render features.");
     }
     await changeLanguage(destDbChat.language);
-    const dbChat = await this.resolveDatabaseChat(ctx, chatId);
+    const dbChat = await this.resolveChat(ctx, chatId);
     if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -283,9 +282,9 @@ export class Settings implements BasicModule {
     };
 
     await Promise.all([
-      callbackQuery && ctx.answerCbQuery(),
-      callbackQuery && ctx.editMessageText(msg, { parse_mode: "HTML", reply_markup: replyMarkup }),
-      !callbackQuery && telegram.sendMessage(from.id, msg, { parse_mode: "HTML", reply_markup: replyMarkup }),
+      cbQuery && ctx.answerCbQuery(),
+      cbQuery && ctx.editMessageText(msg, { parse_mode: "HTML", reply_markup: replyMarkup }),
+      !cbQuery && telegram.sendMessage(from.id, msg, { parse_mode: "HTML", reply_markup: replyMarkup }),
     ]);
   }
 }

@@ -1,8 +1,8 @@
 import { App } from "app";
 import { http, type HttpHandler, HttpResponse } from "msw";
 import { MESSAGE_DATE } from "test/constants";
-import { prisma } from "test/database";
 import { mockSupergroupChat } from "test/mockChat";
+import { prisma } from "test/mockDatabase";
 import { mockUser } from "test/mockUser";
 import { BASE_URL, server } from "test/setup";
 

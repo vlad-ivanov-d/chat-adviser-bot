@@ -26,6 +26,7 @@ export class Cleanup implements BasicModule {
   public init(): void {
     this.bot.on(message("left_chat_member"), async (ctx, next): Promise<void> => {
       if (ctx.update.message.left_chat_member.id === ctx.botInfo.id) {
+        this.database.removeUpsertChatCache(ctx.chat.id);
         await this.database.chat.deleteMany({ where: { id: ctx.chat.id } });
       }
       await next();

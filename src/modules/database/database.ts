@@ -15,9 +15,11 @@ import i18next, { t } from "i18next";
 import type { Telegraf } from "telegraf";
 import type { Chat, User as TelegramUser } from "telegraf/typings/core/types/typegram";
 import type { BasicModule } from "types/basicModule";
+import { cache } from "utils/cache";
 import { getDateLocale } from "utils/dates";
 import { getChatDisplayTitle, getUserDisplayName, getUserHtmlLink } from "utils/telegraf";
 
+import { CHAT_CACHE_TIMEOUT } from "./database.constants";
 import type { UpsertedChat } from "./database.types";
 
 export class Database extends PrismaClient implements BasicModule {
@@ -76,10 +78,16 @@ export class Database extends PrismaClient implements BasicModule {
   }
 
   /**
-   * Shutdowns database module
+   * Removes cache for upsert chat method
+   * @param chatId Chat id
    */
-  public async shutdown(): Promise<void> {
-    await this.$disconnect();
+  public removeUpsertChatCache(chatId: number): void {
+    const cacheKey = this.getChatCacheKey(chatId);
+    cache.forEach((key) => {
+      if (key.startsWith(cacheKey)) {
+        cache.removeItem(key);
+      }
+    });
   }
 
   /**
@@ -98,12 +106,25 @@ export class Database extends PrismaClient implements BasicModule {
   }
 
   /**
+   * Shutdowns database module
+   */
+  public async shutdown(): Promise<void> {
+    await this.$disconnect();
+  }
+
+  /**
    * Gets the chat from the database. The chat will be created if it's not exists.
    * @param chat Telegram chat or chat id
    * @param editor Telegram user who makes upsert
    * @returns Chat
    */
   public async upsertChat(chat: Chat, editor: TelegramUser): Promise<UpsertedChat> {
+    const cacheKey = this.getChatCacheKey(chat.id, editor.id);
+    const cachedChat = cache.getItem<UpsertedChat>(cacheKey);
+    if (cachedChat) {
+      return cachedChat;
+    }
+
     const { botInfo, telegram } = this.bot;
     const [admins, membersCount] = await Promise.all([
       // An expected error may happen if administrators are hidden
@@ -111,12 +132,19 @@ export class Database extends PrismaClient implements BasicModule {
       telegram.getChatMembersCount(chat.id),
     ]);
 
-    const displayTitle = getChatDisplayTitle(chat);
-    const firstName = "first_name" in chat ? chat.first_name : null;
+    const adminIds = admins.map((a) => ({ id: a.user.id }));
     const isGroupChat = chat.type === "group" || chat.type === "supergroup";
-    const lastName = "last_name" in chat ? chat.last_name ?? null : null;
-    const title = "title" in chat ? chat.title : null;
-    const username = "username" in chat ? chat.username ?? null : null;
+    const update = {
+      admins: { set: adminIds },
+      displayTitle: getChatDisplayTitle(chat),
+      editorId: editor.id,
+      firstName: "first_name" in chat ? chat.first_name : null,
+      lastName: "last_name" in chat ? chat.last_name ?? null : null,
+      membersCount,
+      title: "title" in chat ? chat.title : null,
+      type: this.resolveChatType(chat.type),
+      username: "username" in chat ? chat.username ?? null : null,
+    };
 
     const transaction = await this.$transaction([
       ...[editor, ...admins.map((a) => a.user)]
@@ -124,48 +152,34 @@ export class Database extends PrismaClient implements BasicModule {
         .map((u) => this.upsertUser(u, editor)),
       this.chat.upsert({
         create: {
+          ...update,
           addingBots: isGroupChat ? AddingBotsRule.RESTRICT : undefined,
-          admins: { connect: admins.map((a) => ({ id: a.user.id })) },
+          admins: { connect: adminIds },
           authorId: editor.id,
-          displayTitle,
-          editorId: editor.id,
-          firstName,
           id: chat.id,
           language: this.resolveLanguage(editor.language_code),
-          lastName,
-          membersCount,
           messagesOnBehalfOfChannels: isGroupChat ? MessagesOnBehalfOfChannelsRule.FILTER : undefined,
           profanityFilter: isGroupChat ? ProfanityFilterRule.FILTER : undefined,
           timeZone: this.resolveTimeZone(editor.language_code),
-          title,
-          type: this.resolveChatType(chat.type),
-          username,
         },
         include: { admins: true, chatSettingsHistory: { include: { editor: true } } },
-        update: {
-          admins: { set: admins.map((a) => ({ id: a.user.id })) },
-          displayTitle,
-          editorId: editor.id,
-          firstName,
-          lastName,
-          membersCount,
-          title,
-          type: this.resolveChatType(chat.type),
-          username,
-        },
+        update,
         where: { id: chat.id },
       }),
     ]);
 
-    const upsertedChat = transaction[transaction.length - 1];
-    if (!("admins" in upsertedChat)) {
+    const dbChat = transaction[transaction.length - 1];
+    if (!("admins" in dbChat)) {
       throw new Error("Something went wrong during chat upsertion.");
     }
 
-    return botInfo && chat.id === editor.id
-      ? // Patch display title of the chat with the bot
-        { ...upsertedChat, displayTitle: getUserDisplayName(botInfo, "full"), username: botInfo.username }
-      : upsertedChat;
+    // Patch display title of the chat with the bot
+    const patchedChat =
+      botInfo && chat.id === editor.id
+        ? { ...dbChat, displayTitle: getUserDisplayName(botInfo, "full"), username: botInfo.username }
+        : dbChat;
+    cache.setItem(cacheKey, patchedChat, CHAT_CACHE_TIMEOUT);
+    return patchedChat;
   }
 
   /**
@@ -180,6 +194,7 @@ export class Database extends PrismaClient implements BasicModule {
     editorId: number,
     settingName: ChatSettingName,
   ): Prisma.Prisma__ChatSettingsHistoryClient<{ id: bigint }> {
+    this.removeUpsertChatCache(chatId);
     return this.chatSettingsHistory.upsert({
       create: { authorId: editorId, chatId, editorId, settingName },
       select: { id: true },
@@ -227,25 +242,28 @@ export class Database extends PrismaClient implements BasicModule {
    * @returns User
    */
   public upsertUser(user: TelegramUser, editor: TelegramUser): Prisma.Prisma__UserClient<User> {
+    const update = {
+      editorId: editor.id,
+      firstName: user.first_name,
+      languageCode: user.language_code ?? null,
+      lastName: user.last_name ?? null,
+      username: user.username ?? null,
+    };
     return this.user.upsert({
-      create: {
-        authorId: editor.id,
-        editorId: editor.id,
-        firstName: user.first_name,
-        id: user.id,
-        languageCode: user.language_code ?? null,
-        lastName: user.last_name ?? null,
-        username: user.username ?? null,
-      },
-      update: {
-        editorId: editor.id,
-        firstName: user.first_name,
-        languageCode: user.language_code ?? null,
-        lastName: user.last_name ?? null,
-        username: user.username ?? null,
-      },
+      create: { ...update, authorId: editor.id, id: user.id },
+      update,
       where: { id: user.id },
     });
+  }
+
+  /**
+   * Gets cache key for the chat
+   * @param chatId Chat id
+   * @param editorId Editor id
+   * @returns Cache key
+   */
+  private getChatCacheKey(chatId: number, editorId?: number): string {
+    return `database-upsert-chat-${chatId}` + (typeof editorId === "undefined" ? "" : `-${editorId}`);
   }
 
   /**
@@ -270,7 +288,7 @@ export class Database extends PrismaClient implements BasicModule {
 
   /**
    * Resolves time zone based on Telegram language code
-   * @param languageCode Telegram lanugage code
+   * @param languageCode Telegram language code
    * @returns Time zone identifier
    */
   private resolveTimeZone(languageCode: string | undefined): string {

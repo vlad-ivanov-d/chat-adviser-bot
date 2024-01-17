@@ -49,14 +49,14 @@ export class MessagesOnBehalfOfChannels implements BasicModule {
    * @param next Function to continue processing
    */
   private async filterMessage(ctx: MessageCtx, next: () => Promise<void>): Promise<void> {
-    const { message } = ctx.update;
-    const { chat, from, message_id: messageId, sender_chat: senderChat } = message;
+    const { message: msg } = ctx.update;
+    const { chat, from, message_id: messageId, sender_chat: senderChat } = msg;
 
     if (
       !senderChat?.id || // Message from the user
       chat.id === senderChat.id || // Message from the admin
-      ("left_chat_member" in message && message.left_chat_member.id === ctx.botInfo.id) || // The bot is kicked
-      ("is_automatic_forward" in message && message.is_automatic_forward) // Message from the linked chat
+      ("left_chat_member" in msg && msg.left_chat_member.id === ctx.botInfo.id) || // The bot is kicked
+      ("is_automatic_forward" in msg && msg.is_automatic_forward) // Message from the linked chat
     ) {
       await next();
       return;
@@ -96,7 +96,7 @@ export class MessagesOnBehalfOfChannels implements BasicModule {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    const dbChat = await this.settings.resolveChat(ctx, chatId);
     if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -146,7 +146,7 @@ export class MessagesOnBehalfOfChannels implements BasicModule {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    const dbChat = await this.settings.resolveChat(ctx, chatId);
     if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }

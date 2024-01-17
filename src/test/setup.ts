@@ -1,8 +1,9 @@
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
+import { cache } from "utils/cache";
 
-import { cleanupDb, prisma } from "./database";
 import { mockBot } from "./mockBot";
+import { cleanupDb, prisma } from "./mockDatabase";
 
 /**
  * Base url for mocking API calls
@@ -25,6 +26,7 @@ beforeAll(() => {
 
 // Reset any request handlers that may be added during the tests, so they don't affect other tests.
 afterEach(async () => {
+  cache.clear();
   jest.restoreAllMocks();
   server.resetHandlers();
   await cleanupDb();

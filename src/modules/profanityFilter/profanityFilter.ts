@@ -6,6 +6,7 @@ import type { Telegraf } from "telegraf";
 import { callbackQuery, message } from "telegraf/filters";
 import type { BasicModule } from "types/basicModule";
 import type { CallbackCtx, MessageCtx } from "types/telegrafContext";
+import { cache } from "utils/cache";
 import { Profanity } from "utils/profanity";
 import { getCallbackQueryParams, getChatHtmlLink, getUserFullName } from "utils/telegraf";
 
@@ -13,9 +14,6 @@ import { WORDS_CACHE_TIMEOUT } from "./profanityFilter.constants";
 import { ProfanityFilterAction } from "./profanityFilter.types";
 
 export class ProfanityFilter implements BasicModule {
-  private profaneWords?: string[];
-  private profaneWordsDate: Date = new Date();
-
   /**
    * Creates profanity filter module
    * @param bot Telegraf bot instance
@@ -54,16 +52,16 @@ export class ProfanityFilter implements BasicModule {
    * @param next Function to continue processing
    */
   private async filterMessage(ctx: MessageCtx, next: () => Promise<void>): Promise<void> {
-    const { message } = ctx.update;
-    const { chat, from, message_id: messageId, sender_chat: senderChat } = message;
+    const { message: msg } = ctx.update;
+    const { chat, from, message_id: messageId, sender_chat: senderChat } = msg;
 
-    if ("is_automatic_forward" in message && message.is_automatic_forward) {
+    if ("is_automatic_forward" in msg && msg.is_automatic_forward) {
       // Message from linked chat
       await next();
       return;
     }
 
-    if ("left_chat_member" in message && message.left_chat_member.id === ctx.botInfo.id) {
+    if ("left_chat_member" in msg && msg.left_chat_member.id === ctx.botInfo.id) {
       // The bot is kicked from the chat
       await next();
       return;
@@ -95,7 +93,7 @@ export class ProfanityFilter implements BasicModule {
     ) {
       // An expected error may happen if there are no enough permissions
       const isDeleted = await ctx.deleteMessage(messageId).catch(() => false);
-      if (isDeleted && !("new_chat_members" in message)) {
+      if (isDeleted && !("new_chat_members" in msg)) {
         return; // Do not continue processing if the message is deleted and it's not the new_chat_member event.
       }
     }
@@ -104,16 +102,19 @@ export class ProfanityFilter implements BasicModule {
   }
 
   /**
-   * Gets profane words with 15 minutes cache
+   * Gets profane words with caching
    * @returns Cached profane words
    */
   private async getCachedProfaneWords(): Promise<string[]> {
-    if (!this.profaneWords || this.profaneWordsDate.getTime() < Date.now() - WORDS_CACHE_TIMEOUT) {
-      const profaneWords = await this.database.profaneWord.findMany({ select: { word: true } });
-      this.profaneWords = profaneWords.map(({ word }) => word);
-      this.profaneWordsDate = new Date();
+    const key = "profane-words";
+    const cachedProfaneWords = cache.getItem<string[]>(key);
+    if (cachedProfaneWords) {
+      return cachedProfaneWords;
     }
-    return this.profaneWords;
+    const profaneWordRows = await this.database.profaneWord.findMany({ select: { word: true } });
+    const profaneWords = profaneWordRows.map(({ word }) => word);
+    cache.setItem(key, profaneWords, WORDS_CACHE_TIMEOUT);
+    return profaneWords;
   }
 
   /**
@@ -133,8 +134,7 @@ export class ProfanityFilter implements BasicModule {
    * @returns Message text
    */
   private getMessageText(ctx: MessageCtx): string {
-    const { message } = ctx.update;
-    const srcMessage = "pinned_message" in message ? message.pinned_message : message;
+    const srcMessage = "pinned_message" in ctx.update.message ? ctx.update.message.pinned_message : ctx.update.message;
     if ("caption" in srcMessage) {
       return srcMessage.caption ?? "";
     }
@@ -168,16 +168,15 @@ export class ProfanityFilter implements BasicModule {
     userFullName: string;
     username: string;
   } {
-    const { message } = ctx.update;
-    const { from, sender_chat: senderChat } = message;
+    const { message: msg } = ctx.update;
+    const { from, sender_chat: senderChat } = msg;
     return {
       forwardChatTitle:
-        "forward_from_chat" in message && message.forward_from_chat && "title" in message.forward_from_chat
-          ? message.forward_from_chat.title
+        "forward_from_chat" in msg && msg.forward_from_chat && "title" in msg.forward_from_chat
+          ? msg.forward_from_chat.title
           : "",
-      forwardSenderName: "forward_sender_name" in message ? message.forward_sender_name ?? "" : "",
-      forwardUserFullName:
-        "forward_from" in message && message.forward_from ? getUserFullName(message.forward_from) : "",
+      forwardSenderName: "forward_sender_name" in msg ? msg.forward_sender_name ?? "" : "",
+      forwardUserFullName: "forward_from" in msg && msg.forward_from ? getUserFullName(msg.forward_from) : "",
       senderChatTitle: senderChat && "title" in senderChat ? senderChat.title : "",
       senderChatUserName: senderChat && "username" in senderChat ? senderChat.username ?? "" : "",
       text: this.getMessageText(ctx),
@@ -198,7 +197,7 @@ export class ProfanityFilter implements BasicModule {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    const dbChat = await this.settings.resolveChat(ctx, chatId);
     if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -247,7 +246,7 @@ export class ProfanityFilter implements BasicModule {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    const dbChat = await this.settings.resolveChat(ctx, chatId);
     if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }

@@ -51,17 +51,15 @@ export class Messages implements BasicModule {
    * @param next Function to continue processing
    */
   private async saveMessage(ctx: MessageCtx, next: () => Promise<void>): Promise<void> {
-    const { message } = ctx.update;
-
-    if ("media_group_id" in message) {
-      await this.database.upsertChat(message.chat, message.from);
+    if ("media_group_id" in ctx.update.message) {
+      await this.database.upsertChat(ctx.update.message.chat, ctx.update.message.from);
       await this.database.message.create({
         data: {
-          authorId: message.from.id,
-          chatId: message.chat.id,
-          editorId: message.from.id,
-          mediaGroupId: message.media_group_id,
-          messageId: message.message_id,
+          authorId: ctx.update.message.from.id,
+          chatId: ctx.update.message.chat.id,
+          editorId: ctx.update.message.from.id,
+          mediaGroupId: ctx.update.message.media_group_id,
+          messageId: ctx.update.message.message_id,
         },
         select: { messageId: true },
       });

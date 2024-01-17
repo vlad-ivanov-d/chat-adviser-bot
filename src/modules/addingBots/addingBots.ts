@@ -67,7 +67,7 @@ export class AddingBots implements BasicModule {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    const dbChat = await this.settings.resolveChat(ctx, chatId);
     if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -109,7 +109,7 @@ export class AddingBots implements BasicModule {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    const dbChat = await this.settings.resolveChat(ctx, chatId);
     if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
