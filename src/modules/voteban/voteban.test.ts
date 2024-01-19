@@ -5,15 +5,33 @@ import { MESSAGE_DATE } from "test/constants";
 import { mockBot } from "test/mockBot";
 import { mockPrivateChat, mockSupergroupChat } from "test/mockChat";
 import { createDbSupergroupChat } from "test/mockDatabase";
-import { mockUser, mockUser2 } from "test/mockUser";
+import { mockAdminUser, mockUser } from "test/mockUser";
 import { BASE_URL, server } from "test/setup";
 
-const chatAdminsHandler: HttpHandler = http.post(`${BASE_URL}/getChatAdministrators`, () =>
-  HttpResponse.json({ ok: true, result: [{ is_anonymous: false, status: "administrator", user: mockBot() }] }),
-);
-
-const chatMemberHandler: HttpHandler = http.post(`${BASE_URL}/getChatMember`, () =>
-  HttpResponse.json({ ok: true, result: { is_anonymous: false, status: "member", user: mockUser2() } }),
+const botMessageHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
+  HttpResponse.json({
+    ok: true,
+    result: [
+      {
+        message: {
+          chat: mockSupergroupChat(),
+          date: MESSAGE_DATE,
+          from: mockAdminUser(),
+          message_id: 2,
+          message_thread_id: 1,
+          reply_to_message: {
+            chat: mockSupergroupChat(),
+            date: MESSAGE_DATE,
+            from: mockBot(),
+            message_id: 1,
+            text: "Bad message",
+          },
+          text: "voteban",
+        },
+        update_id: 1,
+      },
+    ],
+  }),
 );
 
 const privateChatVotebanCommandHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
@@ -21,7 +39,7 @@ const privateChatVotebanCommandHandler: HttpHandler = http.post(`${BASE_URL}/get
     ok: true,
     result: [
       {
-        message: { chat: mockPrivateChat(), date: MESSAGE_DATE, from: mockUser(), message_id: 1, text: "voteban" },
+        message: { chat: mockPrivateChat(), date: MESSAGE_DATE, from: mockAdminUser(), message_id: 1, text: "voteban" },
         update_id: 1,
       },
     ],
@@ -36,13 +54,13 @@ const votebanCommandHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, (
         message: {
           chat: mockSupergroupChat(),
           date: MESSAGE_DATE,
-          from: mockUser(),
+          from: mockAdminUser(),
           message_id: 2,
           message_thread_id: 1,
           reply_to_message: {
             chat: mockSupergroupChat(),
             date: MESSAGE_DATE,
-            from: mockUser2(),
+            from: mockUser(),
             message_id: 1,
             text: "Bad message",
           },
@@ -59,7 +77,13 @@ const votebanWithNoReplyCommandHandler: HttpHandler = http.post(`${BASE_URL}/get
     ok: true,
     result: [
       {
-        message: { chat: mockSupergroupChat(), date: MESSAGE_DATE, from: mockUser(), message_id: 1, text: "Voteban" },
+        message: {
+          chat: mockSupergroupChat(),
+          date: MESSAGE_DATE,
+          from: mockAdminUser(),
+          message_id: 1,
+          text: "Voteban",
+        },
         update_id: 1,
       },
     ],
@@ -81,7 +105,7 @@ describe("Voteban", () => {
 
   it("tells how to use the voteban command correctly", async () => {
     await createDbSupergroupChat({ votebanLimit: 2 });
-    server.use(chatAdminsHandler, votebanWithNoReplyCommandHandler);
+    server.use(votebanWithNoReplyCommandHandler);
 
     let replySpy;
     bot.use(async (ctx, next) => {
@@ -101,7 +125,10 @@ describe("Voteban", () => {
 
   it("says if there is no admin permissions", async () => {
     await createDbSupergroupChat({ votebanLimit: 2 });
-    server.use(chatMemberHandler, votebanCommandHandler);
+    server.use(
+      http.post(`${BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
+      votebanCommandHandler,
+    );
 
     let replySpy;
     bot.use(async (ctx, next) => {
@@ -118,7 +145,7 @@ describe("Voteban", () => {
   });
 
   it("ignores voteban command if the feature is disabled", async () => {
-    server.use(chatAdminsHandler, votebanWithNoReplyCommandHandler);
+    server.use(votebanWithNoReplyCommandHandler);
 
     let replySpy;
     bot.use(async (ctx, next) => {
@@ -144,5 +171,23 @@ describe("Voteban", () => {
 
     expect(replySpy).toHaveBeenCalledTimes(1);
     expect(replySpy).toHaveBeenCalledWith("This command is not for private chats.");
+  });
+
+  it("doesn't start voteban against itself", async () => {
+    await createDbSupergroupChat({ votebanLimit: 2 });
+    server.use(botMessageHandler);
+
+    let replySpy;
+    bot.use(async (ctx, next) => {
+      replySpy = jest.spyOn(ctx, "reply").mockImplementation();
+      await next();
+    });
+
+    await app.initAndProcessUpdates();
+
+    expect(replySpy).toHaveBeenCalledTimes(1);
+    expect(replySpy).toHaveBeenCalledWith("I can't start voting to ban myself. This would be weird.", {
+      reply_to_message_id: 2,
+    });
   });
 });

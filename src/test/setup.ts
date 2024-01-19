@@ -1,9 +1,11 @@
-import { http, HttpResponse } from "msw";
+import { http, HttpResponse, type HttpResponseResolver, type PathParams } from "msw";
 import { setupServer } from "msw/node";
 import { cache } from "utils/cache";
 
 import { mockBot } from "./mockBot";
+import { mockGroupChat, mockPrivateChat, mockSupergroupChat } from "./mockChat";
 import { cleanupDb, prisma } from "./mockDatabase";
+import { mockAdminUser, mockUser } from "./mockUser";
 
 /**
  * Base url for mocking API calls
@@ -11,11 +13,71 @@ import { cleanupDb, prisma } from "./mockDatabase";
 export const BASE_URL = `https://api.telegram.org/bot${process.env.BOT_TOKEN}`;
 
 /**
+ * Resolves response for /getChatAdministrators endpoint.
+ * @param info Resolver info
+ * @returns HTTP response
+ */
+const getChatAdministratorsResolver: HttpResponseResolver<PathParams, { chat_id: number }> = async (info) => {
+  const { chat_id: chatId } = await info.request.json();
+  return HttpResponse.json({
+    ok: true,
+    result:
+      chatId === mockPrivateChat().id
+        ? []
+        : [
+            { is_anonymous: false, status: "creator", user: mockAdminUser() },
+            { is_anonymous: false, status: "administrator", user: mockBot() },
+          ],
+  });
+};
+
+/**
+ * Resolves response for /getChatMember endpoint.
+ * @param info Resolver info
+ * @returns HTTP response
+ */
+const getChatMemberResolver: HttpResponseResolver<PathParams, { chat_id: number; user_id: number }> = async (info) => {
+  const { user_id: userId } = await info.request.json();
+  if (userId === mockAdminUser().id) {
+    return HttpResponse.json({ ok: true, result: { is_anonymous: false, status: "creator", user: mockAdminUser() } });
+  }
+  return HttpResponse.json({ ok: true, result: { is_anonymous: false, status: "member", user: mockUser() } });
+};
+
+/**
+ * Resolves response for /getChatMembersCount endpoint.
+ * @param info Resolver info
+ * @returns HTTP response
+ */
+const getChatMembersCountResolver: HttpResponseResolver<PathParams, { chat_id: number }> = async (info) => {
+  const { chat_id: chatId } = await info.request.json();
+  return HttpResponse.json({ ok: true, result: chatId === mockPrivateChat().id ? 2 : 3 });
+};
+
+/**
+ * Resolves response for /getChat endpoint.
+ * @param info Resolver info
+ * @returns HTTP response
+ */
+const getChatResolver: HttpResponseResolver<PathParams, { chat_id: number }> = async (info) => {
+  const { chat_id: chatId } = await info.request.json();
+  switch (chatId) {
+    case mockGroupChat().id:
+      return HttpResponse.json({ ok: true, result: mockGroupChat() });
+    case mockSupergroupChat().id:
+    default:
+      return HttpResponse.json({ ok: true, result: mockSupergroupChat() });
+  }
+};
+
+/**
  * MSW server
  */
 export const server = setupServer(
-  http.post(`${BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
-  http.post(`${BASE_URL}/getChatMembersCount`, () => HttpResponse.json({ ok: true, result: 2 })),
+  http.post(`${BASE_URL}/getChat`, getChatResolver),
+  http.post(`${BASE_URL}/getChatAdministrators`, getChatAdministratorsResolver),
+  http.post(`${BASE_URL}/getChatMember`, getChatMemberResolver),
+  http.post(`${BASE_URL}/getChatMembersCount`, getChatMembersCountResolver),
   http.post(`${BASE_URL}/getMe`, () => HttpResponse.json({ ok: true, result: mockBot() })),
 );
 

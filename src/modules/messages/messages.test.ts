@@ -3,7 +3,7 @@ import { http, type HttpHandler, HttpResponse } from "msw";
 import { MESSAGE_DATE } from "test/constants";
 import { mockSupergroupChat } from "test/mockChat";
 import { prisma } from "test/mockDatabase";
-import { mockUser } from "test/mockUser";
+import { mockAdminUser } from "test/mockUser";
 import { BASE_URL, server } from "test/setup";
 
 const mediaGroupMessageHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
@@ -15,7 +15,7 @@ const mediaGroupMessageHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`
           caption: "Hello",
           chat: mockSupergroupChat(),
           date: MESSAGE_DATE,
-          from: mockUser(),
+          from: mockAdminUser(),
           media_group_id: "100",
           message_id: 1,
           photo: [
@@ -55,7 +55,7 @@ const mediaGroupMessageHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`
         message: {
           chat: mockSupergroupChat(),
           date: MESSAGE_DATE,
-          from: mockUser(),
+          from: mockAdminUser(),
           media_group_id: "100",
           message_id: 2,
           photo: [
@@ -116,16 +116,16 @@ describe("Messages", () => {
     expect(messages).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          authorId: mockUser().id,
+          authorId: mockAdminUser().id,
           chatId: mockSupergroupChat().id,
-          editorId: mockUser().id,
+          editorId: mockAdminUser().id,
           mediaGroupId: "100",
           messageId: 1,
         }),
         expect.objectContaining({
-          authorId: mockUser().id,
+          authorId: mockAdminUser().id,
           chatId: mockSupergroupChat().id,
-          editorId: mockUser().id,
+          editorId: mockAdminUser().id,
           mediaGroupId: "100",
           messageId: 2,
         }),

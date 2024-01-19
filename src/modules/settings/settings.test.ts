@@ -6,7 +6,7 @@ import { MESSAGE_DATE } from "test/constants";
 import { mockBot } from "test/mockBot";
 import { mockGroupChat, mockPrivateChat, mockSupergroupChat } from "test/mockChat";
 import { createDbPrivateChat } from "test/mockDatabase";
-import { mockUser } from "test/mockUser";
+import { mockAdminUser } from "test/mockUser";
 import { BASE_URL, server } from "test/setup";
 
 const addedToNewChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
@@ -17,7 +17,7 @@ const addedToNewChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, (
         message: {
           chat: mockSupergroupChat(),
           date: MESSAGE_DATE,
-          from: mockUser(),
+          from: mockAdminUser(),
           message_id: 1,
           new_chat_member: mockBot(),
           new_chat_members: [mockBot()],
@@ -29,10 +29,6 @@ const addedToNewChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, (
   }),
 );
 
-const chatAdminsHandler: HttpHandler = http.post(`${BASE_URL}/getChatAdministrators`, () =>
-  HttpResponse.json({ ok: true, result: [{ is_anonymous: false, status: "creator", user: mockUser() }] }),
-);
-
 const createdGroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
   HttpResponse.json({
     ok: true,
@@ -41,7 +37,7 @@ const createdGroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`,
         my_chat_member: {
           chat: { ...mockGroupChat(), all_members_are_administrators: false },
           date: MESSAGE_DATE,
-          from: mockUser(),
+          from: mockAdminUser(),
           new_chat_member: { status: "member", user: mockBot() },
           old_chat_member: { status: "left", user: mockBot() },
         },
@@ -51,7 +47,7 @@ const createdGroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`,
         message: {
           chat: { ...mockGroupChat(), all_members_are_administrators: true },
           date: MESSAGE_DATE,
-          from: mockUser(),
+          from: mockAdminUser(),
           group_chat_created: true,
           message_id: 540,
         },
@@ -61,15 +57,7 @@ const createdGroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`,
   }),
 );
 
-const getGroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getChat`, () =>
-  HttpResponse.json({ ok: true, result: mockGroupChat() }),
-);
-
-const getSupergroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getChat`, () =>
-  HttpResponse.json({ ok: true, result: mockSupergroupChat() }),
-);
-
-const myChatsCommandPrivateHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
+const myChatsInPrivateChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
   HttpResponse.json({
     ok: true,
     result: [
@@ -78,7 +66,7 @@ const myChatsCommandPrivateHandler: HttpHandler = http.post(`${BASE_URL}/getUpda
           chat: mockPrivateChat(),
           date: MESSAGE_DATE,
           entities: [{ length: 5, offset: 0, type: "bot_command" }],
-          from: mockUser(),
+          from: mockAdminUser(),
           message_id: 1,
           text: "/mychats",
         },
@@ -88,7 +76,7 @@ const myChatsCommandPrivateHandler: HttpHandler = http.post(`${BASE_URL}/getUpda
   }),
 );
 
-const myChatsCommandSupergroupHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
+const myChatsInSupergroupHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
   HttpResponse.json({
     ok: true,
     result: [
@@ -97,7 +85,7 @@ const myChatsCommandSupergroupHandler: HttpHandler = http.post(`${BASE_URL}/getU
           chat: mockSupergroupChat(),
           date: MESSAGE_DATE,
           entities: [{ length: 5, offset: 0, type: "bot_command" }],
-          from: mockUser(),
+          from: mockAdminUser(),
           message_id: 1,
           text: "/mychats",
         },
@@ -131,7 +119,7 @@ describe("Settings", () => {
 
   it("prompts admin to make settings when adding the bot to a new chat", async () => {
     await createDbPrivateChat();
-    server.use(addedToNewChatHandler, chatAdminsHandler, getSupergroupChatHandler);
+    server.use(addedToNewChatHandler);
 
     let sendMessageSpy;
     bot.use(async (ctx, next) => {
@@ -142,10 +130,10 @@ describe("Settings", () => {
     await app.initAndProcessUpdates();
 
     expect(sendMessageSpy).toHaveBeenCalledTimes(2);
-    expect(sendMessageSpy).toHaveBeenNthCalledWith(1, mockUser().id, settingsInvitationMsg);
+    expect(sendMessageSpy).toHaveBeenNthCalledWith(1, mockAdminUser().id, settingsInvitationMsg);
     expect(sendMessageSpy).toHaveBeenNthCalledWith(
       2,
-      mockUser().id,
+      mockAdminUser().id,
       `Select the feature you want to configure for the @${mockSupergroupChat().username} chat. ` +
         "The list of features depends on the type of chat (channel, group, etc.).",
       {
@@ -167,7 +155,7 @@ describe("Settings", () => {
 
   it("prompts admin to make settings when a new group chat has been created", async () => {
     await createDbPrivateChat();
-    server.use(createdGroupChatHandler, chatAdminsHandler, getGroupChatHandler);
+    server.use(createdGroupChatHandler);
 
     let sendMessageSpy;
     bot.use(async (ctx, next) => {
@@ -178,10 +166,10 @@ describe("Settings", () => {
     await app.initAndProcessUpdates();
 
     expect(sendMessageSpy).toHaveBeenCalledTimes(2);
-    expect(sendMessageSpy).toHaveBeenNthCalledWith(1, mockUser().id, settingsInvitationMsg);
+    expect(sendMessageSpy).toHaveBeenNthCalledWith(1, mockAdminUser().id, settingsInvitationMsg);
     expect(sendMessageSpy).toHaveBeenNthCalledWith(
       2,
-      mockUser().id,
+      mockAdminUser().id,
       `Select the feature you want to configure for the <b>${mockGroupChat().title}</b> chat. ` +
         "The list of features depends on the type of chat (channel, group, etc.).",
       {
@@ -202,7 +190,7 @@ describe("Settings", () => {
   });
 
   it("renders chats as an answer to /mychats command in a private chat", async () => {
-    server.use(myChatsCommandPrivateHandler);
+    server.use(myChatsInPrivateChatHandler);
 
     let replySpy;
     bot.use(async (ctx, next) => {
@@ -226,7 +214,7 @@ describe("Settings", () => {
   });
 
   it("doesn't render chats as an answer to /mychats command in a supergroup chat", async () => {
-    server.use(myChatsCommandSupergroupHandler);
+    server.use(myChatsInSupergroupHandler);
 
     let replySpy;
     bot.use(async (ctx, next) => {
