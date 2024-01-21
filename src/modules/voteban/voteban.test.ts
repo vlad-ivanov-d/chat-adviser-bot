@@ -8,6 +8,8 @@ import { createDbSupergroupChat } from "test/mockDatabase";
 import { mockAdminUser, mockUser } from "test/mockUser";
 import { server } from "test/setup";
 
+import { VotebanAction } from "./voteban.types";
+
 const botMessageHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
   HttpResponse.json({
     ok: true,
@@ -27,6 +29,56 @@ const botMessageHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
             text: "Bad message",
           },
           text: "voteban",
+        },
+        update_id: 1,
+      },
+    ],
+  }),
+);
+
+const cbSaveSettingsErrorHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
+  HttpResponse.json({
+    ok: true,
+    result: [
+      {
+        callback_query: {
+          chat_instance: "1",
+          data: `${VotebanAction.SAVE}?chatId=error_id&v=2`,
+          from: mockAdminUser(),
+          id: "1",
+          message: {
+            chat: mockPrivateChat(),
+            date: MESSAGE_DATE,
+            edit_date: MESSAGE_DATE,
+            from: mockBot(),
+            message_id: 1,
+            text: "Ban Voting",
+          },
+        },
+        update_id: 1,
+      },
+    ],
+  }),
+);
+
+const cbSettingsErrorHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
+  HttpResponse.json({
+    ok: true,
+    result: [
+      {
+        callback_query: {
+          chat_instance: "1",
+          data: `${VotebanAction.SETTINGS}?chatId=error_id`,
+          from: mockAdminUser(),
+          id: "1",
+          message: {
+            chat: mockPrivateChat(),
+            date: MESSAGE_DATE,
+            edit_date: MESSAGE_DATE,
+            from: mockBot(),
+            message_id: 1,
+            text: "Select the feature",
+          },
         },
         update_id: 1,
       },
@@ -189,5 +241,21 @@ describe("Voteban", () => {
     expect(replySpy).toHaveBeenCalledWith("I can't start voting to ban myself. This would be weird.", {
       reply_to_message_id: 2,
     });
+  });
+
+  it("throws an error if chat id is incorrect during settings rendering", async () => {
+    server.use(cbSettingsErrorHandler);
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+
+    await expect(() => app.initAndProcessUpdates()).rejects.toThrow("Chat is not defined to render voteban settings.");
+    expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("throws an error if chat id is incorrect during settings saving", async () => {
+    server.use(cbSaveSettingsErrorHandler);
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+
+    await expect(() => app.initAndProcessUpdates()).rejects.toThrow("Chat is not defined to save voteban settings.");
+    expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
   });
 });

@@ -170,6 +170,14 @@ const warnWithNoReplyCommandHandler: HttpHandler = http.post(`${BASE_URL}/getUpd
   }),
 );
 
+const featureDescription =
+  "<b>Warnings</b>\n" +
+  "I can issue warnings to users upon admin command. To give a warning to a user, respond to their message " +
+  "with the appropriate command. In this case, the user's message will be deleted. Each warning is valid " +
+  "for 90 days, then it is automatically removed. If 3 warnings are received, the user will be banned. " +
+  "A warning cannot be issued to an administrator.\n/warn - issue a warning\n\nEnable warnings in " +
+  `@${mockSupergroupChat().username} chat?\n\n`;
+
 describe("Warnings", () => {
   let app: App;
   let bot: Telegraf;
@@ -267,24 +275,16 @@ describe("Warnings", () => {
     expect(answerCbQuerySpy).toHaveBeenCalledTimes(1);
     expect(answerCbQuerySpy).toHaveBeenCalledWith();
     expect(editMessageTextSpy).toHaveBeenCalledTimes(1);
-    expect(editMessageTextSpy).toHaveBeenCalledWith(
-      "<b>Warnings</b>\n" +
-        "I can issue warnings to users upon admin command. To give a warning to a user, respond to their message " +
-        "with the appropriate command. In this case, the user's message will be deleted. Each warning is valid " +
-        "for 90 days, then it is automatically removed. If 3 warnings are received, the user will be banned. " +
-        "A warning cannot be issued to an administrator.\n/warn - issue a warning\n\nEnable warnings in " +
-        `@${mockSupergroupChat().username} chat?\n\nCurrent value: <b>disabled</b>`,
-      {
-        parse_mode: "HTML",
-        reply_markup: {
-          inline_keyboard: [
-            [{ callback_data: `cfg-wrn-sv?chatId=${mockSupergroupChat().id}&v=true`, text: "Enable" }],
-            [{ callback_data: `cfg-wrn-sv?chatId=${mockSupergroupChat().id}`, text: "Disable" }],
-            [{ callback_data: `cfg-ftrs?chatId=${mockSupergroupChat().id}`, text: "« Back to features" }],
-          ],
-        },
+    expect(editMessageTextSpy).toHaveBeenCalledWith(`${featureDescription}Current value: <b>disabled</b>`, {
+      parse_mode: "HTML",
+      reply_markup: {
+        inline_keyboard: [
+          [{ callback_data: `cfg-wrn-sv?chatId=${mockSupergroupChat().id}&v=true`, text: "Enable" }],
+          [{ callback_data: `cfg-wrn-sv?chatId=${mockSupergroupChat().id}`, text: "Disable" }],
+          [{ callback_data: `cfg-ftrs?chatId=${mockSupergroupChat().id}`, text: "« Back to features" }],
+        ],
       },
-    );
+    });
   });
 
   it("saves settings", async () => {
@@ -306,12 +306,7 @@ describe("Warnings", () => {
     expect(answerCbQuerySpy).toHaveBeenNthCalledWith(2);
     expect(editMessageTextSpy).toHaveBeenCalledTimes(1);
     expect(editMessageTextSpy).toHaveBeenCalledWith(
-      "<b>Warnings</b>\n" +
-        "I can issue warnings to users upon admin command. To give a warning to a user, respond to their message " +
-        "with the appropriate command. In this case, the user's message will be deleted. Each warning is valid " +
-        "for 90 days, then it is automatically removed. If 3 warnings are received, the user will be banned. " +
-        "A warning cannot be issued to an administrator.\n/warn - issue a warning\n\nEnable warnings in " +
-        `@${mockSupergroupChat().username} chat?\n\nCurrent value: <b>enabled</b>\n` +
+      `${featureDescription}Current value: <b>enabled</b>\n` +
         `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
         `by <a href="tg:user?id=${mockAdminUser().id}">@${mockAdminUser().username}</a>`,
       {
@@ -327,7 +322,7 @@ describe("Warnings", () => {
     );
   });
 
-  it("says if the user has no admin permissions", async () => {
+  it("says if the bot has no admin permissions", async () => {
     server.use(
       http.post(`${BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
       warnCommandHandler,
@@ -343,6 +338,28 @@ describe("Warnings", () => {
 
     expect(replySpy).toHaveBeenCalledTimes(1);
     expect(replySpy).toHaveBeenCalledWith("I need administrator permissions for this feature to work.", {
+      reply_to_message_id: 4,
+    });
+  });
+
+  it("says if the user has no admin permissions", async () => {
+    server.use(
+      http.post(`${BASE_URL}/getChatAdministrators`, () =>
+        HttpResponse.json({ ok: true, result: [{ is_anonymous: false, status: "administrator", user: mockBot() }] }),
+      ),
+      warnCommandHandler,
+    );
+
+    let replySpy;
+    bot.use(async (ctx, next) => {
+      replySpy = jest.spyOn(ctx, "reply").mockImplementation();
+      await next();
+    });
+
+    await app.initAndProcessUpdates();
+
+    expect(replySpy).toHaveBeenCalledTimes(1);
+    expect(replySpy).toHaveBeenCalledWith("This command is only available to administrators.", {
       reply_to_message_id: 4,
     });
   });

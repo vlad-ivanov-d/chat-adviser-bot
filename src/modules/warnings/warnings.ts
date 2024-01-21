@@ -7,7 +7,7 @@ import type { Telegraf } from "telegraf";
 import { callbackQuery } from "telegraf/filters";
 import type { BasicModule } from "types/basicModule";
 import type { CallbackCtx, TextMessageCtx } from "types/telegrafContext";
-import { getCallbackQueryParams, getChatHtmlLink, getUserOrChatHtmlLink, isChatAdmin } from "utils/telegraf";
+import { getCallbackQueryParams, getChatHtmlLink, getUserOrChatHtmlLink } from "utils/telegraf";
 
 import { DELETE_MESSAGE_DELAY, OUTDATED_WARNING_TIMEOUT, WARNINGS_LIMIT } from "./warnings.constants";
 import { WarningsAction } from "./warnings.types";
@@ -192,12 +192,12 @@ export class Warnings implements BasicModule {
       return; // Private chat, return.
     }
 
-    const [chat, isCandidateAdmin] = await Promise.all([
-      this.database.upsertChat(ctx.chat, from),
+    const [candidateMember, chat] = await Promise.all([
       typeof candidate?.id === "number" && !candidateSenderChat
-        ? // Check seperately, because other bots are not included in admin list.
-          isChatAdmin(ctx.telegram, ctx.chat.id, candidate.id)
-        : candidateSenderChat?.id === ctx.chat.id,
+        ? // An expected error may happen if the bot have no permissions to see the member list.
+          ctx.telegram.getChatMember(ctx.chat.id, candidate.id).catch(() => undefined)
+        : undefined,
+      this.database.upsertChat(ctx.chat, from),
     ]);
     await changeLanguage(chat.language);
 
@@ -220,7 +220,12 @@ export class Warnings implements BasicModule {
       await ctx.reply(t("warnings:cannotWarnMyself"), { reply_to_message_id: messageId });
       return; // Candidate is the bot itself, return.
     }
-    if (isCandidateAutomaticForward || isCandidateAdmin) {
+    if (
+      isCandidateAutomaticForward ||
+      candidateMember?.status === "administrator" ||
+      candidateMember?.status === "creator" ||
+      candidateSenderChat?.id === ctx.chat.id
+    ) {
       await ctx.reply(t("warnings:cannotWarnAdmin"), { reply_to_message_id: messageId });
       return; // Candidate is an admin, return.
     }
@@ -232,12 +237,18 @@ export class Warnings implements BasicModule {
       ctx.deleteMessage(messageId).catch(() => false),
     ]);
 
-    const isWarningExist = await this.database.warning.findFirst({
+    // Delete the message with a delay to let users know the reason
+    setTimeout(() => {
+      // An expected error may happen when bot has no enough permissions
+      ctx.deleteMessage(replyToMessage.message_id).catch(() => false);
+    }, DELETE_MESSAGE_DELAY);
+
+    const existedWarning = await this.database.warning.findFirst({
       select: { id: true },
       where: { chatId: chat.id, messageId: replyToMessage.message_id, userId: from.id },
     });
-    if (isWarningExist) {
-      return; // The warning has been already issued for this message, return.
+    if (candidateMember?.status === "kicked" || existedWarning) {
+      return;
     }
 
     const [, , warnings] = await this.database.$transaction([
@@ -265,12 +276,6 @@ export class Warnings implements BasicModule {
       parse_mode: "HTML",
       reply_to_message_id: replyToMessage.message_id,
     });
-
-    // Delete the message with a delay to let users know the reason
-    setTimeout(() => {
-      // An expected error may happen when bot has no enough permissions
-      ctx.deleteMessage(replyToMessage.message_id).catch(() => false);
-    }, DELETE_MESSAGE_DELAY);
 
     if (warnings.length >= WARNINGS_LIMIT) {
       await this.applyPenalties(ctx);

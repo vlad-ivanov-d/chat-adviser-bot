@@ -59,7 +59,7 @@ export interface PaginationParams {
 }
 
 /**
- * Gets pagination buttons
+ * Gets pagination buttons.
  * @param action User action
  * @param {PaginationParams} params Pagination parameters
  * @returns Buttons
@@ -78,7 +78,7 @@ export const getPagination = (action: string, { count, skip, take }: PaginationP
 };
 
 /**
- * Gets chat display title
+ * Gets chat display title.
  * @param chat Chat or sender chat
  * @returns Returns display title
  */
@@ -106,7 +106,7 @@ export const getChatDisplayTitle = (chat: Chat | SenderChat): string => {
 };
 
 /**
- * Gets chat link
+ * Gets chat link.
  * @param chat Chat or sender chat
  * @returns Returns link
  */
@@ -119,7 +119,7 @@ export const getChatHtmlLink = (chat: Chat | SenderChat): string => {
 };
 
 /**
- * Tries to resolve Telegram error code from unknown error
+ * Tries to resolve Telegram error code from unknown error.
  * @param error Unknown error
  * @returns Telegram error code or undefined
  */
@@ -139,7 +139,7 @@ export const getErrorCode = (error: unknown): number | undefined => {
 };
 
 /**
- * Gets user display name
+ * Gets user display name.
  * @param user User
  * @param format Name format
  * @returns User display name
@@ -157,7 +157,7 @@ export const getUserDisplayName = (user: User | PrismaUser, format: "full" | "sh
 };
 
 /**
- * Gets user full name
+ * Gets user full name.
  * @param user User
  * @returns User full name
  */
@@ -168,7 +168,7 @@ export const getUserFullName = (user: User | PrismaUser): string => {
 };
 
 /**
- * Gets the link to user
+ * Gets the link to user.
  * @param user User
  * @returns Returns user link HTML
  */
@@ -195,7 +195,7 @@ export const encodeText = (text: string): string =>
   text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 
 /**
- * Check if the user is chat admin
+ * Check if the user is chat admin.
  * @param telegram Telegram instance
  * @param chatId Chat id
  * @param userId User id
@@ -214,11 +214,11 @@ export const isChatAdmin = async (telegram: Telegram, chatId: number, userId: nu
         return undefined;
     }
   });
-  return member && ["administrator", "creator"].includes(member.status);
+  return member && (member.status === "administrator" || member.status === "creator");
 };
 
 /**
- * Check if the user is chat member
+ * Check if the user is chat member.
  * @param telegram Telegram instance
  * @param chatId Chat id
  * @param userId User id
@@ -245,7 +245,7 @@ export const isChatMember = async (
 };
 
 /**
- * Kicks user from the chat
+ * Kicks user from the chat.
  * @param bot Telegraf bot instance
  * @param chatId Chat id
  * @param userId User id
