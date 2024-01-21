@@ -8,6 +8,7 @@ import { ProfanityFilter } from "modules/profanityFilter";
 import { Settings } from "modules/settings";
 import { TimeZone } from "modules/timeZone";
 import { Voteban } from "modules/voteban";
+import { Warnings } from "modules/warnings";
 import { Telegraf } from "telegraf";
 import { BOT_TOKEN } from "utils/envs";
 
@@ -27,6 +28,7 @@ export class App {
   private settings?: Settings;
   private timeZone?: TimeZone;
   private voteban?: Voteban;
+  private warnings?: Warnings;
 
   /**
    * Creates app module
@@ -71,6 +73,9 @@ export class App {
 
     this.voteban = new Voteban(this.bot, this.database, this.settings);
     this.voteban.init();
+
+    this.warnings = new Warnings(this.bot, this.database, this.settings);
+    this.warnings.init();
   }
 
   /**
@@ -92,6 +97,7 @@ export class App {
     this.cleanup?.shutdown();
     this.messages?.shutdown();
     this.voteban?.shutdown();
+    this.warnings?.shutdown();
     if (stopBot) {
       this.bot.stop();
     }

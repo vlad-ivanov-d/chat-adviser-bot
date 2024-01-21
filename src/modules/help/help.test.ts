@@ -1,11 +1,11 @@
 import { App } from "app";
 import { http, type HttpHandler, HttpResponse } from "msw";
 import type { Telegraf } from "telegraf";
-import { MESSAGE_DATE } from "test/constants";
+import { BASE_URL, MESSAGE_DATE } from "test/constants";
 import { mockBot } from "test/mockBot";
 import { mockPrivateChat, mockSupergroupChat } from "test/mockChat";
-import { mockUser } from "test/mockUser";
-import { BASE_URL, server } from "test/setup";
+import { mockAdminUser } from "test/mockUser";
+import { server } from "test/setup";
 
 const privateChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
   HttpResponse.json({
@@ -16,7 +16,7 @@ const privateChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =
           chat: mockPrivateChat(),
           date: MESSAGE_DATE,
           entities: [{ length: 5, offset: 0, type: "bot_command" }],
-          from: mockUser(),
+          from: mockAdminUser(),
           message_id: 1,
           text: "/start",
         },
@@ -35,7 +35,7 @@ const supergroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, (
           chat: mockSupergroupChat(),
           date: MESSAGE_DATE,
           entities: [{ length: 5, offset: 0, type: "bot_command" }],
-          from: mockUser(),
+          from: mockAdminUser(),
           message_id: 1,
           text: "/help",
         },

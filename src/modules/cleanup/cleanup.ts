@@ -26,6 +26,7 @@ export class Cleanup implements BasicModule {
   public init(): void {
     this.bot.on(message("left_chat_member"), async (ctx, next): Promise<void> => {
       if (ctx.update.message.left_chat_member.id === ctx.botInfo.id) {
+        this.database.removeUpsertChatCache(ctx.chat.id);
         await this.database.chat.deleteMany({ where: { id: ctx.chat.id } });
       }
       await next();
@@ -55,7 +56,13 @@ export class Cleanup implements BasicModule {
    */
   private async cleanupSenderChats(): Promise<void> {
     await this.database.senderChat.deleteMany({
-      where: { AND: [{ votebanAuthorSenderChats: { none: {} } }, { votebanCandidateSenderChats: { none: {} } }] },
+      where: {
+        AND: [
+          { votebanAuthorSenderChats: { none: {} } },
+          { votebanCandidateSenderChats: { none: {} } },
+          { warningSenderChats: { none: {} } },
+        ],
+      },
     });
   }
 
@@ -87,6 +94,9 @@ export class Cleanup implements BasicModule {
           { votebanEditors: { none: {} } },
           { votebanNoBanVoterAuthors: { none: {} } },
           { votebanNoBanVoterEditors: { none: {} } },
+          { warningAuthors: { none: {} } },
+          { warningEditors: { none: {} } },
+          { warningUsers: { none: {} } },
         ],
       },
     });
@@ -115,6 +125,9 @@ export class Cleanup implements BasicModule {
           { votebanEditors: { none: {} } },
           { votebanNoBanVoterAuthors: { none: {} } },
           { votebanNoBanVoterEditors: { none: {} } },
+          { warningAuthors: { none: {} } },
+          { warningEditors: { none: {} } },
+          { warningUsers: { none: {} } },
         ],
       },
     });

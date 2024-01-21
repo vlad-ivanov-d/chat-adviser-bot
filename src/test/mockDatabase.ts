@@ -4,7 +4,7 @@ import { NODE_ENV } from "utils/envs";
 import { getChatDisplayTitle } from "utils/telegraf";
 
 import { mockPrivateChat, mockSupergroupChat } from "./mockChat";
-import { mockUser } from "./mockUser";
+import { mockAdminUser, mockUser } from "./mockUser";
 
 /**
  * Prisma client
@@ -27,17 +27,17 @@ export const cleanupDb = async (): Promise<void> => {
  * @param chat Private chat which will be merged with the default one
  */
 export const createDbPrivateChat = async (chat?: Partial<Chat>): Promise<void> => {
-  await createDbUser();
+  await createDbAdminUser();
   await prisma.chat.create({
     data: {
-      authorId: chat?.authorId ?? mockUser().id,
+      authorId: chat?.authorId ?? mockAdminUser().id,
       displayTitle: getChatDisplayTitle({
         ...mockPrivateChat(),
         first_name: chat?.firstName ?? mockPrivateChat().first_name,
         last_name: typeof chat?.lastName === "undefined" ? mockPrivateChat().last_name : chat.lastName ?? undefined,
         username: typeof chat?.username === "undefined" ? mockPrivateChat().username : chat.username ?? undefined,
       }),
-      editorId: chat?.editorId ?? mockUser().id,
+      editorId: chat?.editorId ?? mockAdminUser().id,
       id: chat?.id ?? mockPrivateChat().id,
       language: LanguageCode.EN,
       membersCount: 2,
@@ -54,17 +54,17 @@ export const createDbPrivateChat = async (chat?: Partial<Chat>): Promise<void> =
  * @param chat Supergroup chat which will be merged with the default one
  */
 export const createDbSupergroupChat = async (chat?: Partial<Chat>): Promise<void> => {
-  await createDbUser();
+  await createDbAdminUser();
   await prisma.chat.create({
     data: {
-      admins: { connect: { id: mockUser().id } },
-      authorId: mockUser().id,
+      admins: { connect: { id: mockAdminUser().id } },
+      authorId: mockAdminUser().id,
       displayTitle: getChatDisplayTitle({
         ...mockSupergroupChat(),
         title: chat?.title ?? mockSupergroupChat().title,
         username: typeof chat?.username === "undefined" ? mockSupergroupChat().username : chat.username ?? undefined,
       }),
-      editorId: mockUser().id,
+      editorId: mockAdminUser().id,
       id: chat?.id ?? mockSupergroupChat().id,
       language: LanguageCode.EN,
       membersCount: 2,
@@ -78,12 +78,20 @@ export const createDbSupergroupChat = async (chat?: Partial<Chat>): Promise<void
 };
 
 /**
- * Creates database user
+ * Creates database chat admin user
  * @param user Telegram user which will be merged with the default one
  */
-export const createDbUser = async (user?: Partial<User>): Promise<void> => {
-  const userPayload: User = { ...mockUser(), ...user };
+export const createDbAdminUser = async (user?: Partial<User>): Promise<void> => {
+  const userPayload: User = { ...mockAdminUser(), ...user };
   await prisma.user.create({
     data: { authorId: userPayload.id, editorId: userPayload.id, firstName: userPayload.first_name, id: userPayload.id },
   });
+};
+
+/**
+ * Creates database chat user
+ * @param user Telegram user which will be merged with the default one
+ */
+export const createDbUser = async (user?: Partial<User>): Promise<void> => {
+  await createDbAdminUser({ ...mockUser(), ...user });
 };

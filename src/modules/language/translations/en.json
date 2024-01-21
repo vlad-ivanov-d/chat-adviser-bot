@@ -11,6 +11,7 @@
     "userBanned": "User {{USER}} has been banned for adding a bot to the chat."
   },
   "common": {
+    "commandForAdmins": "This command is only available to administrators.",
     "commandForPrivateChat": "Send this command to me in <a href=\"{{BOT_LINK}}\">private messages</a> and I'll help you to configure your chats.",
     "commandNotForPrivateChats": "This command is not for private chats.",
     "help": "Hello! I'm a bot that helps to moderate chats.\n\n<b>Getting started:</b>\n1. add me to chat\n2. give me administrator permissions\n3. send a <a href=\"{{BOT_LINK}}\">private message</a> command /mychats and I will help you set up your chat\n\n<b>Feature list:</b> ban voting, profanity filter, restriction on adding bots, support for different languages.\nI'll tell about each feature in more detail during setup.\n\nYou can call this message again at any time using the /help command.",
@@ -78,5 +79,17 @@
     "tip": "<b>Tip:</b> Don't set your vote limit too low. Otherwise, a user who has several Telegram accounts will be able to virtually single-handedly collect the required number of votes and block other chat members.",
     "trimmedUsers": "{{USERS}} and others",
     "voteCounted": "Your vote has been counted"
+  },
+  "warnings": {
+    "cannotWarnAdmin": "I can't issue a warning to the administrator. It would be incorrect.",
+    "cannotWarnMyself": "I can't issue a warning to myself. This would be weird.",
+    "disable": "Disable",
+    "disabled": "disabled",
+    "enable": "Enable",
+    "enabled": "enabled",
+    "featureName": "Warnings",
+    "replyToSomeonesMessage": "You should respond with this command to a message that you consider incorrect in order to issue a warning to the user.",
+    "set": "<b>Warnings</b>\nI can issue warnings to users upon admin command. To give a warning to a user, respond to their message with the appropriate command. In this case, the user's message will be deleted. Each warning is valid for 90 days, then it is automatically removed. If 3 warnings are received, the user will be banned. A warning cannot be issued to an administrator.\n/warn - issue a warning\n\nEnable warnings in {{CHAT}} chat?\n\nCurrent value: <b>{{VALUE}}</b>",
+    "text": "{{USER}}, you are receiving a warning for violating the rules. The warning is valid for 90 days. If you receive {{WARNINGS_LIMIT}} warnings, you will be banned.\n\nNumber of warnings: <b>{{WARNINGS_COUNT}} of {{WARNINGS_LIMIT}}</b>"
   }
 }

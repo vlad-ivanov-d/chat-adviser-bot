@@ -3,12 +3,14 @@ import { DATE_FORMAT } from "constants/dates";
 import { formatInTimeZone } from "date-fns-tz";
 import { http, type HttpHandler, HttpResponse } from "msw";
 import type { Telegraf } from "telegraf";
-import { MESSAGE_DATE } from "test/constants";
-import { createDbSupergroupChat } from "test/database";
+import { BASE_URL, MESSAGE_DATE } from "test/constants";
 import { mockBot, mockChannelBot } from "test/mockBot";
 import { mockChannelChat, mockPrivateChat, mockSupergroupChat } from "test/mockChat";
-import { mockUser } from "test/mockUser";
-import { BASE_URL, server } from "test/setup";
+import { createDbSupergroupChat } from "test/mockDatabase";
+import { mockAdminUser } from "test/mockUser";
+import { server } from "test/setup";
+
+import { MessagesOnBehalfOfChannelsAction } from "./messagesOnBehalfOfChannels.types";
 
 const cbSaveSettingsErrorHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
   HttpResponse.json({
@@ -17,8 +19,8 @@ const cbSaveSettingsErrorHandler: HttpHandler = http.post(`${BASE_URL}/getUpdate
       {
         callback_query: {
           chat_instance: "1",
-          data: `cfg-moboc-sv?chatId=error_id&v=FILTER`,
-          from: mockUser(),
+          data: `${MessagesOnBehalfOfChannelsAction.SAVE}?chatId=error_id&v=FILTER`,
+          from: mockAdminUser(),
           id: "1",
           message: {
             chat: mockPrivateChat(),
@@ -42,8 +44,8 @@ const cbSaveSettingsHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, (
       {
         callback_query: {
           chat_instance: "1",
-          data: `cfg-moboc-sv?chatId=${mockSupergroupChat().id}&v=FILTER`,
-          from: mockUser(),
+          data: `${MessagesOnBehalfOfChannelsAction.SAVE}?chatId=${mockSupergroupChat().id}&v=FILTER`,
+          from: mockAdminUser(),
           id: "1",
           message: {
             chat: mockPrivateChat(),
@@ -67,8 +69,8 @@ const cbSettingsErrorHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, 
       {
         callback_query: {
           chat_instance: "1",
-          data: `cfg-moboc?chatId=error_id`,
-          from: mockUser(),
+          data: `${MessagesOnBehalfOfChannelsAction.SETTINGS}?chatId=error_id`,
+          from: mockAdminUser(),
           id: "1",
           message: {
             chat: mockPrivateChat(),
@@ -92,8 +94,8 @@ const cbSettingsHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
       {
         callback_query: {
           chat_instance: "1",
-          data: `cfg-moboc?chatId=${mockSupergroupChat().id}`,
-          from: mockUser(),
+          data: `${MessagesOnBehalfOfChannelsAction.SETTINGS}?chatId=${mockSupergroupChat().id}`,
+          from: mockAdminUser(),
           id: "1",
           message: {
             chat: mockPrivateChat(),
@@ -110,15 +112,7 @@ const cbSettingsHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
   }),
 );
 
-const chatAdminsHandler: HttpHandler = http.post(`${BASE_URL}/getChatAdministrators`, () =>
-  HttpResponse.json({ ok: true, result: [{ is_anonymous: false, status: "creator", user: mockUser() }] }),
-);
-
-const getSupergroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getChat`, () =>
-  HttpResponse.json({ ok: true, result: mockSupergroupChat() }),
-);
-
-const supergroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
+const messageHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
   HttpResponse.json({
     ok: true,
     result: [
@@ -137,6 +131,15 @@ const supergroupChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, (
   }),
 );
 
+const featureDescription =
+  "<b>Messages On Behalf Of Channels</b>\n" +
+  "I can filter messages on behalf of channels (not to be confused with forwarded messages). " +
+  "Users who have their own Telegram channels can write in public chats on behalf of the channels. " +
+  "In this way, they can make additional advertising for themselves or simply anonymize messages " +
+  "without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel " +
+  "and write on its behalf.\n\nEnable message filter on behalf of channels in " +
+  `@${mockSupergroupChat().username} chat?\n\n`;
+
 describe("MessagesOnBehalfOfChannels", () => {
   let app: App;
   let bot: Telegraf;
@@ -151,7 +154,7 @@ describe("MessagesOnBehalfOfChannels", () => {
   });
 
   it("filters messages on behalf of channels in a new supergroup chat", async () => {
-    server.use(supergroupChatHandler);
+    server.use(messageHandler);
 
     let banChatSenderChatSpy;
     let deleteMessageSpy;
@@ -171,7 +174,7 @@ describe("MessagesOnBehalfOfChannels", () => {
 
   it("doesn't filter messages on behalf of channels if the feature is disabled", async () => {
     await createDbSupergroupChat();
-    server.use(supergroupChatHandler);
+    server.use(messageHandler);
 
     let banChatSenderChatSpy;
     let deleteMessageSpy;
@@ -189,7 +192,7 @@ describe("MessagesOnBehalfOfChannels", () => {
 
   it("renders settings", async () => {
     await createDbSupergroupChat();
-    server.use(cbSettingsHandler, chatAdminsHandler, getSupergroupChatHandler);
+    server.use(cbSettingsHandler);
 
     let answerCbQuerySpy;
     let editMessageTextSpy;
@@ -204,30 +207,21 @@ describe("MessagesOnBehalfOfChannels", () => {
     expect(answerCbQuerySpy).toHaveBeenCalledTimes(1);
     expect(answerCbQuerySpy).toHaveBeenCalledWith();
     expect(editMessageTextSpy).toHaveBeenCalledTimes(1);
-    expect(editMessageTextSpy).toHaveBeenCalledWith(
-      "<b>Messages On Behalf Of Channels</b>\n" +
-        "I can filter messages on behalf of channels (not to be confused with forwarded messages). " +
-        "Users who have their own Telegram channels can write in public chats on behalf of the channels. " +
-        "In this way, they can make additional advertising for themselves or simply anonymize messages " +
-        "without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel " +
-        "and write on its behalf.\n\nEnable message filter on behalf of channels in " +
-        `@${mockSupergroupChat().username} chat?\n\nCurrent value: <b>filter disabled</b>`,
-      {
-        parse_mode: "HTML",
-        reply_markup: {
-          inline_keyboard: [
-            [{ callback_data: `cfg-moboc-sv?chatId=${mockSupergroupChat().id}&v=FILTER`, text: "Enable filter" }],
-            [{ callback_data: `cfg-moboc-sv?chatId=${mockSupergroupChat().id}`, text: "Disable filter" }],
-            [{ callback_data: `cfg-ftrs?chatId=${mockSupergroupChat().id}`, text: "« Back to features" }],
-          ],
-        },
+    expect(editMessageTextSpy).toHaveBeenCalledWith(`${featureDescription}Current value: <b>filter disabled</b>`, {
+      parse_mode: "HTML",
+      reply_markup: {
+        inline_keyboard: [
+          [{ callback_data: `cfg-moboc-sv?chatId=${mockSupergroupChat().id}&v=FILTER`, text: "Enable filter" }],
+          [{ callback_data: `cfg-moboc-sv?chatId=${mockSupergroupChat().id}`, text: "Disable filter" }],
+          [{ callback_data: `cfg-ftrs?chatId=${mockSupergroupChat().id}`, text: "« Back to features" }],
+        ],
       },
-    );
+    });
   });
 
   it("saves settings", async () => {
     await createDbSupergroupChat();
-    server.use(cbSaveSettingsHandler, chatAdminsHandler, getSupergroupChatHandler);
+    server.use(cbSaveSettingsHandler);
 
     let answerCbQuerySpy;
     let editMessageTextSpy;
@@ -244,15 +238,9 @@ describe("MessagesOnBehalfOfChannels", () => {
     expect(answerCbQuerySpy).toHaveBeenNthCalledWith(2);
     expect(editMessageTextSpy).toHaveBeenCalledTimes(1);
     expect(editMessageTextSpy).toHaveBeenCalledWith(
-      "<b>Messages On Behalf Of Channels</b>\n" +
-        "I can filter messages on behalf of channels (not to be confused with forwarded messages). " +
-        "Users who have their own Telegram channels can write in public chats on behalf of the channels. " +
-        "In this way, they can make additional advertising for themselves or simply anonymize messages " +
-        "without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel " +
-        "and write on its behalf.\n\nEnable message filter on behalf of channels in " +
-        `@${mockSupergroupChat().username} chat?\n\nCurrent value: <b>filter enabled</b>\n` +
+      `${featureDescription}Current value: <b>filter enabled</b>\n` +
         `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
-        `by <a href="tg:user?id=${mockUser().id}">@${mockUser().username}</a>`,
+        `by <a href="tg:user?id=${mockAdminUser().id}">@${mockAdminUser().username}</a>`,
       {
         parse_mode: "HTML",
         reply_markup: {

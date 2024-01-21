@@ -1,4 +1,4 @@
-import { ChatSettingName, ChatType, type User } from "@prisma/client";
+import { ChatSettingName, type User } from "@prisma/client";
 import { CronJob } from "cron";
 import { changeLanguage, t, type TOptions } from "i18next";
 import { type Database, MAX_INT } from "modules/database";
@@ -39,17 +39,6 @@ export class Voteban implements BasicModule {
    * Initiates voteban module
    */
   public init(): void {
-    this.cleanupCronJob = new CronJob(
-      "0 0 0 * * *", // Every day at 00:00:00
-      () => {
-        void (async () => {
-          const date = new Date(Date.now() - EXPIRED_VOTEBAN_TIMEOUT);
-          await this.database.voteban.deleteMany({ where: { createdAt: { lt: date } } });
-        })();
-      },
-      null,
-      true,
-    );
     this.bot.hears(/^(\/)?voteban$/i, (ctx) => this.votebanCommand(ctx));
     this.bot.on(callbackQuery("data"), async (ctx, next) => {
       const { action, chatId, valueNum } = getCallbackQueryParams(ctx);
@@ -68,6 +57,17 @@ export class Voteban implements BasicModule {
           await next();
       }
     });
+    this.cleanupCronJob = new CronJob(
+      "0 0 0 * * *", // Every day at 00:00:00
+      () => {
+        void (async () => {
+          const date = new Date(Date.now() - EXPIRED_VOTEBAN_TIMEOUT);
+          await this.database.voteban.deleteMany({ where: { createdAt: { lt: date } } });
+        })();
+      },
+      null,
+      true,
+    );
   }
 
   /**
@@ -140,7 +140,7 @@ export class Voteban implements BasicModule {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    const dbChat = await this.settings.resolveChat(ctx, chatId);
     if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -204,7 +204,7 @@ export class Voteban implements BasicModule {
 
     const { language } = await this.database.upsertChat(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const dbChat = await this.settings.resolveDatabaseChat(ctx, chatId);
+    const dbChat = await this.settings.resolveChat(ctx, chatId);
     if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
@@ -235,8 +235,8 @@ export class Voteban implements BasicModule {
           authorSenderChat: true,
           banVoters: { orderBy: { createdAt: "asc" }, select: { author: true } },
           candidate: true,
+          candidateMediaGroupId: true,
           candidateSenderChat: true,
-          mediaGroupId: true,
           noBanVoters: { orderBy: { createdAt: "asc" }, select: { author: true } },
         },
         where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
@@ -244,7 +244,8 @@ export class Voteban implements BasicModule {
     ]);
     await changeLanguage(chat.language);
 
-    const { author, authorSenderChat, banVoters, candidate, candidateSenderChat, mediaGroupId, noBanVoters } = voting;
+    const { author, authorSenderChat, banVoters, candidate, candidateMediaGroupId, candidateSenderChat, noBanVoters } =
+      voting;
     const authorLink = getUserOrChatHtmlLink(author, authorSenderChat);
     const candidateLink = getUserOrChatHtmlLink(candidate, candidateSenderChat);
     const isBan = banVoters.length > noBanVoters.length;
@@ -281,7 +282,7 @@ export class Voteban implements BasicModule {
         }),
         ctx.editMessageText([questionMsg, resultsMsg].join("\n\n"), { parse_mode: "HTML" }),
         ctx.reply(t("voteban:completed"), { reply_to_message_id: message.message_id }),
-        isBan && this.deleteMessages(ctx, candidateMessageId, mediaGroupId),
+        isBan && this.deleteMessages(ctx, candidateMessageId, candidateMediaGroupId),
         // An expected error may happen if there are no enough permissions
         isBan && candidateSenderChat && ctx.banChatSenderChat(candidateSenderChat.id).catch(() => undefined),
         isBan && !candidateSenderChat && ctx.banChatMember(candidate.id).catch(() => undefined),
@@ -313,8 +314,8 @@ export class Voteban implements BasicModule {
       throw new Error("Message is not defined to save the vote for voteban.");
     }
 
-    const [isChatExists, isVoterChatMember, voting] = await Promise.all([
-      this.database.isChatExists(message.chat.id),
+    const [existedChat, isVoterChatMember, voting] = await Promise.all([
+      this.database.chat.findUnique({ select: { id: true }, where: { id: message.chat.id } }),
       isChatMember(ctx.telegram, message.chat.id, from.id),
       this.database.voteban.findUnique({
         select: {
@@ -327,7 +328,7 @@ export class Voteban implements BasicModule {
     ]);
 
     // Do not upsert chat if it's not found. It means that bot was removed from the chat.
-    const chat = isChatExists ? await this.database.upsertChat(message.chat, from) : undefined;
+    const chat = existedChat ? await this.database.upsertChat(message.chat, from) : undefined;
     const lng = chat?.language ?? this.database.resolveLanguage(from.language_code);
     await changeLanguage(lng);
     if (!chat || !voting) {
@@ -382,6 +383,13 @@ export class Voteban implements BasicModule {
     const { from, message_id: messageId, sender_chat: fromSenderChat, reply_to_message: replyToMessage } = ctx.message;
     const candidate = replyToMessage?.from;
     const candidateSenderChat = replyToMessage?.sender_chat;
+    const isCandidateAutomaticForward =
+      !!replyToMessage && "is_automatic_forward" in replyToMessage && !!replyToMessage.is_automatic_forward;
+
+    if (ctx.message.chat.type === "private") {
+      await ctx.reply(t("common:commandNotForPrivateChats"));
+      return; // Private chat, return.
+    }
 
     const [chat, isCandidateAdmin] = await Promise.all([
       this.database.upsertChat(ctx.chat, from),
@@ -392,10 +400,6 @@ export class Voteban implements BasicModule {
     ]);
     await changeLanguage(chat.language);
 
-    if (chat.type === ChatType.PRIVATE) {
-      await ctx.reply(t("common:commandNotForPrivateChats"));
-      return; // Private chat, return.
-    }
     if (!chat.votebanLimit) {
       return; // The feature is disabled, return.
     }
@@ -411,7 +415,7 @@ export class Voteban implements BasicModule {
       await ctx.reply(t("voteban:cannotVoteAgainstMyself"), { reply_to_message_id: messageId });
       return; // Candidate is the bot itself, return.
     }
-    if (isCandidateAdmin) {
+    if (isCandidateAutomaticForward || isCandidateAdmin) {
       await ctx.reply(t("voteban:cannotVoteAgainstAdmin"), { reply_to_message_id: messageId });
       return; // Candidate is an admin, return.
     }
@@ -447,10 +451,10 @@ export class Voteban implements BasicModule {
           // Do not accept vote from sender chat
           banVoters: fromSenderChat ? undefined : { create: { authorId: from.id, editorId: from.id } },
           candidateId: candidate.id,
+          candidateMediaGroupId: "media_group_id" in replyToMessage ? replyToMessage.media_group_id : undefined,
           candidateSenderChatId: candidateSenderChat?.id,
           chatId: chat.id,
           editorId: from.id,
-          mediaGroupId: "media_group_id" in replyToMessage ? replyToMessage.media_group_id : undefined,
           messageId: reply.message_id,
         },
         select: { id: true },
