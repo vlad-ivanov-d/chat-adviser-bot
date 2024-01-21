@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.15.0 (2024-xx-xx)
+## 1.15.0 (2024-01-22)
 
 - Improvement: Warnings feature
 - Other: internal improvements
