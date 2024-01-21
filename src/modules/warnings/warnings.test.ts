@@ -14,6 +14,31 @@ import { sleep } from "test/utils";
 import { DELETE_MESSAGE_DELAY, WARNINGS_LIMIT } from "./warnings.constants";
 import { WarningsAction } from "./warnings.types";
 
+const cbSaveSettingsErrorHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
+  HttpResponse.json({
+    ok: true,
+    result: [
+      {
+        callback_query: {
+          chat_instance: "1",
+          data: `${WarningsAction.SAVE}?chatId=error_id&v=true`,
+          from: mockAdminUser(),
+          id: "1",
+          message: {
+            chat: mockPrivateChat(),
+            date: MESSAGE_DATE,
+            edit_date: MESSAGE_DATE,
+            from: mockBot(),
+            message_id: 1,
+            text: "Warnings",
+          },
+        },
+        update_id: 1,
+      },
+    ],
+  }),
+);
+
 const cbSaveSettingsHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
   HttpResponse.json({
     ok: true,
@@ -31,6 +56,31 @@ const cbSaveSettingsHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, (
             from: mockBot(),
             message_id: 1,
             text: "Warnings",
+          },
+        },
+        update_id: 1,
+      },
+    ],
+  }),
+);
+
+const cbSettingsErrorHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
+  HttpResponse.json({
+    ok: true,
+    result: [
+      {
+        callback_query: {
+          chat_instance: "1",
+          data: `${WarningsAction.SETTINGS}?chatId=error_id`,
+          from: mockAdminUser(),
+          id: "1",
+          message: {
+            chat: mockPrivateChat(),
+            date: MESSAGE_DATE,
+            edit_date: MESSAGE_DATE,
+            from: mockBot(),
+            message_id: 1,
+            text: "Select the feature",
           },
         },
         update_id: 1,
@@ -257,5 +307,21 @@ describe("Warnings", () => {
 
     expect(replySpy).toHaveBeenCalledTimes(1);
     expect(replySpy).toHaveBeenCalledWith("This command is not for private chats.");
+  });
+
+  it("throws an error if chat id is incorrect during settings rendering", async () => {
+    server.use(cbSettingsErrorHandler);
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+
+    await expect(() => app.initAndProcessUpdates()).rejects.toThrow("Chat is not defined to render warnings settings.");
+    expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("throws an error if chat id is incorrect during settings saving", async () => {
+    server.use(cbSaveSettingsErrorHandler);
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+
+    await expect(() => app.initAndProcessUpdates()).rejects.toThrow("Chat is not defined to save warnings settings.");
+    expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
   });
 });
