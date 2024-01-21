@@ -146,7 +146,25 @@ const warnCommandHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =
           },
           text: "/warn",
         },
-        update_id: 3,
+        update_id: 1,
+      },
+    ],
+  }),
+);
+
+const warnWithNoReplyCommandHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
+  HttpResponse.json({
+    ok: true,
+    result: [
+      {
+        message: {
+          chat: mockSupergroupChat(),
+          date: MESSAGE_DATE,
+          from: mockAdminUser(),
+          message_id: 1,
+          text: "/warn",
+        },
+        update_id: 1,
       },
     ],
   }),
@@ -216,6 +234,21 @@ describe("Warnings", () => {
     expect(deleteMessageSpy).toHaveBeenCalledTimes(2);
     expect(deleteMessageSpy).toHaveBeenCalledWith(3);
   }, 15000);
+
+  it("ignores warn command if the feature is disabled", async () => {
+    await createDbSupergroupChat();
+    server.use(warnWithNoReplyCommandHandler);
+
+    let replySpy;
+    bot.use(async (ctx, next) => {
+      replySpy = jest.spyOn(ctx, "reply").mockImplementation();
+      await next();
+    });
+
+    await app.initAndProcessUpdates();
+
+    expect(replySpy).toHaveBeenCalledTimes(0);
+  });
 
   it("renders settings", async () => {
     await createDbSupergroupChat();
@@ -292,6 +325,26 @@ describe("Warnings", () => {
         },
       },
     );
+  });
+
+  it("says if the user has no admin permissions", async () => {
+    server.use(
+      http.post(`${BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
+      warnCommandHandler,
+    );
+
+    let replySpy;
+    bot.use(async (ctx, next) => {
+      replySpy = jest.spyOn(ctx, "reply").mockImplementation();
+      await next();
+    });
+
+    await app.initAndProcessUpdates();
+
+    expect(replySpy).toHaveBeenCalledTimes(1);
+    expect(replySpy).toHaveBeenCalledWith("I need administrator permissions for this feature to work.", {
+      reply_to_message_id: 4,
+    });
   });
 
   it("tells warn command is not for a private chat", async () => {

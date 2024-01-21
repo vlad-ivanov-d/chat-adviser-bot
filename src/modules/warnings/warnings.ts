@@ -204,13 +204,13 @@ export class Warnings implements BasicModule {
     if (!chat.hasWarnings) {
       return; // The feature is disabled, return.
     }
-    if (!this.database.isChatAdmin(chat, from.id, senderChat?.id)) {
-      await ctx.reply(t("common:commandForAdmins"), { reply_to_message_id: messageId });
-      return; // The user is not an admin, return.
-    }
     if (!this.database.isChatAdmin(chat, ctx.botInfo.id)) {
       await ctx.reply(t("common:needAdminPermissions"), { reply_to_message_id: messageId });
       return; // Bot is not an admin, return.
+    }
+    if (!this.database.isChatAdmin(chat, from.id, senderChat?.id)) {
+      await ctx.reply(t("common:commandForAdmins"), { reply_to_message_id: messageId });
+      return; // The user is not an admin, return.
     }
     if (!candidate) {
       await ctx.reply(t("warnings:replyToSomeonesMessage"), { reply_to_message_id: messageId });
