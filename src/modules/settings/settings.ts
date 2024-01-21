@@ -9,6 +9,7 @@ import { MessagesOnBehalfOfChannelsAction } from "modules/messagesOnBehalfOfChan
 import { ProfanityFilterAction } from "modules/profanityFilter/profanityFilter.types";
 import { TimeZoneAction } from "modules/timeZone/timeZone.types";
 import { VotebanAction } from "modules/voteban/voteban.types";
+import { WarningsAction } from "modules/warnings/warnings.types";
 import type { Telegraf } from "telegraf";
 import { callbackQuery, message } from "telegraf/filters";
 import type { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
@@ -248,6 +249,9 @@ export class Settings implements BasicModule {
     const votebanButton: InlineKeyboardButton[] = [
       { callback_data: `${VotebanAction.SETTINGS}?chatId=${chatId}`, text: t("voteban:featureName") },
     ];
+    const warningsButton: InlineKeyboardButton[] = [
+      { callback_data: `${WarningsAction.SETTINGS}?chatId=${chatId}`, text: t("warnings:featureName") },
+    ];
     const allFeatures: Record<ChatType, InlineKeyboardButton[][]> = {
       [ChatType.CHANNEL]: [languageButton, timeZoneButton],
       [ChatType.GROUP]: [
@@ -257,6 +261,7 @@ export class Settings implements BasicModule {
         profanityFilterButton,
         timeZoneButton,
         votebanButton,
+        warningsButton,
       ],
       [ChatType.PRIVATE]: [languageButton, timeZoneButton],
       [ChatType.SUPERGROUP]: [
@@ -266,6 +271,7 @@ export class Settings implements BasicModule {
         profanityFilterButton,
         timeZoneButton,
         votebanButton,
+        warningsButton,
       ],
       [ChatType.UNKNOWN]: [],
     };

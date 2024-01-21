@@ -24,6 +24,7 @@ export class Messages implements BasicModule {
    * Initiates messages module
    */
   public init(): void {
+    this.bot.on(message(), (ctx, next) => this.saveMessage(ctx, next));
     this.cleanupCronJob = new CronJob(
       "0 0 0 * * *", // Every day at 00:00:00
       () => {
@@ -35,7 +36,6 @@ export class Messages implements BasicModule {
       null,
       true,
     );
-    this.bot.on(message(), (ctx, next) => this.saveMessage(ctx, next));
   }
 
   /**

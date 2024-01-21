@@ -32,6 +32,12 @@ The bot can prevent users from adding bots to chat. This will help avoid spam or
 
 The bot can work in different time zones and display dates in the appropriate format.
 
+### Warnings
+
+The bot can issue warnings to users upon admin command. To give a warning to a user, respond to their message with the appropriate command. In this case, the user's message will be deleted. Each warning is valid for 90 days, then it is automatically removed. If 3 warnings are received, the user will be banned. A warning cannot be issued to an administrator.
+
+/warn - issue a warning
+
 ## Getting Started
 
 ### Prerequisites
@@ -59,7 +65,7 @@ Get more details in [Contributing](./CONTRIBUTING.md)
 
 | Statements                  | Branches                | Functions                 | Lines             |
 | --------------------------- | ----------------------- | ------------------------- | ----------------- |
-| ![Statements](https://img.shields.io/badge/statements-59.9%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-40.19%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-62.99%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-58.4%25-red.svg?style=flat) |
+| ![Statements](https://img.shields.io/badge/statements-62.68%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-42.26%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-65.21%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-61.41%25-red.svg?style=flat) |
 
 ## License
 

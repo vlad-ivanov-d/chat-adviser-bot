@@ -56,7 +56,13 @@ export class Cleanup implements BasicModule {
    */
   private async cleanupSenderChats(): Promise<void> {
     await this.database.senderChat.deleteMany({
-      where: { AND: [{ votebanAuthorSenderChats: { none: {} } }, { votebanCandidateSenderChats: { none: {} } }] },
+      where: {
+        AND: [
+          { votebanAuthorSenderChats: { none: {} } },
+          { votebanCandidateSenderChats: { none: {} } },
+          { warningSenderChats: { none: {} } },
+        ],
+      },
     });
   }
 
@@ -88,6 +94,9 @@ export class Cleanup implements BasicModule {
           { votebanEditors: { none: {} } },
           { votebanNoBanVoterAuthors: { none: {} } },
           { votebanNoBanVoterEditors: { none: {} } },
+          { warningAuthors: { none: {} } },
+          { warningEditors: { none: {} } },
+          { warningUsers: { none: {} } },
         ],
       },
     });
@@ -116,6 +125,9 @@ export class Cleanup implements BasicModule {
           { votebanEditors: { none: {} } },
           { votebanNoBanVoterAuthors: { none: {} } },
           { votebanNoBanVoterEditors: { none: {} } },
+          { warningAuthors: { none: {} } },
+          { warningEditors: { none: {} } },
+          { warningUsers: { none: {} } },
         ],
       },
     });

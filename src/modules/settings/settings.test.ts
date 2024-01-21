@@ -2,12 +2,12 @@ import { App } from "app";
 import { PAGE_SIZE } from "constants/pagination";
 import { http, type HttpHandler, HttpResponse } from "msw";
 import type { Telegraf } from "telegraf";
-import { MESSAGE_DATE } from "test/constants";
+import { BASE_URL, MESSAGE_DATE } from "test/constants";
 import { mockBot } from "test/mockBot";
 import { mockGroupChat, mockPrivateChat, mockSupergroupChat } from "test/mockChat";
 import { createDbPrivateChat } from "test/mockDatabase";
 import { mockAdminUser } from "test/mockUser";
-import { BASE_URL, server } from "test/setup";
+import { server } from "test/setup";
 
 const addedToNewChatHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
   HttpResponse.json({

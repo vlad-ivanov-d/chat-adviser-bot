@@ -3,12 +3,14 @@ import { DATE_FORMAT } from "constants/dates";
 import { formatInTimeZone } from "date-fns-tz";
 import { http, type HttpHandler, HttpResponse } from "msw";
 import type { Telegraf } from "telegraf";
-import { MESSAGE_DATE } from "test/constants";
+import { BASE_URL, MESSAGE_DATE } from "test/constants";
 import { mockBot, mockChannelBot } from "test/mockBot";
 import { mockChannelChat, mockPrivateChat, mockSupergroupChat } from "test/mockChat";
 import { createDbSupergroupChat } from "test/mockDatabase";
 import { mockAdminUser } from "test/mockUser";
-import { BASE_URL, server } from "test/setup";
+import { server } from "test/setup";
+
+import { MessagesOnBehalfOfChannelsAction } from "./messagesOnBehalfOfChannels.types";
 
 const cbSaveSettingsErrorHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
   HttpResponse.json({
@@ -17,7 +19,7 @@ const cbSaveSettingsErrorHandler: HttpHandler = http.post(`${BASE_URL}/getUpdate
       {
         callback_query: {
           chat_instance: "1",
-          data: `cfg-moboc-sv?chatId=error_id&v=FILTER`,
+          data: `${MessagesOnBehalfOfChannelsAction.SAVE}?chatId=error_id&v=FILTER`,
           from: mockAdminUser(),
           id: "1",
           message: {
@@ -42,7 +44,7 @@ const cbSaveSettingsHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, (
       {
         callback_query: {
           chat_instance: "1",
-          data: `cfg-moboc-sv?chatId=${mockSupergroupChat().id}&v=FILTER`,
+          data: `${MessagesOnBehalfOfChannelsAction.SAVE}?chatId=${mockSupergroupChat().id}&v=FILTER`,
           from: mockAdminUser(),
           id: "1",
           message: {
@@ -67,7 +69,7 @@ const cbSettingsErrorHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, 
       {
         callback_query: {
           chat_instance: "1",
-          data: `cfg-moboc?chatId=error_id`,
+          data: `${MessagesOnBehalfOfChannelsAction.SETTINGS}?chatId=error_id`,
           from: mockAdminUser(),
           id: "1",
           message: {
@@ -92,7 +94,7 @@ const cbSettingsHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
       {
         callback_query: {
           chat_instance: "1",
-          data: `cfg-moboc?chatId=${mockSupergroupChat().id}`,
+          data: `${MessagesOnBehalfOfChannelsAction.SETTINGS}?chatId=${mockSupergroupChat().id}`,
           from: mockAdminUser(),
           id: "1",
           message: {

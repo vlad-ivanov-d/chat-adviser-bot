@@ -1,5 +1,5 @@
 /**
- * Chat cache timout in milliseconds - 10 seconds.
+ * Chat cache timout in milliseconds (10 seconds).
  */
 export const CHAT_CACHE_TIMEOUT = 10_000;
 

@@ -2,6 +2,7 @@
 
 ## 1.15.0 (2024-xx-xx)
 
+- Improvement: Warnings feature
 - Other: internal improvements
 
 ## 1.14.0 (2024-01-16)

@@ -2,15 +2,11 @@ import { http, HttpResponse, type HttpResponseResolver, type PathParams } from "
 import { setupServer } from "msw/node";
 import { cache } from "utils/cache";
 
+import { BASE_URL } from "./constants";
 import { mockBot } from "./mockBot";
 import { mockGroupChat, mockPrivateChat, mockSupergroupChat } from "./mockChat";
 import { cleanupDb, prisma } from "./mockDatabase";
 import { mockAdminUser, mockUser } from "./mockUser";
-
-/**
- * Base url for mocking API calls
- */
-export const BASE_URL = `https://api.telegram.org/bot${process.env.BOT_TOKEN}`;
 
 /**
  * Resolves response for /getChatAdministrators endpoint.
@@ -90,6 +86,7 @@ beforeAll(() => {
 afterEach(async () => {
   cache.clear();
   jest.restoreAllMocks();
+  jest.useRealTimers();
   server.resetHandlers();
   await cleanupDb();
 });

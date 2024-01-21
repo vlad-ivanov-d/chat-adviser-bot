@@ -133,7 +133,6 @@ export class Database extends PrismaClient implements BasicModule {
     ]);
 
     const adminIds = admins.map((a) => ({ id: a.user.id }));
-    const isGroupChat = chat.type === "group" || chat.type === "supergroup";
     const update = {
       admins: { set: adminIds },
       displayTitle: getChatDisplayTitle(chat),
@@ -153,13 +152,18 @@ export class Database extends PrismaClient implements BasicModule {
       this.chat.upsert({
         create: {
           ...update,
-          addingBots: isGroupChat ? AddingBotsRule.RESTRICT : undefined,
+          ...(chat.type === "group" || chat.type === "supergroup"
+            ? {
+                addingBots: AddingBotsRule.RESTRICT,
+                hasWarnings: true,
+                messagesOnBehalfOfChannels: MessagesOnBehalfOfChannelsRule.FILTER,
+                profanityFilter: ProfanityFilterRule.FILTER,
+              }
+            : {}),
           admins: { connect: adminIds },
           authorId: editor.id,
           id: chat.id,
           language: this.resolveLanguage(editor.language_code),
-          messagesOnBehalfOfChannels: isGroupChat ? MessagesOnBehalfOfChannelsRule.FILTER : undefined,
-          profanityFilter: isGroupChat ? ProfanityFilterRule.FILTER : undefined,
           timeZone: this.resolveTimeZone(editor.language_code),
         },
         include: { admins: true, chatSettingsHistory: { include: { editor: true } } },

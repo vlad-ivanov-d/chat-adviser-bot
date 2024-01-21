@@ -1,12 +1,12 @@
 import { App } from "app";
 import { http, type HttpHandler, HttpResponse } from "msw";
 import type { Telegraf } from "telegraf";
-import { MESSAGE_DATE } from "test/constants";
+import { BASE_URL, MESSAGE_DATE } from "test/constants";
 import { mockBot } from "test/mockBot";
 import { mockPrivateChat, mockSupergroupChat } from "test/mockChat";
 import { createDbSupergroupChat } from "test/mockDatabase";
 import { mockAdminUser, mockUser } from "test/mockUser";
-import { BASE_URL, server } from "test/setup";
+import { server } from "test/setup";
 
 const botMessageHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
   HttpResponse.json({

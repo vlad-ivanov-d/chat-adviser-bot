@@ -15,6 +15,7 @@ enum AddingBotsRule {
 
 enum ChatSettingName {
   ADDING_BOTS                    @map("adding_bots")
+  HAS_WARNINGS                   @map("has_warnings")
   LANGUAGE                       @map("language")
   MESSAGES_ON_BEHALF_OF_CHANNELS @map("messages_on_behalf_of_channels")
   PROFANITY_FILTER               @map("profanity_filter")
@@ -52,6 +53,7 @@ model Chat {
   displayTitle               String                          @map("display_title")
   editorId                   Float                           @map("editor_id")
   firstName                  String?                         @map("first_name")
+  hasWarnings                Boolean?                        @map("has_warnings")
   language                   LanguageCode
   lastName                   String?                         @map("last_name")
   membersCount               Int                             @map("members_count")
@@ -69,6 +71,7 @@ model Chat {
   editor              User                  @relation("ChatEditor", fields: [editorId], references: [id])
   messages            Message[]
   votebans            Voteban[]
+  warnings            Warning[]
 
   @@index([displayTitle])
   @@map("chats")
@@ -105,7 +108,6 @@ model Message {
   editor User @relation("MessageEditor", fields: [editorId], references: [id])
 
   @@unique([chatId, messageId])
-  @@index([chatId])
   @@index([createdAt])
   @@index([mediaGroupId])
   @@map("messages")
@@ -127,6 +129,7 @@ model SenderChat {
   editor                      User      @relation("SenderChatEditor", fields: [editorId], references: [id])
   votebanAuthorSenderChats    Voteban[] @relation("VotebanAuthorSenderChat")
   votebanCandidateSenderChats Voteban[] @relation("VotebanCandidateSenderChat")
+  warningSenderChats          Warning[] @relation("WarningSenderChat")
 
   @@map("sender_chats")
 }
@@ -181,6 +184,9 @@ model User {
   votebanEditors             Voteban[]             @relation("VotebanEditor")
   votebanNoBanVoterAuthors   VotebanNoBanVoter[]   @relation("VotebanNoBanVoterAuthor")
   votebanNoBanVoterEditors   VotebanNoBanVoter[]   @relation("VotebanNoBanVoterEditor")
+  warningAuthors             Warning[]             @relation("WarningAuthor")
+  warningEditors             Warning[]             @relation("WarningEditor")
+  warningUsers               Warning[]             @relation("WarningUser")
 
   @@map("users")
 }
@@ -191,12 +197,12 @@ model Voteban {
   authorSenderChatId    Float?              @map("author_sender_chat_id")
   banVoters             VotebanBanVoter[]
   candidateId           Float               @map("candidate_id")
+  candidateMediaGroupId String?             @map("candidate_media_group_id")
   candidateSenderChatId Float?              @map("candidate_sender_chat_id")
   chatId                Float               @map("chat_id")
   createdAt             DateTime            @default(now()) @map("created_at")
   editorId              Float               @map("editor_id")
   isCompleted           Boolean?            @map("is_completed")
-  mediaGroupId          String?             @map("media_group_id")
   messageId             Float               @map("message_id")
   noBanVoters           VotebanNoBanVoter[]
   updatedAt             DateTime            @updatedAt @map("updated_at")
@@ -243,4 +249,25 @@ model VotebanNoBanVoter {
 
   @@unique([authorId, votebanId])
   @@map("voteban_no_ban_voters")
+}
+
+model Warning {
+  id           BigInt   @id @default(autoincrement())
+  authorId     Float    @map("author_id")
+  chatId       Float    @map("chat_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  editorId     Float    @map("editor_id")
+  messageId    Float    @map("message_id")
+  senderChatId Float?   @map("sender_chat_id")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  userId       Float    @map("user_id")
+
+  author     User        @relation("WarningAuthor", fields: [authorId], references: [id])
+  chat       Chat        @relation(fields: [chatId], onDelete: Cascade, references: [id])
+  editor     User        @relation("WarningEditor", fields: [editorId], references: [id])
+  senderChat SenderChat? @relation("WarningSenderChat", fields: [senderChatId], references: [id])
+  user       User        @relation("WarningUser", fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@map("warnings")
 }
