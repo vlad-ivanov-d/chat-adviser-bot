@@ -1,6 +1,6 @@
 # Chat Adviser
 
-Chat Adviser is an open source Telegram bot that helps to moderate chats.
+Open source Telegram bot that helps to moderate chats.
 
 <https://t.me/chat_adviser_bot>
 

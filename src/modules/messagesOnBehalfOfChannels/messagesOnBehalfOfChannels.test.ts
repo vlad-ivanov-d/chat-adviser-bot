@@ -135,8 +135,8 @@ const featureDescription =
   "<b>Messages On Behalf Of Channels</b>\n" +
   "I can filter messages on behalf of channels (not to be confused with forwarded messages). " +
   "Users who have their own Telegram channels can write in public chats on behalf of the channels. " +
-  "In this way, they can make additional advertising for themselves or simply anonymize messages " +
-  "without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel " +
+  "In this way, they can make advertising for themselves or simply anonymize messages without fear of ban. " +
+  "Even if the administrator bans a chat channel, the user can create a new channel " +
   "and write on its behalf.\n\nEnable message filter on behalf of channels in " +
   `@${mockSupergroupChat().username} chat?\n\n`;
 

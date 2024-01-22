@@ -172,11 +172,10 @@ const warnWithNoReplyCommandHandler: HttpHandler = http.post(`${BASE_URL}/getUpd
 
 const featureDescription =
   "<b>Warnings</b>\n" +
-  "I can issue warnings to users upon admin command. To give a warning to a user, respond to their message " +
-  "with the appropriate command. In this case, the user's message will be deleted. Each warning is valid " +
-  "for 90 days, then it is automatically removed. If 3 warnings are received, the user will be banned. " +
-  "A warning cannot be issued to an administrator.\n/warn - issue a warning\n\nEnable warnings in " +
-  `@${mockSupergroupChat().username} chat?\n\n`;
+  "I can issue warnings to users by admin command. To do this, respond to the user's message with the appropriate " +
+  "command. In this case, the user's message will be deleted. Each warning is valid for 90 days, " +
+  "then it is automatically removed. If 3 warnings are received, the user will be banned.\n" +
+  `/warn - issue a warning\n\nEnable warnings in @${mockSupergroupChat().username} chat?\n\n`;
 
 describe("Warnings", () => {
   let app: App;

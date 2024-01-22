@@ -27,7 +27,7 @@
     "featureName": "Messages On Behalf Of Channels",
     "filterDisabled": "filter disabled",
     "filterEnabled": "filter enabled",
-    "set": "<b>Messages On Behalf Of Channels</b>\nI can filter messages on behalf of channels (not to be confused with forwarded messages). Users who have their own Telegram channels can write in public chats on behalf of the channels. In this way, they can make additional advertising for themselves or simply anonymize messages without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel and write on its behalf.\n\nEnable message filter on behalf of channels in {{CHAT}} chat?\n\nCurrent value: <b>{{VALUE}}</b>"
+    "set": "<b>Messages On Behalf Of Channels</b>\nI can filter messages on behalf of channels (not to be confused with forwarded messages). Users who have their own Telegram channels can write in public chats on behalf of the channels. In this way, they can make advertising for themselves or simply anonymize messages without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel and write on its behalf.\n\nEnable message filter on behalf of channels in {{CHAT}} chat?\n\nCurrent value: <b>{{VALUE}}</b>"
   },
   "settings": {
     "backToChats": "Back to chats",
@@ -76,7 +76,7 @@
     "replyToSomeonesMessage": "You should respond with this command to a message that you consider incorrect in order to start voting to ban the user.",
     "setLimit": "<b>Ban Voting</b>\nI can run votes to ban a user in a chat. The user will be banned and their message deleted if the appropriate number of votes is reached. This feature will help users ban the violator when administrators are offline. Messages sent more than 48 hours ago won't be deleted according to Telegram rules.\n/voteban - start voting (can be used without the slash)\n\n{{TIP}}\n\nSet the vote limit for making a decision in {{CHAT}} chat. If set a value less than 2, the feature will be disabled.\n\nCurrent value: <b>{{count}}</b>",
     "setLimit_zero": "<b>Ban Voting</b>\nI can run votes to ban a user in a chat. The user will be banned and their message deleted if the appropriate number of votes is reached. This feature will help users ban the violator when administrators are offline. Messages sent more than 48 hours ago won't be deleted according to Telegram rules.\n/voteban - start voting (can be used without the slash)\n\n{{TIP}}\n\nSet the vote limit for making a decision in {{CHAT}} chat. If set a value less than 2, the feature will be disabled.\n\nCurrent state: <b>disabled</b>",
-    "tip": "<b>Tip:</b> Don't set your vote limit too low. Otherwise, a user who has several Telegram accounts will be able to virtually single-handedly collect the required number of votes and block other chat members.",
+    "tip": "<b>Tip:</b> Don't set your vote limit too low. Otherwise, a user who has several accounts will be able to single-handedly collect the required number of votes and ban other chat members.",
     "trimmedUsers": "{{USERS}} and others",
     "voteCounted": "Your vote has been counted"
   },
@@ -89,7 +89,7 @@
     "enabled": "enabled",
     "featureName": "Warnings",
     "replyToSomeonesMessage": "You should respond with this command to a message that you consider incorrect in order to issue a warning to the user.",
-    "set": "<b>Warnings</b>\nI can issue warnings to users upon admin command. To give a warning to a user, respond to their message with the appropriate command. In this case, the user's message will be deleted. Each warning is valid for 90 days, then it is automatically removed. If 3 warnings are received, the user will be banned. A warning cannot be issued to an administrator.\n/warn - issue a warning\n\nEnable warnings in {{CHAT}} chat?\n\nCurrent value: <b>{{VALUE}}</b>",
+    "set": "<b>Warnings</b>\nI can issue warnings to users by admin command. To do this, respond to the user's message with the appropriate command. In this case, the user's message will be deleted. Each warning is valid for 90 days, then it is automatically removed. If 3 warnings are received, the user will be banned.\n/warn - issue a warning\n\nEnable warnings in {{CHAT}} chat?\n\nCurrent value: <b>{{VALUE}}</b>",
     "text": "{{USER}}, you are receiving a warning for violating the rules. The warning is valid for 90 days. If you receive {{WARNINGS_LIMIT}} warnings, you will be banned.\n\nNumber of warnings: <b>{{WARNINGS_COUNT}} of {{WARNINGS_LIMIT}}</b>"
   }
 }
