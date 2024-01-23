@@ -19,7 +19,7 @@ The required are:
 
 ## Restore Dependencies
 
-```bash
+```text
 npm ci
 ```
 
@@ -29,7 +29,7 @@ Copy `.env.sample` to `.env` and provide correct environment variables
 
 ## Build
 
-```bash
+```text
 npm run build
 ```
 
@@ -40,13 +40,13 @@ Resulted `./dist` folder can be moved to your hosting.
 The tests were implemented using Jest and the MSW library for mocking the Telegram API. Use an environment variable
 `export DEBUG='telegraf:*'` to display in the console all running network requests to the Telegram API. Run tests before each commit, this will also update the test badges in [README](./README.md#Test-Coverage).
 
-```bash
+```text
 npm run test
 ```
 
 ## Development Server
 
-```bash
+```text
 npm run dev
 ```
 

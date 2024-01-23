@@ -50,16 +50,39 @@ The bot can issue warnings to users upon admin command. To give a warning to a u
 
 ### Production
 
-- Provide environment variables. Copy `.env.sample` to `.env` and set correct values.
-- Restore dependencies: `npm ci`
-- Build sources: `npm run build`
-- Run production server: `npm run start`
+1. Provide environment variables. Copy `.env.sample` to `.env` and set correct values.
+2. Restore dependencies
+
+    ```text
+    npm ci
+    ```
+
+3. Build sources
+
+    ```text
+    npm run build
+    ```
+
+4. Run production server
+
+    ```text
+    npm run start
+    ```
 
 ### Development
 
-- Provide environment variables. Copy `.env.sample` to `.env` and set correct values.
-- Restore dependencies: `npm ci`
-- Run development server: `npm run dev`
+1. Provide environment variables. Copy `.env.sample` to `.env` and set correct values.
+2. Restore dependencies
+
+    ```text
+    npm ci
+    ```
+
+3. Run development server
+
+    ```text
+    npm run dev
+    ```
 
 Get more details in [Contributing](./CONTRIBUTING.md)
 
