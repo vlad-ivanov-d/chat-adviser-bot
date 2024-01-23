@@ -51,7 +51,7 @@ The bot can issue warnings to users upon admin command. To give a warning to a u
 ### Production
 
 - Provide environment variables. Copy `.env.sample` to `.env` and set correct values.
-- Restore dependencies: ```npm ci```
+- Restore dependencies: `npm ci`
 - Build sources: `npm run build`
 - Run production server: `npm run start`
 
