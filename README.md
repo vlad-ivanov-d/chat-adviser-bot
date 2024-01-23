@@ -4,7 +4,7 @@ Open source Telegram bot that helps to moderate chats.
 
 <https://t.me/chat_adviser_bot>
 
-## Bot Features
+## Features
 
 ### Ban Voting
 
@@ -12,13 +12,15 @@ The bot can run votes to ban a user in a chat. The user will be banned and their
 
 /voteban - start voting (can be used without the slash)
 
+**Tip:** Don't set your vote limit too low. Otherwise, a user who has several accounts will be able to single-handedly collect the required number of votes and ban other chat members.
+
 ### Language
 
 The bot can communicate in different languages so that chat users can understand the bot.
 
 ### Messages On Behalf Of Channels
 
-The bot can filter messages on behalf of channels (not to be confused with forwarded messages). Users who have their own Telegram channels can write in public chats on behalf of the channels. In this way, they can make additional advertising for themselves or simply anonymize messages without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel and write on its behalf.
+The bot can filter messages on behalf of channels (not to be confused with forwarded messages). Users who have their own Telegram channels can write in public chats on behalf of the channels. In this way, they can make advertising for themselves or simply anonymize messages without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel and write on its behalf.
 
 ### Profanity Filter
 
@@ -49,7 +51,7 @@ The bot can issue warnings to users upon admin command. To give a warning to a u
 ### Production
 
 - Provide environment variables. Copy `.env.sample` to `.env` and set correct values.
-- Restore dependencies: `npm ci`
+- Restore dependencies: ```npm ci```
 - Build sources: `npm run build`
 - Run production server: `npm run start`
 
