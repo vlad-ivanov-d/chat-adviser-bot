@@ -9,9 +9,8 @@ import { mockPrivateChat, mockSupergroupChat } from "test/mockChat";
 import { createDbSupergroupChat, createDbUser, prisma } from "test/mockDatabase";
 import { mockAdminUser, mockUser } from "test/mockUser";
 import { server } from "test/setup";
-import { sleep } from "test/utils";
 
-import { DELETE_MESSAGE_DELAY, WARNINGS_LIMIT } from "./warnings.constants";
+import { WARNINGS_LIMIT } from "./warnings.constants";
 import { WarningsAction } from "./warnings.types";
 
 const cbSaveSettingsErrorHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
@@ -222,6 +221,7 @@ describe("Warnings", () => {
       sendMessageSpy = jest.spyOn(ctx, "sendMessage").mockImplementation();
       await next();
     });
+    jest.useFakeTimers({ advanceTimers: true });
 
     await app.initAndProcessUpdates();
 
@@ -236,11 +236,11 @@ describe("Warnings", () => {
     );
     expect(banChatMemberSpy).toHaveBeenCalledTimes(1);
     expect(banChatMemberSpy).toHaveBeenCalledWith(mockUser().id);
-    // Have to use sleep instead of jest.useFakeTimers() because of issues with telegraf library
-    await sleep(DELETE_MESSAGE_DELAY);
+
+    jest.runOnlyPendingTimers();
     expect(deleteMessageSpy).toHaveBeenCalledTimes(2);
     expect(deleteMessageSpy).toHaveBeenCalledWith(3);
-  }, 15000);
+  });
 
   it("ignores warn command if the feature is disabled", async () => {
     await createDbSupergroupChat();
