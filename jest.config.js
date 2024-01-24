@@ -3,7 +3,7 @@ const { compilerOptions } = require("./tsconfig.json");
 /** @type {import('jest').Config} */
 const config = {
   coverageReporters: ["json-summary", "lcov", "text-summary"],
-  coverageThreshold: { global: { branches: 45, functions: 65, lines: 62, statements: 63 } },
+  coverageThreshold: { global: { branches: 45, functions: 69, lines: 64, statements: 65 } },
   detectOpenHandles: true,
   forceExit: true,
   maxWorkers: 1, // Use sequential tests to prevent conflicts in database
