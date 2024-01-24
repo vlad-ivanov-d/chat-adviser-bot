@@ -7,11 +7,11 @@
     "dev": "docker compose -f compose.dev.yml up --force-recreate --remove-orphans --wait -d && prisma migrate dev && nodemon src/index.ts",
     "lint": "eslint --fix .",
     "start": "docker compose up --build --force-recreate --remove-orphans -d",
-    "test": "npm run test:env-up && jest --coverage -i && npm run test:env-down && istanbul-badges-readme --silent",
-    "test:ci": "npm run test:env-up && jest --coverage -i && npm run test:env-down && istanbul-badges-readme --ci --silent",
+    "test": "npm run test:env-up && jest --coverage && npm run test:env-down && istanbul-badges-readme --silent",
+    "test:ci": "npm run test:env-up && jest --coverage && npm run test:env-down && istanbul-badges-readme --ci --silent",
     "test:env-down": "docker compose --env-file=.env.test -f compose.test.yml down",
     "test:env-up": "docker compose --env-file=.env.test -f compose.test.yml up --force-recreate --remove-orphans --wait -d && dotenv -e .env.test -- prisma migrate deploy",
-    "test:watch": "npm run test:env-up && jest --watch -i"
+    "test:watch": "npm run test:env-up && jest --watch"
   },
   "author": "Vlad Ivanov",
   "bugs": {
@@ -45,7 +45,7 @@
     "cron": "3.1.6",
     "date-fns": "2.30.0",
     "date-fns-tz": "2.0.0",
-    "dotenv": "16.3.2",
+    "dotenv": "16.4.0",
     "i18next": "23.7.18",
     "lodash.escaperegexp": "4.1.2",
     "telegraf": "4.15.3"
@@ -53,7 +53,7 @@
   "devDependencies": {
     "@types/jest": "29.5.11",
     "@types/lodash.escaperegexp": "4.1.9",
-    "@types/node": "20.11.5",
+    "@types/node": "20.11.6",
     "@typescript-eslint/eslint-plugin": "6.19.1",
     "@typescript-eslint/parser": "6.19.1",
     "dotenv-cli": "7.3.0",

@@ -10,11 +10,12 @@ import { TimeZone } from "modules/timeZone";
 import { Voteban } from "modules/voteban";
 import { Warnings } from "modules/warnings";
 import { Telegraf } from "telegraf";
+import type { BasicModule } from "types/basicModule";
 import { BOT_TOKEN } from "utils/envs";
 
 import { Database } from "./modules/database";
 
-export class App {
+export class App implements BasicModule {
   public readonly bot: Telegraf;
 
   private addingBots?: AddingBots;

@@ -214,25 +214,20 @@ export class Database extends PrismaClient implements BasicModule {
    * @returns Sender chat id
    */
   public async upsertSenderChat(chat: Chat, editor: TelegramUser): Promise<number> {
-    const firstName = "first_name" in chat ? chat.first_name : null;
-    const lastName = "last_name" in chat ? chat.last_name ?? null : null;
-    const title = "title" in chat ? chat.title : null;
-    const username = "username" in chat ? chat.username ?? null : null;
+    const update = {
+      editorId: editor.id,
+      firstName: "first_name" in chat ? chat.first_name : null,
+      lastName: "last_name" in chat ? chat.last_name ?? null : null,
+      title: "title" in chat ? chat.title : null,
+      type: this.resolveChatType(chat.type),
+      username: "username" in chat ? chat.username ?? null : null,
+    };
     const [, senderChat] = await this.$transaction([
       this.upsertUser(editor, editor),
       this.senderChat.upsert({
-        create: {
-          authorId: editor.id,
-          editorId: editor.id,
-          firstName,
-          id: chat.id,
-          lastName,
-          title,
-          type: this.resolveChatType(chat.type),
-          username,
-        },
+        create: { ...update, authorId: editor.id, id: chat.id },
         select: { id: true },
-        update: { editorId: editor.id, firstName, lastName, title, type: this.resolveChatType(chat.type), username },
+        update,
         where: { id: chat.id },
       }),
     ]);

@@ -6,6 +6,7 @@ const config = {
   coverageThreshold: { global: { branches: 45, functions: 65, lines: 62, statements: 63 } },
   detectOpenHandles: true,
   forceExit: true,
+  maxWorkers: 1, // Use sequential tests to prevent conflicts in database
   modulePaths: [compilerOptions.baseUrl],
   preset: "ts-jest",
   restoreMocks: true,
