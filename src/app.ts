@@ -11,9 +11,15 @@ import { Voteban } from "modules/voteban";
 import { Warnings } from "modules/warnings";
 import { Telegraf } from "telegraf";
 import type { BasicModule } from "types/basicModule";
-import { BOT_TOKEN } from "utils/envs";
+import { BOT_TOKEN, NODE_ENV } from "utils/envs";
 
 import { Database } from "./modules/database";
+
+/**
+ * Cached database client instance for tests only to fix the warning:
+ * "This is the 10th instance of Prisma Client being started. Make sure this is intentional."
+ */
+let testDatabase: Database | undefined;
 
 export class App implements BasicModule {
   public readonly bot: Telegraf;
@@ -42,7 +48,8 @@ export class App implements BasicModule {
    * Initiates app module
    */
   public async init(): Promise<void> {
-    this.database = new Database(this.bot);
+    this.database = NODE_ENV === "test" ? testDatabase ?? new Database(this.bot) : new Database(this.bot);
+    testDatabase = this.database;
     await this.database.init();
 
     this.settings = new Settings(this.bot, this.database);

@@ -13,6 +13,32 @@ import { server } from "test/setup";
 import { WARNINGS_LIMIT } from "./warnings.constants";
 import { WarningsAction } from "./warnings.types";
 
+const botMessageHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
+  HttpResponse.json({
+    ok: true,
+    result: [
+      {
+        message: {
+          chat: mockSupergroupChat(),
+          date: MESSAGE_DATE,
+          from: mockAdminUser(),
+          message_id: 2,
+          message_thread_id: 1,
+          reply_to_message: {
+            chat: mockSupergroupChat(),
+            date: MESSAGE_DATE,
+            from: mockBot(),
+            message_id: 1,
+            text: "Bad message",
+          },
+          text: "/warn",
+        },
+        update_id: 1,
+      },
+    ],
+  }),
+);
+
 const cbSaveSettingsErrorHandler: HttpHandler = http.post(`${BASE_URL}/getUpdates`, () =>
   HttpResponse.json({
     ok: true,
@@ -319,6 +345,44 @@ describe("Warnings", () => {
         },
       },
     );
+  });
+
+  it("tells how to use the warn command correctly", async () => {
+    await createDbSupergroupChat({ hasWarnings: true });
+    server.use(warnWithNoReplyCommandHandler);
+
+    let replySpy;
+    bot.use(async (ctx, next) => {
+      replySpy = jest.spyOn(ctx, "reply").mockImplementation();
+      await next();
+    });
+
+    await app.initAndProcessUpdates();
+
+    expect(replySpy).toHaveBeenCalledTimes(1);
+    expect(replySpy).toHaveBeenCalledWith(
+      "You should respond with this command to a message that you consider incorrect in order to issue " +
+        "a warning to the user.",
+      { reply_to_message_id: 1 },
+    );
+  });
+
+  it("doesn't issue a warning to the bot itself", async () => {
+    await createDbSupergroupChat({ hasWarnings: true });
+    server.use(botMessageHandler);
+
+    let replySpy;
+    bot.use(async (ctx, next) => {
+      replySpy = jest.spyOn(ctx, "reply").mockImplementation();
+      await next();
+    });
+
+    await app.initAndProcessUpdates();
+
+    expect(replySpy).toHaveBeenCalledTimes(1);
+    expect(replySpy).toHaveBeenCalledWith("I can't issue a warning to myself. This would be weird.", {
+      reply_to_message_id: 2,
+    });
   });
 
   it("says if the bot has no admin permissions", async () => {
