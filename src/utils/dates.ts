@@ -1,4 +1,5 @@
 import { LanguageCode } from "@prisma/client";
+import type { Locale } from "date-fns";
 import en from "date-fns/locale/en-US";
 import ru from "date-fns/locale/ru";
 

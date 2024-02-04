@@ -1,1 +1,0 @@
-export { Voteban } from "./voteban";

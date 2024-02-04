@@ -1,1 +1,0 @@
-export { MessagesOnBehalfOfChannels } from "./messagesOnBehalfOfChannels";

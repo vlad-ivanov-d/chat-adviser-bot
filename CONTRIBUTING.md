@@ -1,6 +1,6 @@
 # Contributing
 
-Notes for developers
+The project is built on the NestJS framework, so all approaches to the code base structure correspond to a NestJS application. For more details visit the NestJS website.
 
 ## Prerequisites
 
@@ -33,21 +33,41 @@ Copy `.env.sample` to `.env` and provide correct environment variables
 npm run build
 ```
 
-Resulted `./dist` folder can be moved to your hosting.
+Result will be in `./dist` folder.
 
 ## Tests
 
 The tests were implemented using Jest and the MSW library for mocking the Telegram API. Use an environment variable
-`export DEBUG='telegraf:*'` to display in the console all running network requests to the Telegram API. Run tests before each commit, this will also update the test badges in [README](./README.md#Test-Coverage).
+`export DEBUG='telegraf:*'` to display in the console all running network requests to the Telegram API.
+
+### Unit Tests
+
+Execute the following command to run unit tests.
 
 ```text
 npm run test
 ```
 
+### End-to-End Tests
+
+Execute the following command to run end-to-end tests.
+
+```text
+npm run test:e2e
+```
+
+### Total Test Coverage
+
+Execute the following command to run unit and end-to-end tests with a code coverage check. Run it before each commit, this will also update the test badges in [README](./README.md#Test-Coverage).
+
+```text
+npm run test:total:cov
+```
+
 ## Development Server
 
 ```text
-npm run dev
+npm run start:dev
 ```
 
 The command starts the local development server, compiles and reloads changes.

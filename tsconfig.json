@@ -1,22 +1,22 @@
 {
   "compilerOptions": {
-    "baseUrl": "src",
+    "baseUrl": "./",
+    "emitDecoratorMetadata": true,
     "esModuleInterop": true,
+    "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
-    "isolatedModules": true,
-    "lib": ["ESNext"],
+    "incremental": true,
     "module": "commonjs",
-    "moduleResolution": "node",
-    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "outDir": "./dist",
+    "removeComments": true,
     "resolveJsonModule": true,
-    "rootDir": "src",
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
     "target": "ESNext"
   },
-  "exclude": ["coverage", "dist", "node_modules"],
-  "ts-node": {
-    "require": ["tsconfig-paths/register"]
+  "watchOptions": {
+    "watchFile": "fixedPollingInterval"
   }
 }

@@ -20,7 +20,7 @@ The bot can communicate in different languages so that chat users can understand
 
 ### Messages On Behalf Of Channels
 
-The bot can filter messages on behalf of channels (not to be confused with forwarded messages). Users who have their own Telegram channels can write in public chats on behalf of the channels. In this way, they can make advertising for themselves or simply anonymize messages without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel and write on its behalf.
+The bot can filter messages on behalf of channels (not to be confused with forwarded messages) in group chats. Users who have their own Telegram channels can write in public chats on behalf of the channels. In this way, they can make advertising for themselves or simply anonymize messages without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel and write on its behalf.
 
 ### Profanity Filter
 
@@ -66,7 +66,7 @@ The bot can issue warnings to users upon admin command. To give a warning to a u
 4. Run production server
 
     ```text
-    npm run start
+    npm run start:prod:docker
     ```
 
 ### Development
@@ -81,7 +81,7 @@ The bot can issue warnings to users upon admin command. To give a warning to a u
 3. Run development server
 
     ```text
-    npm run dev
+    npm run start:dev
     ```
 
 Get more details in [Contributing](./CONTRIBUTING.md)
@@ -90,7 +90,7 @@ Get more details in [Contributing](./CONTRIBUTING.md)
 
 | Statements                  | Branches                | Functions                 | Lines             |
 | --------------------------- | ----------------------- | ------------------------- | ----------------- |
-| ![Statements](https://img.shields.io/badge/statements-65.52%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-46.06%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-69.44%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-64.55%25-red.svg?style=flat) |
+| ![Statements](https://img.shields.io/badge/statements-50%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-27.25%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-39.58%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-48.03%25-red.svg?style=flat) |
 
 ## License
 
