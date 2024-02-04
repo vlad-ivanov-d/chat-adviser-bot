@@ -6,7 +6,7 @@ import type { App } from "supertest/types";
 import { server } from "test/utils/setup";
 
 import { AppModule } from "../src/app.module";
-import { ASYNC_CHECK_DELAY, TELEGRAM_BOT_API_BASE_URL, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./constants";
+import { ASYNC_REQUEST_DELAY, TELEGRAM_BOT_API_BASE_URL, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./constants";
 import * as fixtures from "./fixtures/channel-message-filter";
 import { createDbSupergroupChat } from "./utils/database";
 import { sleep } from "./utils/sleep";
@@ -83,10 +83,10 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     );
 
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSaveSettingsWebhook);
-    await sleep(ASYNC_CHECK_DELAY);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbSaveSettingsWebhookResponse);
+    await sleep(ASYNC_REQUEST_DELAY);
     expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayload);
   });
 

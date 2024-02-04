@@ -3,7 +3,7 @@ import { BOT_TOKEN, WEBHOOK_PATH } from "src/app.constants";
 /**
  * The delay in milliseconds that is required to run asynchronous requests
  */
-export const ASYNC_CHECK_DELAY = 50;
+export const ASYNC_REQUEST_DELAY = 75;
 
 /**
  * Telegram API base url for mocking API calls

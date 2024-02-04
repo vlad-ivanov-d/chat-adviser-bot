@@ -5,7 +5,7 @@ import type { App } from "supertest/types";
 import { createDbSupergroupChat, prisma } from "test/utils/database";
 
 import { AppModule } from "../src/app.module";
-import { ASYNC_CHECK_DELAY, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./constants";
+import { ASYNC_REQUEST_DELAY, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./constants";
 import * as fixtures from "./fixtures/messages";
 import { sleep } from "./utils/sleep";
 
@@ -46,7 +46,7 @@ describe("MessagesModule (e2e)", () => {
     await createDbSupergroupChat();
     await prisma.message.create({ data: fixtures.oldSavedMessage, select: { id: true } });
     await jest.advanceTimersByTimeAsync(24 * 60 * 60 * 1000); // 24h to run the daily cron job
-    await sleep(ASYNC_CHECK_DELAY);
+    await sleep(ASYNC_REQUEST_DELAY);
 
     const savedMessages = await prisma.message.findMany();
     expect(savedMessages.length).toBe(0);
