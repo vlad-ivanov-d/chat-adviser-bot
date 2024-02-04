@@ -90,7 +90,7 @@ Get more details in [Contributing](./CONTRIBUTING.md)
 
 | Statements                  | Branches                | Functions                 | Lines             |
 | --------------------------- | ----------------------- | ------------------------- | ----------------- |
-| ![Statements](https://img.shields.io/badge/statements-50%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-27.25%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-39.58%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-48.03%25-red.svg?style=flat) |
+| ![Statements](https://img.shields.io/badge/statements-59.27%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-37.41%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-55.72%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-57.58%25-red.svg?style=flat) |
 
 ## License
 

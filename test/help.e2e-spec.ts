@@ -32,7 +32,7 @@ describe("HelpModule (e2e)", () => {
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.supergroupHelpWebhook);
 
     expect(response.status).toBe(200);
-    expect(sendMessagePayload).toMatchObject(fixtures.supergroupSendMessagePayload);
+    expect(sendMessagePayload).toEqual(fixtures.supergroupSendMessagePayload);
   });
 
   it("should answer to /start command in a private chat", async () => {
@@ -47,6 +47,6 @@ describe("HelpModule (e2e)", () => {
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.privateHelpWebhook);
 
     expect(response.status).toBe(200);
-    expect(sendMessagePayload).toMatchObject(fixtures.privateHelpSendMessagePayload);
+    expect(sendMessagePayload).toEqual(fixtures.privateHelpSendMessagePayload);
   });
 });

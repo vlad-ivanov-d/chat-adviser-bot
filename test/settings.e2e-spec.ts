@@ -37,8 +37,8 @@ describe("SettingsModule (e2e)", () => {
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.addedToNewChatWebhook);
 
     expect(response.status).toBe(200);
-    expect(sendMessagePayload1).toMatchObject(fixtures.addedToNewChatSendMessagePayload1);
-    expect(sendMessagePayload2).toMatchObject(fixtures.addedToNewChatSendMessagePayload2);
+    expect(sendMessagePayload1).toEqual(fixtures.addedToNewChatSendMessagePayload1);
+    expect(sendMessagePayload2).toEqual(fixtures.addedToNewChatSendMessagePayload2);
   });
 
   it("should prompt admin to make settings when a new group chat has been created", async () => {
@@ -60,8 +60,8 @@ describe("SettingsModule (e2e)", () => {
 
     expect(response1.status).toBe(200);
     expect(response2.status).toBe(200);
-    expect(sendMessagePayload1).toMatchObject(fixtures.addedToNewChatSendMessagePayload1);
-    expect(sendMessagePayload2).toMatchObject(fixtures.groupCreatedSendMessagePayload);
+    expect(sendMessagePayload1).toEqual(fixtures.addedToNewChatSendMessagePayload1);
+    expect(sendMessagePayload2).toEqual(fixtures.groupCreatedSendMessagePayload);
   });
 
   it("should render chats as an answer to /mychats command in a private chat", async () => {
@@ -78,7 +78,7 @@ describe("SettingsModule (e2e)", () => {
       .send(fixtures.myChatsCommandInPrivateChatWebhook);
 
     expect(response.status).toBe(200);
-    expect(sendMessagePayload).toMatchObject(fixtures.myChatsCommandInPrivateChatSendMessagePayload);
+    expect(sendMessagePayload).toEqual(fixtures.myChatsCommandInPrivateChatSendMessagePayload);
   });
 
   it("should not render chats as an answer to /mychats command in a supergroup chat", async () => {
@@ -95,6 +95,6 @@ describe("SettingsModule (e2e)", () => {
       .send(fixtures.myChatsCommandInSupergroupWebhook);
 
     expect(response.status).toBe(200);
-    expect(sendMessagePayload).toMatchObject(fixtures.myChatsCommandInSupergroupSendMessagePayload);
+    expect(sendMessagePayload).toEqual(fixtures.myChatsCommandInSupergroupSendMessagePayload);
   });
 });

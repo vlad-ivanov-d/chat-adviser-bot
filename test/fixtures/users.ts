@@ -26,6 +26,16 @@ export const bot: UserFromGetMe = {
 };
 
 /**
+ * Telegram system channel bot
+ */
+export const systemChannelBot: User = {
+  first_name: "The Channel",
+  id: 136_817_688,
+  is_bot: true,
+  username: "Channel_Bot",
+};
+
+/**
  * Telegram user
  */
 export const user: User = {

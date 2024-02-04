@@ -53,7 +53,7 @@ describe("VotebanModule (e2e)", () => {
       .send(fixtures.votebanAgainstBotWebhook);
 
     expect(response.status).toBe(200);
-    expect(sendMessagePayload).toMatchObject(fixtures.votebanAgainstBotSendMessagePayload);
+    expect(sendMessagePayload).toEqual(fixtures.votebanAgainstBotSendMessagePayload);
   });
 
   it("should say if there is no admin permissions", async () => {
@@ -72,7 +72,7 @@ describe("VotebanModule (e2e)", () => {
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.votebanCommandWebhook);
 
     expect(response.status).toBe(200);
-    expect(sendMessagePayload).toMatchObject(fixtures.votebanCommandNoAdminPermissionsSendMessagePayload);
+    expect(sendMessagePayload).toEqual(fixtures.votebanCommandNoAdminPermissionsSendMessagePayload);
   });
 
   it("should say voteban command is not for a private chat", async () => {
@@ -89,7 +89,7 @@ describe("VotebanModule (e2e)", () => {
       .send(fixtures.votebanCommandInPrivateChatWebhook);
 
     expect(response.status).toBe(200);
-    expect(sendMessagePayload).toMatchObject(fixtures.votebanCommandInPrivateChatSendMessagePayload);
+    expect(sendMessagePayload).toEqual(fixtures.votebanCommandInPrivateChatSendMessagePayload);
   });
 
   it("should tell how to use the voteban command correctly", async () => {
@@ -107,15 +107,15 @@ describe("VotebanModule (e2e)", () => {
       .send(fixtures.votebanWithoutReplyWebhook);
 
     expect(response.status).toBe(200);
-    expect(sendMessagePayload).toMatchObject(fixtures.votebanWithoutReplySendMessagePayload);
+    expect(sendMessagePayload).toEqual(fixtures.votebanWithoutReplySendMessagePayload);
   });
 
-  it("should handle the error if chat id is incorrect during settings rendering", async () => {
+  it("should handle an error if chat id is incorrect during settings rendering", async () => {
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsErrorWebhook);
     expect(response.status).toBe(200);
   });
 
-  it("should handle the error if chat id is incorrect during settings saving", async () => {
+  it("should handle an error if chat id is incorrect during settings saving", async () => {
     const response = await request(TEST_WEBHOOK_BASE_URL)
       .post(TEST_WEBHOOK_PATH)
       .send(fixtures.cbSaveSettingsErrorWebhook);
