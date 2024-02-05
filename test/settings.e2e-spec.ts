@@ -30,7 +30,7 @@ describe("SettingsModule (e2e)", () => {
         const body = await info.request.json();
         sendMessagePayload1 = sendMessagePayload1 ?? body;
         sendMessagePayload2 = sendMessagePayload1 ? body : undefined;
-        return HttpResponse.json(fixtures.sendMessageResponse);
+        return HttpResponse.json({ ok: true });
       }),
     );
 
@@ -50,7 +50,7 @@ describe("SettingsModule (e2e)", () => {
         const body = await info.request.json();
         sendMessagePayload1 = sendMessagePayload1 ?? body;
         sendMessagePayload2 = sendMessagePayload1 ? body : undefined;
-        return HttpResponse.json(fixtures.sendMessageResponse);
+        return HttpResponse.json({ ok: true });
       }),
     );
 
@@ -69,7 +69,7 @@ describe("SettingsModule (e2e)", () => {
     server.use(
       http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
-        return HttpResponse.json(fixtures.sendMessageResponse);
+        return HttpResponse.json({ ok: true });
       }),
     );
 
@@ -86,7 +86,7 @@ describe("SettingsModule (e2e)", () => {
     server.use(
       http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
-        return HttpResponse.json(fixtures.sendMessageResponse);
+        return HttpResponse.json({ ok: true });
       }),
     );
 

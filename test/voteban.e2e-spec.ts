@@ -26,7 +26,7 @@ describe("VotebanModule (e2e)", () => {
     server.use(
       http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
-        return HttpResponse.json(fixtures.sendMessageResponse);
+        return HttpResponse.json({ ok: true });
       }),
     );
 
@@ -44,7 +44,7 @@ describe("VotebanModule (e2e)", () => {
     server.use(
       http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
-        return HttpResponse.json(fixtures.sendMessageResponse);
+        return HttpResponse.json({ ok: true });
       }),
     );
 
@@ -65,7 +65,7 @@ describe("VotebanModule (e2e)", () => {
       ),
       http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
-        return HttpResponse.json(fixtures.sendMessageResponse);
+        return HttpResponse.json({ ok: true });
       }),
     );
 
@@ -80,7 +80,7 @@ describe("VotebanModule (e2e)", () => {
     server.use(
       http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
-        return HttpResponse.json(fixtures.sendMessageResponse);
+        return HttpResponse.json({ ok: true });
       }),
     );
 
@@ -98,7 +98,7 @@ describe("VotebanModule (e2e)", () => {
     server.use(
       http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
-        return HttpResponse.json(fixtures.sendMessageResponse);
+        return HttpResponse.json({ ok: true });
       }),
     );
 

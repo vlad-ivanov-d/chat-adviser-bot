@@ -39,11 +39,6 @@ export const privateHelpWebhook = {
 };
 
 /**
- * Response for send message request
- */
-export const sendMessageResponse = { ok: true };
-
-/**
  * Payload for send message request. It should be sent as a result of /help command processing in a supergroup chat.
  */
 export const supergroupSendMessagePayload = {

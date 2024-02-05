@@ -46,11 +46,6 @@ export const cbSaveSettingsErrorWebhook = {
 };
 
 /**
- * Response for send message request
- */
-export const sendMessageResponse = { ok: true };
-
-/**
  * Payload for send message request. It should be sent as a result of voteban command against the bot itself.
  */
 export const votebanAgainstBotSendMessagePayload = {

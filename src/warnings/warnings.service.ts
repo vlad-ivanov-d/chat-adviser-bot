@@ -38,7 +38,7 @@ export class WarningsService {
         await this.saveSettings(ctx, chatId, value);
         break;
       case WarningsAction.SETTINGS:
-        await this.renderSettings(ctx, chatId);
+        await this.renderSettings(ctx, chatId, true);
         break;
       default:
         await next();
@@ -200,8 +200,9 @@ export class WarningsService {
    * Renders settings
    * @param ctx Callback context
    * @param chatId Id of the chat which is edited
+   * @param sendAnswerCallback Answer callback query will be sent if true
    */
-  private async renderSettings(ctx: CallbackCtx, chatId: number): Promise<void> {
+  private async renderSettings(ctx: CallbackCtx, chatId: number, sendAnswerCallback?: boolean): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
       throw new Error("Chat is not defined to render warnings settings.");
     }
@@ -219,7 +220,7 @@ export class WarningsService {
     const msg = t("warnings:set", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
-      ctx.answerCbQuery(),
+      sendAnswerCallback && ctx.answerCbQuery(),
       ctx.editMessageText(this.prismaService.joinModifiedInfo(msg, ChatSettingName.HAS_WARNINGS, dbChat), {
         parse_mode: "HTML",
         reply_markup: {

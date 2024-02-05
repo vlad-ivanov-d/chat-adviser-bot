@@ -178,8 +178,3 @@ export const myChatsCommandInSupergroupWebhook = {
   },
   update_id: 1,
 };
-
-/**
- * Response for send message request
- */
-export const sendMessageResponse = { ok: true };

@@ -19,21 +19,10 @@ export const answerCbSaveSettingsWebhookResponse = {
 };
 
 /**
- * Webhook response which contains answer callback query method.
- * It should be sent as a result of callback settings processing.
- */
-export const answerCbSettingsWebhookResponse = { callback_query_id: "1", method: "answerCallbackQuery" };
-
-/**
  * Payload for ban sender chat request. It should be sent as a result of channel message
  * processing in a supergroup chat.
  */
 export const banSenderChatPayload = { chat_id: supergroup.id, sender_chat_id: channel.id };
-
-/**
- * Response for ban sender chat request
- */
-export const banSenderChatResponse = { ok: true };
 
 /**
  * Webhook payload which contains channel message filter settings callback
@@ -128,7 +117,7 @@ export const cbSettingsWebhook = {
 };
 
 /**
- * Webhook payload which contains channel message filter save settings callback
+ * Webhook payload which contains channel message filter save settings edit message payload
  */
 export const cbSaveSettingsEditMessageTextPayload = {
   ...cbSettingsEditMessageTextPayload,
@@ -144,7 +133,7 @@ export const cbSaveSettingsEditMessageTextPayload = {
 };
 
 /**
- * Webhook payload which contains channel message filter settings callback
+ * Webhook payload which contains channel message filter save settings callback
  */
 export const cbSaveSettingsWebhook = {
   callback_query: {

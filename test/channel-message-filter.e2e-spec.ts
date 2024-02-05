@@ -27,7 +27,7 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     server.use(
       http.post(`${TELEGRAM_BOT_API_BASE_URL}/banChatSenderChat`, async (info) => {
         banChatSenderChatPayload = await info.request.json();
-        return HttpResponse.json(fixtures.banSenderChatResponse);
+        return HttpResponse.json({ ok: true });
       }),
     );
 
@@ -44,7 +44,7 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     server.use(
       http.post(`${TELEGRAM_BOT_API_BASE_URL}/banChatSenderChat`, async (info) => {
         banChatSenderChatPayload = await info.request.json();
-        return HttpResponse.json(fixtures.banSenderChatResponse);
+        return HttpResponse.json({ ok: true });
       }),
     );
 
@@ -61,14 +61,14 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     server.use(
       http.post(`${TELEGRAM_BOT_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
-        return HttpResponse.json(fixtures.banSenderChatResponse);
+        return HttpResponse.json({ ok: true });
       }),
     );
 
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsWebhook);
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual(fixtures.answerCbSettingsWebhookResponse);
+    expect(response.body).toEqual({ callback_query_id: "1", method: "answerCallbackQuery" });
     expect(editMessageTextPayload).toEqual(fixtures.cbSettingsEditMessageTextPayload);
   });
 
@@ -78,7 +78,7 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     server.use(
       http.post(`${TELEGRAM_BOT_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
-        return HttpResponse.json(fixtures.banSenderChatResponse);
+        return HttpResponse.json({ ok: true });
       }),
     );
 

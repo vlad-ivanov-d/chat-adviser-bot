@@ -25,7 +25,7 @@ describe("HelpModule (e2e)", () => {
     server.use(
       http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
-        return HttpResponse.json(fixtures.sendMessageResponse);
+        return HttpResponse.json({ ok: true });
       }),
     );
 
@@ -40,7 +40,7 @@ describe("HelpModule (e2e)", () => {
     server.use(
       http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
-        return HttpResponse.json(fixtures.sendMessageResponse);
+        return HttpResponse.json({ ok: true });
       }),
     );
 
