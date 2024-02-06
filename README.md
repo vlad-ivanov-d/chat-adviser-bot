@@ -66,6 +66,12 @@ The bot can issue warnings to users upon admin command. To give a warning to a u
 4. Run production server
 
     ```text
+    npm run start:prod
+    ```
+
+    To start the server in docker, use the following command:
+
+    ```text
     npm run start:prod:docker
     ```
 
