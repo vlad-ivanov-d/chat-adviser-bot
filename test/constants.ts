@@ -1,4 +1,4 @@
-import { BOT_TOKEN, WEBHOOK_PATH } from "src/app.constants";
+import { BOT_TOKEN, WEBHOOK_PATH, WEBHOOK_PORT } from "src/app.constants";
 
 /**
  * The delay in milliseconds that is required to run asynchronous requests
@@ -13,7 +13,7 @@ export const TELEGRAM_BOT_API_BASE_URL = `https://api.telegram.org/bot${BOT_TOKE
 /**
  * Telegram webhook base url for API calls
  */
-export const TEST_WEBHOOK_BASE_URL = "";
+export const TEST_WEBHOOK_BASE_URL = `localhost:${WEBHOOK_PORT}`;
 
 /**
  * Telegram webhook path for API calls
