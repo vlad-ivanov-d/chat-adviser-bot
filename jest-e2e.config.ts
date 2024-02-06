@@ -5,7 +5,7 @@ const config: Config = {
   coverageDirectory: "./coverage-e2e",
   coveragePathIgnorePatterns: [".spec.ts"],
   coverageReporters: [["json", { file: "../.nyc_output/coverage-e2e-final.json" }], "html", "text-summary"],
-  coverageThreshold: { global: { branches: 2, functions: 2, lines: 2, statements: 2 } },
+  coverageThreshold: { global: { branches: 45, functions: 61, lines: 64, statements: 65 } },
   detectOpenHandles: true,
   forceExit: true,
   maxWorkers: 1, // Use sequential tests to prevent conflicts in database
