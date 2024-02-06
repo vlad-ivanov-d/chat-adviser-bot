@@ -35,4 +35,4 @@ export const WEBHOOK_PATH = process.env.WEBHOOK_PATH;
 /**
  * Telegram bot webhook port if it's necessary to use with webhooks
  */
-export const WEBHOOK_PORT = process.env.WEBHOOK_PORT ? parseInt(process.env.WEBHOOK_PORT, 10) : undefined;
+export const WEBHOOK_PORT = process.env.WEBHOOK_PORT ? Number(process.env.WEBHOOK_PORT) : undefined;
