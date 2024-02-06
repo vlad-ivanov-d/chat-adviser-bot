@@ -25,6 +25,27 @@ export const answerCbSaveSettingsWebhookResponse = {
 export const banSenderChatPayload = { chat_id: supergroup.id, sender_chat_id: channel.id };
 
 /**
+ * Webhook payload which contains channel message filter save settings callback with incorrect chat id
+ */
+export const cbSaveSettingsErrorWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: `${ChannelMessageFilterAction.SAVE}?chatId=error_id&v=${ChannelMessageFilterRule.FILTER}`,
+    from: adminUser,
+    id: "1",
+    message: {
+      chat: privateChat,
+      date: Date.now(),
+      edit_date: Date.now(),
+      from: bot,
+      message_id: 1,
+      text: "Messages On Behalf Of Channels",
+    },
+  },
+  update_id: 1,
+};
+
+/**
  * Webhook payload which contains channel message filter settings callback
  */
 export const cbSettingsEditMessageTextPayload = {
@@ -69,27 +90,6 @@ export const cbSettingsErrorWebhook = {
       from: bot,
       message_id: 1,
       text: "Select the feature",
-    },
-  },
-  update_id: 1,
-};
-
-/**
- * Webhook payload which contains channel message filter save settings callback with incorrect chat id
- */
-export const cbSaveSettingsErrorWebhook = {
-  callback_query: {
-    chat_instance: "1",
-    data: `${ChannelMessageFilterAction.SAVE}?chatId=error_id&v=${ChannelMessageFilterRule.FILTER}`,
-    from: adminUser,
-    id: "1",
-    message: {
-      chat: privateChat,
-      date: Date.now(),
-      edit_date: Date.now(),
-      from: bot,
-      message_id: 1,
-      text: "Messages On Behalf Of Channels",
     },
   },
   update_id: 1,

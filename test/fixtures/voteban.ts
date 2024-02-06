@@ -4,27 +4,6 @@ import { privateChat, supergroup } from "./chats";
 import { adminUser, bot, user } from "./users";
 
 /**
- * Webhook payload which contains voteban settings callback with incorrect chat id
- */
-export const cbSettingsErrorWebhook = {
-  callback_query: {
-    chat_instance: "1",
-    data: `${VotebanAction.SETTINGS}?chatId=error_id`,
-    from: adminUser,
-    id: "1",
-    message: {
-      chat: privateChat,
-      date: Date.now(),
-      edit_date: Date.now(),
-      from: bot,
-      message_id: 1,
-      text: "Select the feature",
-    },
-  },
-  update_id: 1,
-};
-
-/**
  * Webhook payload which contains voteban save settings callback with incorrect chat id
  */
 export const cbSaveSettingsErrorWebhook = {
@@ -40,6 +19,27 @@ export const cbSaveSettingsErrorWebhook = {
       from: bot,
       message_id: 1,
       text: "Ban Voting",
+    },
+  },
+  update_id: 1,
+};
+
+/**
+ * Webhook payload which contains voteban settings callback with incorrect chat id
+ */
+export const cbSettingsErrorWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: `${VotebanAction.SETTINGS}?chatId=error_id`,
+    from: adminUser,
+    id: "1",
+    message: {
+      chat: privateChat,
+      date: Date.now(),
+      edit_date: Date.now(),
+      from: bot,
+      message_id: 1,
+      text: "Select the feature",
     },
   },
   update_id: 1,
@@ -71,25 +71,18 @@ export const votebanAgainstBotWebhook = {
 };
 
 /**
- * Payload for send message request. It should be sent as a result of voteban command processing in a private chat.
- */
-export const votebanCommandInPrivateChatSendMessagePayload = {
-  chat_id: privateChat.id,
-  text: "This command is not for private chats.",
-};
-
-/**
  * Webhook payload which contains voteban command in a private chat
  */
-export const votebanCommandInPrivateChatWebhook = {
+export const votebanInPrivateChatWebhook = {
   message: { chat: privateChat, date: Date.now(), from: adminUser, message_id: 1, text: "voteban" },
   update_id: 1,
 };
 
 /**
- * Payload for send message request. It should be sent as a result of voteban command processing in a supergroup chat.
+ * Payload for send message request. It should be sent as a result of voteban command processing in a supergroup chat
+ * without admin permissions.
  */
-export const votebanCommandNoAdminPermissionsSendMessagePayload = {
+export const votebanNoAdminPermsSendMessagePayload = {
   chat_id: supergroup.id,
   reply_to_message_id: 2,
   text: "I need administrator permissions for this feature to work.",
@@ -98,7 +91,7 @@ export const votebanCommandNoAdminPermissionsSendMessagePayload = {
 /**
  * Webhook payload which contains voteban command
  */
-export const votebanCommandWebhook = {
+export const votebanWebhook = {
   message: {
     chat: supergroup,
     date: Date.now(),

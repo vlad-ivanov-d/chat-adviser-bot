@@ -38,6 +38,18 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     expect(banChatSenderChatPayload).toEqual(fixtures.banSenderChatPayload);
   });
 
+  it("should handle an error if chat id is incorrect during settings rendering", async () => {
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsErrorWebhook);
+    expect(response.status).toBe(200);
+  });
+
+  it("should handle an error if chat id is incorrect during settings saving", async () => {
+    const response = await request(TEST_WEBHOOK_BASE_URL)
+      .post(TEST_WEBHOOK_PATH)
+      .send(fixtures.cbSaveSettingsErrorWebhook);
+    expect(response.status).toBe(200);
+  });
+
   it("should not filter channel messages if the feature is disabled", async () => {
     await createDbSupergroupChat();
     let banChatSenderChatPayload;
@@ -88,17 +100,5 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     expect(response.body).toEqual(fixtures.answerCbSaveSettingsWebhookResponse);
     await sleep(ASYNC_REQUEST_DELAY);
     expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayload);
-  });
-
-  it("should handle an error if chat id is incorrect during settings rendering", async () => {
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsErrorWebhook);
-    expect(response.status).toBe(200);
-  });
-
-  it("should handle an error if chat id is incorrect during settings saving", async () => {
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
-      .send(fixtures.cbSaveSettingsErrorWebhook);
-    expect(response.status).toBe(200);
   });
 });

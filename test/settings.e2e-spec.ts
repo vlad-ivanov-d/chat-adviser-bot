@@ -75,10 +75,10 @@ describe("SettingsModule (e2e)", () => {
 
     const response = await request(TEST_WEBHOOK_BASE_URL)
       .post(TEST_WEBHOOK_PATH)
-      .send(fixtures.myChatsCommandInPrivateChatWebhook);
+      .send(fixtures.myChatsInPrivateChatWebhook);
 
     expect(response.status).toBe(200);
-    expect(sendMessagePayload).toEqual(fixtures.myChatsCommandInPrivateChatSendMessagePayload);
+    expect(sendMessagePayload).toEqual(fixtures.myChatsInPrivateChatSendMessagePayload);
   });
 
   it("should not render chats as an answer to /mychats command in a supergroup chat", async () => {
@@ -92,9 +92,9 @@ describe("SettingsModule (e2e)", () => {
 
     const response = await request(TEST_WEBHOOK_BASE_URL)
       .post(TEST_WEBHOOK_PATH)
-      .send(fixtures.myChatsCommandInSupergroupWebhook);
+      .send(fixtures.myChatsInSupergroupWebhook);
 
     expect(response.status).toBe(200);
-    expect(sendMessagePayload).toEqual(fixtures.myChatsCommandInSupergroupSendMessagePayload);
+    expect(sendMessagePayload).toEqual(fixtures.myChatsInSupergroupSendMessagePayload);
   });
 });

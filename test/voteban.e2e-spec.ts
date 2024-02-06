@@ -7,6 +7,7 @@ import { server } from "test/utils/setup";
 
 import { AppModule } from "../src/app.module";
 import { TELEGRAM_BOT_API_BASE_URL, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./constants";
+import { privateChat } from "./fixtures/chats";
 import * as fixtures from "./fixtures/voteban";
 import { createDbSupergroupChat } from "./utils/database";
 
@@ -19,6 +20,18 @@ describe("VotebanModule (e2e)", () => {
     const moduleFixture = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleFixture.createNestApplication();
     await app.init();
+  });
+
+  it("should handle an error if chat id is incorrect during settings rendering", async () => {
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsErrorWebhook);
+    expect(response.status).toBe(200);
+  });
+
+  it("should handle an error if chat id is incorrect during settings saving", async () => {
+    const response = await request(TEST_WEBHOOK_BASE_URL)
+      .post(TEST_WEBHOOK_PATH)
+      .send(fixtures.cbSaveSettingsErrorWebhook);
+    expect(response.status).toBe(200);
   });
 
   it("should ignore voteban command if the feature is disabled", async () => {
@@ -69,10 +82,10 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.votebanCommandWebhook);
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.votebanWebhook);
 
     expect(response.status).toBe(200);
-    expect(sendMessagePayload).toEqual(fixtures.votebanCommandNoAdminPermissionsSendMessagePayload);
+    expect(sendMessagePayload).toEqual(fixtures.votebanNoAdminPermsSendMessagePayload);
   });
 
   it("should say voteban command is not for a private chat", async () => {
@@ -86,10 +99,10 @@ describe("VotebanModule (e2e)", () => {
 
     const response = await request(TEST_WEBHOOK_BASE_URL)
       .post(TEST_WEBHOOK_PATH)
-      .send(fixtures.votebanCommandInPrivateChatWebhook);
+      .send(fixtures.votebanInPrivateChatWebhook);
 
     expect(response.status).toBe(200);
-    expect(sendMessagePayload).toEqual(fixtures.votebanCommandInPrivateChatSendMessagePayload);
+    expect(sendMessagePayload).toEqual({ chat_id: privateChat.id, text: "This command is not for private chats." });
   });
 
   it("should tell how to use the voteban command correctly", async () => {
@@ -108,17 +121,5 @@ describe("VotebanModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(sendMessagePayload).toEqual(fixtures.votebanWithoutReplySendMessagePayload);
-  });
-
-  it("should handle an error if chat id is incorrect during settings rendering", async () => {
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsErrorWebhook);
-    expect(response.status).toBe(200);
-  });
-
-  it("should handle an error if chat id is incorrect during settings saving", async () => {
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
-      .send(fixtures.cbSaveSettingsErrorWebhook);
-    expect(response.status).toBe(200);
   });
 });

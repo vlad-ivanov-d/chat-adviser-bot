@@ -7,8 +7,8 @@ import { server } from "test/utils/setup";
 
 import { AppModule } from "../src/app.module";
 import { ASYNC_REQUEST_DELAY, TELEGRAM_BOT_API_BASE_URL, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./constants";
-import { supergroup } from "./fixtures/chats";
-import { adminUser, user } from "./fixtures/users";
+import { privateChat, supergroup } from "./fixtures/chats";
+import { adminUser, bot, user } from "./fixtures/users";
 import * as fixtures from "./fixtures/warnings";
 import { createDbSupergroupChat, createDbUser, prisma } from "./utils/database";
 import { sleep } from "./utils/sleep";
@@ -55,17 +55,29 @@ describe("WarningsModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.warnCommandWebhook);
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.warnWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ chat_id: supergroup.id, message_id: 4, method: "deleteMessage" });
     await sleep(ASYNC_REQUEST_DELAY);
     expect(banChatMemberPayload).toEqual({ chat_id: supergroup.id, user_id: user.id });
-    expect(sendMessagePayload).toEqual(fixtures.warnCommandSendMessagePayload);
+    expect(sendMessagePayload).toEqual(fixtures.warnSendMessagePayload);
 
     jest.runOnlyPendingTimers();
     await sleep(ASYNC_REQUEST_DELAY);
     expect(deleteMessagePayload).toEqual({ chat_id: supergroup.id, message_id: 3 });
+  });
+
+  it("should handle an error if chat id is incorrect during settings rendering", async () => {
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsErrorWebhook);
+    expect(response.status).toBe(200);
+  });
+
+  it("should handle an error if chat id is incorrect during settings saving", async () => {
+    const response = await request(TEST_WEBHOOK_BASE_URL)
+      .post(TEST_WEBHOOK_PATH)
+      .send(fixtures.cbSaveSettingsErrorWebhook);
+    expect(response.status).toBe(200);
   });
 
   it("should ignore /warn command if the feature is disabled", async () => {
@@ -128,6 +140,59 @@ describe("WarningsModule (e2e)", () => {
     expect(response.body).toEqual(fixtures.answerCbSaveSettingsWebhookResponse);
     await sleep(ASYNC_REQUEST_DELAY);
     expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayload);
+  });
+
+  it("should say if the bot has no admin permissions", async () => {
+    let sendMessagePayload;
+    server.use(
+      http.post(`${TELEGRAM_BOT_API_BASE_URL}/getChatAdministrators`, () =>
+        HttpResponse.json({ ok: true, result: [] }),
+      ),
+      http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
+        sendMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.warnWebhook);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload).toEqual(fixtures.warnBotHasNoAdminPermsSendMessagePayload);
+  });
+
+  it("should say if the user has no admin permissions", async () => {
+    let sendMessagePayload;
+    server.use(
+      http.post(`${TELEGRAM_BOT_API_BASE_URL}/getChatAdministrators`, () =>
+        HttpResponse.json({ ok: true, result: [{ is_anonymous: false, status: "administrator", user: bot }] }),
+      ),
+      http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
+        sendMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.warnWebhook);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload).toEqual(fixtures.warnUserHasNoAdminPermsSendMessagePayload);
+  });
+
+  it("should say /warn command is not for a private chat", async () => {
+    let sendMessagePayload;
+    server.use(
+      http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
+        sendMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL)
+      .post(TEST_WEBHOOK_PATH)
+      .send(fixtures.warnInPrivateChatWebhook);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload).toEqual({ chat_id: privateChat.id, text: "This command is not for private chats." });
   });
 
   it("should tell how to use the /warn command correctly", async () => {

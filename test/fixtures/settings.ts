@@ -120,7 +120,7 @@ export const groupCreatedWebhook2 = {
 /**
  * Payload for send message request. It should be sent as a result of /mychats command in a private chat.
  */
-export const myChatsCommandInPrivateChatSendMessagePayload = {
+export const myChatsInPrivateChatSendMessagePayload = {
   chat_id: privateChat.id,
   parse_mode: "HTML",
   reply_markup: {
@@ -140,7 +140,7 @@ export const myChatsCommandInPrivateChatSendMessagePayload = {
 /**
  * Webhook payload which contains update about /mychats command in a private chat
  */
-export const myChatsCommandInPrivateChatWebhook = {
+export const myChatsInPrivateChatWebhook = {
   message: {
     chat: privateChat,
     date: Date.now(),
@@ -155,7 +155,7 @@ export const myChatsCommandInPrivateChatWebhook = {
 /**
  * Payload for send message request. It should be sent as a result of /mychats command in a private chat.
  */
-export const myChatsCommandInSupergroupSendMessagePayload = {
+export const myChatsInSupergroupSendMessagePayload = {
   chat_id: supergroup.id,
   parse_mode: "HTML",
   reply_to_message_id: 1,
@@ -167,7 +167,7 @@ export const myChatsCommandInSupergroupSendMessagePayload = {
 /**
  * Webhook payload which contains update about /mychats command in a supergroup chat
  */
-export const myChatsCommandInSupergroupWebhook = {
+export const myChatsInSupergroupWebhook = {
   message: {
     chat: supergroup,
     date: Date.now(),

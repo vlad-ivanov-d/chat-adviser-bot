@@ -8,6 +8,27 @@ import { privateChat, supergroup } from "./chats";
 import { adminUser, bot, user } from "./users";
 
 /**
+ * Webhook payload which contains voteban save settings callback with incorrect chat id
+ */
+export const cbSaveSettingsErrorWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: `${WarningsAction.SAVE}?chatId=error_id&v=true`,
+    from: adminUser,
+    id: "1",
+    message: {
+      chat: privateChat,
+      date: Date.now(),
+      edit_date: Date.now(),
+      from: bot,
+      message_id: 1,
+      text: "Warnings",
+    },
+  },
+  update_id: 1,
+};
+
+/**
  * Webhook payload which contains warnings settings callback
  */
 export const cbSettingsEditMessageTextPayload = {
@@ -27,6 +48,27 @@ export const cbSettingsEditMessageTextPayload = {
     `90 days, then it is automatically removed. If ${WARNINGS_LIMIT} warnings are received, the user will ` +
     `be banned.\n/warn - issue a warning\n\nEnable warnings in @${supergroup.username} chat?\n\nCurrent value: ` +
     "<b>disabled</b>",
+};
+
+/**
+ * Webhook payload which contains voteban settings callback with incorrect chat id
+ */
+export const cbSettingsErrorWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: `${WarningsAction.SETTINGS}?chatId=error_id`,
+    from: adminUser,
+    id: "1",
+    message: {
+      chat: privateChat,
+      date: Date.now(),
+      edit_date: Date.now(),
+      from: bot,
+      message_id: 1,
+      text: "Warnings",
+    },
+  },
+  update_id: 1,
 };
 
 /**
@@ -115,9 +157,27 @@ export const warnAgainstBotWebhook = {
 };
 
 /**
+ * Payload for send message request. It should be sent as a result of /warn command processing in a supergroup chat
+ * without admin permissions for the bot.
+ */
+export const warnBotHasNoAdminPermsSendMessagePayload = {
+  chat_id: supergroup.id,
+  reply_to_message_id: 4,
+  text: "I need administrator permissions for this feature to work.",
+};
+
+/**
+ * Webhook payload which contains /warn command in a private chat
+ */
+export const warnInPrivateChatWebhook = {
+  message: { chat: privateChat, date: Date.now(), from: adminUser, message_id: 1, text: "/warn" },
+  update_id: 1,
+};
+
+/**
  * Payload for send message request. It should be sent as a result of /warn command in a supergroup chat.
  */
-export const warnCommandSendMessagePayload = {
+export const warnSendMessagePayload = {
   chat_id: supergroup.id,
   parse_mode: "HTML",
   reply_to_message_id: 3,
@@ -128,9 +188,19 @@ export const warnCommandSendMessagePayload = {
 };
 
 /**
+ * Payload for send message request. It should be sent as a result of /warn command processing in a supergroup chat
+ * without admin permissions for the user.
+ */
+export const warnUserHasNoAdminPermsSendMessagePayload = {
+  chat_id: supergroup.id,
+  reply_to_message_id: 4,
+  text: "This command is only available to administrators.",
+};
+
+/**
  * Webhook payload which contains /warn command in a supergroup chat
  */
-export const warnCommandWebhook = {
+export const warnWebhook = {
   message: {
     chat: supergroup,
     date: Date.now(),

@@ -204,7 +204,7 @@ export class WarningsService {
    */
   private async renderSettings(ctx: CallbackCtx, chatId: number, sendAnswerCallback?: boolean): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      throw new Error("Chat is not defined to render warnings settings.");
+      return; // Chat is not defined to render warnings settings
     }
 
     const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
@@ -254,7 +254,7 @@ export class WarningsService {
    */
   private async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      throw new Error("Chat is not defined to save warnings settings.");
+      return; // Chat is not defined to save warnings settings
     }
 
     const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
