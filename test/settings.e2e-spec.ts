@@ -3,11 +3,11 @@ import { Test } from "@nestjs/testing";
 import { http, HttpResponse } from "msw";
 import request from "supertest";
 import type { App } from "supertest/types";
-import { server } from "test/utils/setup";
+import { server } from "test/utils/setup-after-env";
 
 import { AppModule } from "../src/app.module";
-import { TELEGRAM_BOT_API_BASE_URL, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./constants";
 import * as fixtures from "./fixtures/settings";
+import { TELEGRAM_API_BASE_URL, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./utils/constants";
 import { createDbPrivateChat } from "./utils/database";
 
 describe("SettingsModule (e2e)", () => {
@@ -26,7 +26,7 @@ describe("SettingsModule (e2e)", () => {
     let sendMessagePayload1: unknown;
     let sendMessagePayload2: unknown;
     server.use(
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         const body = await info.request.json();
         sendMessagePayload1 = sendMessagePayload1 ?? body;
         sendMessagePayload2 = sendMessagePayload1 ? body : undefined;
@@ -46,7 +46,7 @@ describe("SettingsModule (e2e)", () => {
     let sendMessagePayload1: unknown;
     let sendMessagePayload2: unknown;
     server.use(
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         const body = await info.request.json();
         sendMessagePayload1 = sendMessagePayload1 ?? body;
         sendMessagePayload2 = sendMessagePayload1 ? body : undefined;
@@ -67,7 +67,7 @@ describe("SettingsModule (e2e)", () => {
   it("should render chats as an answer to /mychats command in a private chat", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -84,7 +84,7 @@ describe("SettingsModule (e2e)", () => {
   it("should not render chats as an answer to /mychats command in a supergroup chat", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),

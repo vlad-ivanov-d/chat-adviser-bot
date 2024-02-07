@@ -22,7 +22,7 @@
     "commandForAdmins": "This command is only available to administrators.",
     "commandForPrivateChat": "Send this command to me in <a href=\"{{BOT_LINK}}\">private messages</a> and I'll help you to configure your chats.",
     "commandNotForPrivateChats": "This command is not for private chats.",
-    "help": "Hello! I'm a bot that helps to moderate chats.\n\n<b>Getting started:</b>\n1. add me to chat\n2. give me administrator permissions\n3. send a <a href=\"{{BOT_LINK}}\">private message</a> command /mychats and I will help you set up your chat\n\n<b>Feature list:</b> ban voting, profanity filter, restriction on adding bots, support for different languages.\nI'll tell about each feature in more detail during setup.\n\nYou can call this message again at any time using the /help command.",
+    "help": "Hello! I'm a bot that helps to moderate chats.\n\n<b>Getting started:</b>\n1. add me to chat\n2. give me administrator permissions\n3. send a <a href=\"{{BOT_LINK}}\">private message</a> command /mychats and I will help you set up your chat\n\n<b>Feature list:</b> ban voting, profanity filter, restriction on adding bots, support for different languages, etc.\nI'll tell about each feature in more detail during setup.\n\nYou can call this message again at any time using the /help command.",
     "needAdminPermissions": "I need administrator permissions for this feature to work."
   },
   "language": {

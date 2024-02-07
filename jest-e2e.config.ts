@@ -8,12 +8,13 @@ const config: Config = {
   coverageThreshold: { global: { branches: 45, functions: 61, lines: 64, statements: 65 } },
   detectOpenHandles: true,
   forceExit: true,
+  globalSetup: "<rootDir>/test/utils/global-setup.ts",
+  globalTeardown: "<rootDir>/test/utils/global-teardown.ts",
   maxWorkers: 1, // Use sequential tests to prevent conflicts in database
   modulePaths: ["<rootDir>"],
   preset: "ts-jest",
   restoreMocks: true,
-  setupFiles: ["<rootDir>/test/utils/setup-after-env.ts"],
-  setupFilesAfterEnv: ["<rootDir>/test/utils/setup.ts"],
+  setupFilesAfterEnv: ["<rootDir>/test/utils/setup-after-env.ts"],
   testMatch: ["<rootDir>/test/**/*.e2e-spec.ts"],
 };
 

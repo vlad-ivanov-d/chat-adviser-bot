@@ -3,13 +3,18 @@ import { Test } from "@nestjs/testing";
 import { http, HttpResponse } from "msw";
 import request from "supertest";
 import type { App } from "supertest/types";
-import { server } from "test/utils/setup";
+import { server } from "test/utils/setup-after-env";
 
 import { AppModule } from "../src/app.module";
-import { ASYNC_REQUEST_DELAY, TELEGRAM_BOT_API_BASE_URL, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./constants";
 import { privateChat, supergroup } from "./fixtures/chats";
 import { adminUser, bot, user } from "./fixtures/users";
 import * as fixtures from "./fixtures/warnings";
+import {
+  ASYNC_REQUEST_DELAY,
+  TELEGRAM_API_BASE_URL,
+  TEST_WEBHOOK_BASE_URL,
+  TEST_WEBHOOK_PATH,
+} from "./utils/constants";
 import { createDbSupergroupChat, createDbUser, prisma } from "./utils/database";
 import { sleep } from "./utils/sleep";
 
@@ -41,15 +46,15 @@ describe("WarningsModule (e2e)", () => {
     let deleteMessagePayload;
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/banChatMember`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/banChatMember`, async (info) => {
         banChatMemberPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/deleteMessage`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/deleteMessage`, async (info) => {
         deleteMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -95,7 +100,7 @@ describe("WarningsModule (e2e)", () => {
     await createDbSupergroupChat({ hasWarnings: true });
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -111,7 +116,7 @@ describe("WarningsModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -128,7 +133,7 @@ describe("WarningsModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -145,10 +150,8 @@ describe("WarningsModule (e2e)", () => {
   it("should say if the bot has no admin permissions", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/getChatAdministrators`, () =>
-        HttpResponse.json({ ok: true, result: [] }),
-      ),
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -163,10 +166,10 @@ describe("WarningsModule (e2e)", () => {
   it("should say if the user has no admin permissions", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/getChatAdministrators`, () =>
+      http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
         HttpResponse.json({ ok: true, result: [{ is_anonymous: false, status: "administrator", user: bot }] }),
       ),
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -181,7 +184,7 @@ describe("WarningsModule (e2e)", () => {
   it("should say /warn command is not for a private chat", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -199,7 +202,7 @@ describe("WarningsModule (e2e)", () => {
     await createDbSupergroupChat({ hasWarnings: true });
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),

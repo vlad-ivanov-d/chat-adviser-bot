@@ -8,7 +8,7 @@ export const ASYNC_REQUEST_DELAY = 75;
 /**
  * Telegram API base url for mocking API calls
  */
-export const TELEGRAM_BOT_API_BASE_URL = `https://api.telegram.org/bot${BOT_TOKEN}`;
+export const TELEGRAM_API_BASE_URL = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
 /**
  * Telegram webhook base url for API calls

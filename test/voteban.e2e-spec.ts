@@ -3,12 +3,12 @@ import { Test } from "@nestjs/testing";
 import { http, HttpResponse } from "msw";
 import request from "supertest";
 import type { App } from "supertest/types";
-import { server } from "test/utils/setup";
+import { server } from "test/utils/setup-after-env";
 
 import { AppModule } from "../src/app.module";
-import { TELEGRAM_BOT_API_BASE_URL, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./constants";
 import { privateChat } from "./fixtures/chats";
 import * as fixtures from "./fixtures/voteban";
+import { TELEGRAM_API_BASE_URL, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./utils/constants";
 import { createDbSupergroupChat } from "./utils/database";
 
 describe("VotebanModule (e2e)", () => {
@@ -37,7 +37,7 @@ describe("VotebanModule (e2e)", () => {
   it("should ignore voteban command if the feature is disabled", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -55,7 +55,7 @@ describe("VotebanModule (e2e)", () => {
     await createDbSupergroupChat({ votebanLimit: 2 });
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -73,10 +73,8 @@ describe("VotebanModule (e2e)", () => {
     await createDbSupergroupChat({ votebanLimit: 2 });
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/getChatAdministrators`, () =>
-        HttpResponse.json({ ok: true, result: [] }),
-      ),
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -91,7 +89,7 @@ describe("VotebanModule (e2e)", () => {
   it("should say voteban command is not for a private chat", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -109,7 +107,7 @@ describe("VotebanModule (e2e)", () => {
     await createDbSupergroupChat({ votebanLimit: 2 });
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_BOT_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),

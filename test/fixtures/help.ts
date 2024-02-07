@@ -17,7 +17,7 @@ export const privateHelpSendMessagePayload = {
     "your chat\n" +
     "\n" +
     "<b>Feature list:</b> ban voting, profanity filter, restriction on adding bots, support for different " +
-    "languages.\n" +
+    "languages, etc.\n" +
     "I'll tell about each feature in more detail during setup.\n" +
     "\n" +
     "You can call this message again at any time using the /help command.",

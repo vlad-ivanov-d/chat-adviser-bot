@@ -5,8 +5,8 @@ import type { App } from "supertest/types";
 import { createDbSupergroupChat, prisma } from "test/utils/database";
 
 import { AppModule } from "../src/app.module";
-import { ASYNC_REQUEST_DELAY, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./constants";
 import * as fixtures from "./fixtures/messages";
+import { ASYNC_REQUEST_DELAY, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./utils/constants";
 import { sleep } from "./utils/sleep";
 
 describe("MessagesModule (e2e)", () => {
