@@ -134,6 +134,15 @@ export const cbSaveSettingsWebhook = {
 /**
  * Payload for send message request. It should be sent as a result of /warn command against the bot itself.
  */
+export const warnAgainstAdminSendMessagePayload = {
+  chat_id: supergroup.id,
+  reply_to_message_id: 4,
+  text: "I can't issue a warning to the administrator. It would be incorrect.",
+};
+
+/**
+ * Payload for send message request. It should be sent as a result of /warn command against the bot itself.
+ */
 export const warnAgainstBotSendMessagePayload = {
   chat_id: supergroup.id,
   reply_to_message_id: 2,

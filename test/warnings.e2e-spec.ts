@@ -96,8 +96,25 @@ describe("WarningsModule (e2e)", () => {
     expect(response.body).toEqual({});
   });
 
+  it("should not issue a warning against the admin", async () => {
+    let sendMessagePayload;
+    server.use(
+      http.post(`${TELEGRAM_API_BASE_URL}/getChatMember`, () =>
+        HttpResponse.json({ ok: true, result: { is_anonymous: false, status: "administrator", user } }),
+      ),
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+        sendMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.warnWebhook);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload).toEqual(fixtures.warnAgainstAdminSendMessagePayload);
+  });
+
   it("should not issue a warning against the bot itself", async () => {
-    await createDbSupergroupChat({ hasWarnings: true });
     let sendMessagePayload;
     server.use(
       http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
@@ -199,7 +216,6 @@ describe("WarningsModule (e2e)", () => {
   });
 
   it("should tell how to use the /warn command correctly", async () => {
-    await createDbSupergroupChat({ hasWarnings: true });
     let sendMessagePayload;
     server.use(
       http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
