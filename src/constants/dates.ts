@@ -1,4 +1,0 @@
-/**
- * Date format related to date-fns
- */
-export const DATE_FORMAT = "P p zzz";

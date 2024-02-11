@@ -1,3 +1,5 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+
 name: Continuous Integration
 
 on: [push]
@@ -28,6 +30,8 @@ jobs:
             Dockerfile
             compose.yml
             dist
+            package-lock.json
+            package.json
             prisma
 
   test:
@@ -41,8 +45,14 @@ jobs:
           node-version: 20.11.0
       - name: Restore dependencies
         run: npm ci
-      - name: Run tests
-        run: npm run test:ci
+      - name: Run unit tests
+        run: npm run test:cov
+      - name: Run e2e tests
+        run: npm run test:e2e:cov
+      - name: Merge test coverage
+        run: npm run merge:cov
+      - name: Check test coverage badges
+        run: npm run make:badges -- --ci
 
   deploy:
     environment: production
@@ -50,11 +60,15 @@ jobs:
     needs: [build, test]
     runs-on: ubuntu-latest
     steps:
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.11.0
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           name: app
-      - name: Run docker compose
+      - name: Start the app in docker
         env:
           BOT_TOKEN: ${{secrets.BOT_TOKEN}}
           DATABASE_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
@@ -71,5 +85,5 @@ jobs:
           chmod 700 ~/.ssh
           echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
-          docker compose up --build --force-recreate --remove-orphans -d
+          npm run start:prod:docker
         shell: bash

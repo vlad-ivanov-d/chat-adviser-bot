@@ -13,14 +13,18 @@ enum AddingBotsRule {
   RESTRICT @map("restrict")
 }
 
+enum ChannelMessageFilterRule {
+  FILTER @map("filter")
+}
+
 enum ChatSettingName {
-  ADDING_BOTS                    @map("adding_bots")
-  HAS_WARNINGS                   @map("has_warnings")
-  LANGUAGE                       @map("language")
-  MESSAGES_ON_BEHALF_OF_CHANNELS @map("messages_on_behalf_of_channels")
-  PROFANITY_FILTER               @map("profanity_filter")
-  TIME_ZONE                      @map("time_zone")
-  VOTEBAN_LIMIT                  @map("voteban_limit")
+  ADDING_BOTS            @map("adding_bots")
+  CHANNEL_MESSAGE_FILTER @map("channel_message_filter")
+  HAS_WARNINGS           @map("has_warnings")
+  LANGUAGE               @map("language")
+  PROFANITY_FILTER       @map("profanity_filter")
+  TIME_ZONE              @map("time_zone")
+  VOTEBAN_LIMIT          @map("voteban_limit")
 }
 
 enum ChatType {
@@ -36,35 +40,31 @@ enum LanguageCode {
   RU @map("ru")
 }
 
-enum MessagesOnBehalfOfChannelsRule {
-  FILTER @map("filter")
-}
-
 enum ProfanityFilterRule {
   FILTER @map("filter")
 }
 
 model Chat {
-  id                         Float                           @id
-  addingBots                 AddingBotsRule?                 @map("adding_bots")
-  admins                     User[]                          @relation("ChatAdmins")
-  authorId                   Float                           @map("author_id")
-  createdAt                  DateTime                        @default(now()) @map("created_at")
-  displayTitle               String                          @map("display_title")
-  editorId                   Float                           @map("editor_id")
-  firstName                  String?                         @map("first_name")
-  hasWarnings                Boolean?                        @map("has_warnings")
-  language                   LanguageCode
-  lastName                   String?                         @map("last_name")
-  membersCount               Int                             @map("members_count")
-  messagesOnBehalfOfChannels MessagesOnBehalfOfChannelsRule? @map("messages_on_behalf_of_channels")
-  profanityFilter            ProfanityFilterRule?            @map("profanity_filter")
-  timeZone                   String                          @map("time_zone")
-  title                      String?
-  type                       ChatType
-  updatedAt                  DateTime                        @updatedAt @map("updated_at")
-  username                   String?
-  votebanLimit               Int?                            @map("voteban_limit")
+  id                   Float                     @id
+  addingBots           AddingBotsRule?           @map("adding_bots")
+  admins               User[]                    @relation("ChatAdmins")
+  authorId             Float                     @map("author_id")
+  channelMessageFilter ChannelMessageFilterRule? @map("channel_message_filter")
+  createdAt            DateTime                  @default(now()) @map("created_at")
+  displayTitle         String                    @map("display_title")
+  editorId             Float                     @map("editor_id")
+  firstName            String?                   @map("first_name")
+  hasWarnings          Boolean?                  @map("has_warnings")
+  language             LanguageCode
+  lastName             String?                   @map("last_name")
+  membersCount         Int                       @map("members_count")
+  profanityFilter      ProfanityFilterRule?      @map("profanity_filter")
+  timeZone             String                    @map("time_zone")
+  title                String?
+  type                 ChatType
+  updatedAt            DateTime                  @updatedAt @map("updated_at")
+  username             String?
+  votebanLimit         Int?                      @map("voteban_limit")
 
   author              User                  @relation("ChatAuthor", fields: [authorId], references: [id])
   chatSettingsHistory ChatSettingsHistory[]
@@ -95,6 +95,7 @@ model ChatSettingsHistory {
 }
 
 model Message {
+  id           BigInt   @id @default(autoincrement())
   authorId     Float    @map("author_id")
   chatId       Float    @map("chat_id")
   createdAt    DateTime @default(now()) @map("created_at")

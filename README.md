@@ -1,10 +1,10 @@
 # Chat Adviser
 
-Chat Adviser is an open source Telegram bot that helps to moderate chats.
+Open source Telegram bot that helps to moderate chats.
 
 <https://t.me/chat_adviser_bot>
 
-## Bot Features
+## Features
 
 ### Ban Voting
 
@@ -12,13 +12,15 @@ The bot can run votes to ban a user in a chat. The user will be banned and their
 
 /voteban - start voting (can be used without the slash)
 
+**Tip:** Don't set your vote limit too low. Otherwise, a user who has several accounts will be able to single-handedly collect the required number of votes and ban other chat members.
+
 ### Language
 
 The bot can communicate in different languages so that chat users can understand the bot.
 
 ### Messages On Behalf Of Channels
 
-The bot can filter messages on behalf of channels (not to be confused with forwarded messages). Users who have their own Telegram channels can write in public chats on behalf of the channels. In this way, they can make additional advertising for themselves or simply anonymize messages without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel and write on its behalf.
+The bot can filter messages on behalf of channels (not to be confused with forwarded messages) in group chats. Users who have their own Telegram channels can write in public chats on behalf of the channels. In this way, they can make advertising for themselves or simply anonymize messages without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel and write on its behalf.
 
 ### Profanity Filter
 
@@ -48,16 +50,45 @@ The bot can issue warnings to users upon admin command. To give a warning to a u
 
 ### Production
 
-- Provide environment variables. Copy `.env.sample` to `.env` and set correct values.
-- Restore dependencies: `npm ci`
-- Build sources: `npm run build`
-- Run production server: `npm run start`
+1. Provide environment variables. Copy `.env.sample` to `.env` and set correct values.
+2. Restore dependencies
+
+    ```text
+    npm ci
+    ```
+
+3. Build sources
+
+    ```text
+    npm run build
+    ```
+
+4. Run production server
+
+    ```text
+    npm run start:prod
+    ```
+
+    To start the server in docker, use the following command:
+
+    ```text
+    npm run start:prod:docker
+    ```
 
 ### Development
 
-- Provide environment variables. Copy `.env.sample` to `.env` and set correct values.
-- Restore dependencies: `npm ci`
-- Run development server: `npm run dev`
+1. Provide environment variables. Copy `.env.sample` to `.env` and set correct values.
+2. Restore dependencies
+
+    ```text
+    npm ci
+    ```
+
+3. Run development server
+
+    ```text
+    npm run start:dev
+    ```
 
 Get more details in [Contributing](./CONTRIBUTING.md)
 
@@ -65,7 +96,7 @@ Get more details in [Contributing](./CONTRIBUTING.md)
 
 | Statements                  | Branches                | Functions                 | Lines             |
 | --------------------------- | ----------------------- | ------------------------- | ----------------- |
-| ![Statements](https://img.shields.io/badge/statements-63.73%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-45.51%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-65.74%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-62.55%25-red.svg?style=flat) |
+| ![Statements](https://img.shields.io/badge/statements-65.95%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-46.83%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-61.53%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-64.6%25-red.svg?style=flat) |
 
 ## License
 

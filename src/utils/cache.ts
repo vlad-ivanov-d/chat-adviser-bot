@@ -1,4 +1,4 @@
-export class Cache {
+export class CacheStore {
   private store = new Map<string, { expired?: Date; value: unknown }>();
 
   /**
@@ -63,4 +63,4 @@ export class Cache {
   }
 }
 
-export const cache = new Cache();
+export const cache = new CacheStore();
