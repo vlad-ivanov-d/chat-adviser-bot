@@ -8,7 +8,7 @@ import { NextFunction } from "src/types/next-function";
 import { CallbackCtx, MessageCtx } from "src/types/telegraf-context";
 import { cache } from "src/utils/cache";
 import { Profanity } from "src/utils/profanity";
-import { getCallbackQueryParams, getChatHtmlLink, getUserFullName } from "src/utils/telegraf";
+import { buildCbData, getChatHtmlLink, getUserFullName, parseCbData } from "src/utils/telegraf";
 
 import { ProfanityFilterAction } from "./interfaces/action.interface";
 import { WORDS_CACHE_KEY, WORDS_CACHE_TIMEOUT } from "./profanity-filter.constants";
@@ -33,7 +33,7 @@ export class ProfanityFilterService {
    */
   @On("callback_query")
   public async callbackQuery(ctx: CallbackCtx, next: NextFunction): Promise<void> {
-    const { action, chatId, value } = getCallbackQueryParams(ctx);
+    const { action, chatId, value } = parseCbData(ctx);
     switch (action) {
       case ProfanityFilterAction.SAVE:
         await this.saveSettings(ctx, chatId, value);
@@ -203,8 +203,8 @@ export class ProfanityFilterService {
     }
 
     const chatLink = getChatHtmlLink(dbChat);
-    const disableCbData = `${ProfanityFilterAction.SAVE}?chatId=${chatId}`;
-    const filterCbData = `${ProfanityFilterAction.SAVE}?chatId=${chatId}&v=${ProfanityFilterRule.FILTER}`;
+    const disableCbData = buildCbData({ action: ProfanityFilterAction.SAVE, chatId });
+    const filterCbData = buildCbData({ action: ProfanityFilterAction.SAVE, chatId, value: ProfanityFilterRule.FILTER });
     const sanitizedValue = this.sanitizeValue(dbChat.profanityFilter);
     const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";
     const msg = t("profanityFilter:set", { CHAT: chatLink, VALUE: value });

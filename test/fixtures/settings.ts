@@ -43,17 +43,17 @@ export const addedToNewChatSendMessagePayload2 = {
   parse_mode: "HTML",
   reply_markup: {
     inline_keyboard: [
-      [{ callback_data: `${VotebanAction.SETTINGS}?chatId=${supergroup.id}`, text: "Ban Voting" }],
-      [{ callback_data: `${LanguageAction.SETTINGS}?chatId=${supergroup.id}`, text: "Language" }],
+      [{ callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}`, text: "Ban Voting" }],
+      [{ callback_data: `${LanguageAction.SETTINGS}?cId=${supergroup.id}`, text: "Language" }],
       [
         {
-          callback_data: `${ChannelMessageFilterAction.SETTINGS}?chatId=${supergroup.id}`,
+          callback_data: `${ChannelMessageFilterAction.SETTINGS}?cId=${supergroup.id}`,
           text: "Messages On Behalf Of Channels",
         },
       ],
-      [{ callback_data: `${ProfanityFilterAction.SETTINGS}?chatId=${supergroup.id}`, text: "Profanity Filter" }],
-      [{ callback_data: `${AddingBotsAction.SETTINGS}?chatId=${supergroup.id}`, text: "Restriction On Adding Bots" }],
-      [{ callback_data: `${SettingsAction.FEATURES}?chatId=${supergroup.id}&skip=${PAGE_SIZE}`, text: "»" }],
+      [{ callback_data: `${ProfanityFilterAction.SETTINGS}?cId=${supergroup.id}`, text: "Profanity Filter" }],
+      [{ callback_data: `${AddingBotsAction.SETTINGS}?cId=${supergroup.id}`, text: "Restriction On Adding Bots" }],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}&s=${PAGE_SIZE}`, text: "»" }],
       [{ callback_data: SettingsAction.CHATS, text: "« Back to chats" }],
     ],
   },
@@ -70,17 +70,17 @@ export const groupCreatedSendMessagePayload = {
   parse_mode: "HTML",
   reply_markup: {
     inline_keyboard: [
-      [{ callback_data: `${VotebanAction.SETTINGS}?chatId=${group.id}`, text: "Ban Voting" }],
-      [{ callback_data: `${LanguageAction.SETTINGS}?chatId=${group.id}`, text: "Language" }],
+      [{ callback_data: `${VotebanAction.SETTINGS}?cId=${group.id}`, text: "Ban Voting" }],
+      [{ callback_data: `${LanguageAction.SETTINGS}?cId=${group.id}`, text: "Language" }],
       [
         {
-          callback_data: `${ChannelMessageFilterAction.SETTINGS}?chatId=${group.id}`,
+          callback_data: `${ChannelMessageFilterAction.SETTINGS}?cId=${group.id}`,
           text: "Messages On Behalf Of Channels",
         },
       ],
-      [{ callback_data: `${ProfanityFilterAction.SETTINGS}?chatId=${group.id}`, text: "Profanity Filter" }],
-      [{ callback_data: `${AddingBotsAction.SETTINGS}?chatId=${group.id}`, text: "Restriction On Adding Bots" }],
-      [{ callback_data: `${SettingsAction.FEATURES}?chatId=${group.id}&skip=${PAGE_SIZE}`, text: "»" }],
+      [{ callback_data: `${ProfanityFilterAction.SETTINGS}?cId=${group.id}`, text: "Profanity Filter" }],
+      [{ callback_data: `${AddingBotsAction.SETTINGS}?cId=${group.id}`, text: "Restriction On Adding Bots" }],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${group.id}&s=${PAGE_SIZE}`, text: "»" }],
       [{ callback_data: SettingsAction.CHATS, text: "« Back to chats" }],
     ],
   },
@@ -125,7 +125,7 @@ export const myChatsInPrivateChatSendMessagePayload = {
   parse_mode: "HTML",
   reply_markup: {
     inline_keyboard: [
-      [{ callback_data: `${SettingsAction.FEATURES}?chatId=${privateChat.id}`, text: `@${bot.username}` }],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${privateChat.id}`, text: `@${bot.username}` }],
       [],
       [{ callback_data: SettingsAction.REFRESH, text: "↻ Refresh the list" }],
     ],

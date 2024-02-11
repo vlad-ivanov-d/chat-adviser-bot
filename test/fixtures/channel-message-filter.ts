@@ -30,7 +30,7 @@ export const banSenderChatPayload = { chat_id: supergroup.id, sender_chat_id: ch
 export const cbSaveSettingsErrorWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${ChannelMessageFilterAction.SAVE}?chatId=error_id&v=${ChannelMessageFilterRule.FILTER}`,
+    data: `${ChannelMessageFilterAction.SAVE}?cId=error_id&v=${ChannelMessageFilterRule.FILTER}`,
     from: adminUser,
     id: "1",
     message: {
@@ -56,13 +56,12 @@ export const cbSettingsEditMessageTextPayload = {
     inline_keyboard: [
       [
         {
-          callback_data:
-            `${ChannelMessageFilterAction.SAVE}?chatId=${supergroup.id}` + `&v=${ChannelMessageFilterRule.FILTER}`,
+          callback_data: `${ChannelMessageFilterAction.SAVE}?cId=${supergroup.id}&v=${ChannelMessageFilterRule.FILTER}`,
           text: "Enable filter",
         },
       ],
-      [{ callback_data: `${ChannelMessageFilterAction.SAVE}?chatId=${supergroup.id}`, text: "Disable filter" }],
-      [{ callback_data: `${SettingsAction.FEATURES}?chatId=${supergroup.id}`, text: "« Back to features" }],
+      [{ callback_data: `${ChannelMessageFilterAction.SAVE}?cId=${supergroup.id}`, text: "Disable filter" }],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}`, text: "« Back to features" }],
     ],
   },
   text:
@@ -80,7 +79,7 @@ export const cbSettingsEditMessageTextPayload = {
 export const cbSettingsErrorWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${ChannelMessageFilterAction.SETTINGS}?chatId=error_id`,
+    data: `${ChannelMessageFilterAction.SETTINGS}?cId=error_id`,
     from: adminUser,
     id: "1",
     message: {
@@ -101,7 +100,7 @@ export const cbSettingsErrorWebhook = {
 export const cbSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${ChannelMessageFilterAction.SETTINGS}?chatId=${supergroup.id}`,
+    data: `${ChannelMessageFilterAction.SETTINGS}?cId=${supergroup.id}`,
     from: adminUser,
     id: "1",
     message: {
@@ -138,7 +137,7 @@ export const cbSaveSettingsEditMessageTextPayload = {
 export const cbSaveSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${ChannelMessageFilterAction.SAVE}?chatId=${supergroup.id}&v=${ChannelMessageFilterRule.FILTER}`,
+    data: `${ChannelMessageFilterAction.SAVE}?cId=${supergroup.id}&v=${ChannelMessageFilterRule.FILTER}`,
     from: adminUser,
     id: "1",
     message: {

@@ -13,7 +13,7 @@ import { adminUser, bot, user } from "./users";
 export const cbSaveSettingsErrorWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${WarningsAction.SAVE}?chatId=error_id&v=true`,
+    data: `${WarningsAction.SAVE}?cId=error_id&v=true`,
     from: adminUser,
     id: "1",
     message: {
@@ -37,9 +37,9 @@ export const cbSettingsEditMessageTextPayload = {
   parse_mode: "HTML",
   reply_markup: {
     inline_keyboard: [
-      [{ callback_data: `${WarningsAction.SAVE}?chatId=${supergroup.id}&v=true`, text: "Enable" }],
-      [{ callback_data: `${WarningsAction.SAVE}?chatId=${supergroup.id}`, text: "Disable" }],
-      [{ callback_data: `${SettingsAction.FEATURES}?chatId=${supergroup.id}`, text: "« Back to features" }],
+      [{ callback_data: `${WarningsAction.SAVE}?cId=${supergroup.id}&v=true`, text: "Enable" }],
+      [{ callback_data: `${WarningsAction.SAVE}?cId=${supergroup.id}`, text: "Disable" }],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}`, text: "« Back to features" }],
     ],
   },
   text:
@@ -56,7 +56,7 @@ export const cbSettingsEditMessageTextPayload = {
 export const cbSettingsErrorWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${WarningsAction.SETTINGS}?chatId=error_id`,
+    data: `${WarningsAction.SETTINGS}?cId=error_id`,
     from: adminUser,
     id: "1",
     message: {
@@ -77,7 +77,7 @@ export const cbSettingsErrorWebhook = {
 export const cbSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${WarningsAction.SETTINGS}?chatId=${supergroup.id}`,
+    data: `${WarningsAction.SETTINGS}?cId=${supergroup.id}`,
     from: adminUser,
     id: "1",
     message: {
@@ -123,7 +123,7 @@ export const cbSaveSettingsEditMessageTextPayload = {
 export const cbSaveSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${WarningsAction.SAVE}?chatId=${supergroup.id}&v=true`,
+    data: `${WarningsAction.SAVE}?cId=${supergroup.id}&v=true`,
     from: adminUser,
     id: "1",
     message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "Warnings" },

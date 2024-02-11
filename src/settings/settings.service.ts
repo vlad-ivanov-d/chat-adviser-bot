@@ -12,7 +12,7 @@ import { ProfanityFilterAction } from "src/profanity-filter/interfaces/action.in
 import { TimeZoneAction } from "src/time-zone/interfaces/action.interface";
 import { NextFunction } from "src/types/next-function";
 import { CallbackCtx, MessageCtx, type TextMessageCtx } from "src/types/telegraf-context";
-import { getCallbackQueryParams, getChatHtmlLink, getErrorCode, getPagination } from "src/utils/telegraf";
+import { buildCbData, getChatHtmlLink, getErrorCode, getPagination, parseCbData } from "src/utils/telegraf";
 import { VotebanAction } from "src/voteban/interfaces/action.interface";
 import { WarningsAction } from "src/warnings/interfaces/action.interface";
 import type { InlineKeyboardButton, InlineKeyboardMarkup } from "telegraf/typings/core/types/typegram";
@@ -35,7 +35,7 @@ export class SettingsService {
    */
   @On("callback_query")
   public async callbackQuery(ctx: CallbackCtx, next: NextFunction): Promise<void> {
-    const { action, chatId, skip } = getCallbackQueryParams(ctx);
+    const { action, chatId, skip } = parseCbData(ctx);
     switch (action) {
       case SettingsAction.CHATS:
       case SettingsAction.REFRESH:
@@ -100,7 +100,10 @@ export class SettingsService {
    */
   public getBackToFeaturesButton(chatId: number): InlineKeyboardButton[] {
     return [
-      { callback_data: `${SettingsAction.FEATURES}?chatId=${chatId}`, text: `« ${t("settings:backToFeatures")}` },
+      {
+        callback_data: buildCbData({ action: SettingsAction.FEATURES, chatId }),
+        text: `« ${t("settings:backToFeatures")}`,
+      },
     ];
   }
 
@@ -183,9 +186,11 @@ export class SettingsService {
     }
     const replyMarkup: InlineKeyboardMarkup = {
       inline_keyboard: [
-        ...chats.map((c) => [{ callback_data: `${SettingsAction.FEATURES}?chatId=${c.id}`, text: c.displayTitle }]),
-        getPagination(SettingsAction.CHATS, { count, skip, take }),
-        [{ callback_data: SettingsAction.REFRESH, text: `↻ ${t("settings:refreshList")}` }],
+        ...chats.map((c) => [
+          { callback_data: buildCbData({ action: SettingsAction.FEATURES, chatId: c.id }), text: c.displayTitle },
+        ]),
+        getPagination({ action: SettingsAction.CHATS, count, skip, take }),
+        [{ callback_data: buildCbData({ action: SettingsAction.REFRESH }), text: `↻ ${t("settings:refreshList")}` }],
       ],
     };
     const msg = [t("settings:selectChat"), t("settings:updateInfoHint")].join("\n\n");
@@ -228,28 +233,31 @@ export class SettingsService {
     }
 
     const addingBotsButton: InlineKeyboardButton[] = [
-      { callback_data: `${AddingBotsAction.SETTINGS}?chatId=${chatId}`, text: t("addingBots:featureName") },
+      { callback_data: buildCbData({ action: AddingBotsAction.SETTINGS, chatId }), text: t("addingBots:featureName") },
     ];
     const channelMessageFilterButton: InlineKeyboardButton[] = [
       {
-        callback_data: `${ChannelMessageFilterAction.SETTINGS}?chatId=${chatId}`,
+        callback_data: buildCbData({ action: ChannelMessageFilterAction.SETTINGS, chatId }),
         text: t("channelMessageFilter:featureName"),
       },
     ];
     const languageButton: InlineKeyboardButton[] = [
-      { callback_data: `${LanguageAction.SETTINGS}?chatId=${chatId}`, text: t("language:featureName") },
+      { callback_data: buildCbData({ action: LanguageAction.SETTINGS, chatId }), text: t("language:featureName") },
     ];
     const profanityFilterButton: InlineKeyboardButton[] = [
-      { callback_data: `${ProfanityFilterAction.SETTINGS}?chatId=${chatId}`, text: t("profanityFilter:featureName") },
+      {
+        callback_data: buildCbData({ action: ProfanityFilterAction.SETTINGS, chatId }),
+        text: t("profanityFilter:featureName"),
+      },
     ];
     const timeZoneButton: InlineKeyboardButton[] = [
-      { callback_data: `${TimeZoneAction.SETTINGS}?chatId=${chatId}`, text: t("timeZone:featureName") },
+      { callback_data: buildCbData({ action: TimeZoneAction.SETTINGS, chatId }), text: t("timeZone:featureName") },
     ];
     const votebanButton: InlineKeyboardButton[] = [
-      { callback_data: `${VotebanAction.SETTINGS}?chatId=${chatId}`, text: t("voteban:featureName") },
+      { callback_data: buildCbData({ action: VotebanAction.SETTINGS, chatId }), text: t("voteban:featureName") },
     ];
     const warningsButton: InlineKeyboardButton[] = [
-      { callback_data: `${WarningsAction.SETTINGS}?chatId=${chatId}`, text: t("warnings:featureName") },
+      { callback_data: buildCbData({ action: WarningsAction.SETTINGS, chatId }), text: t("warnings:featureName") },
     ];
     const allFeatures: Record<ChatType, InlineKeyboardButton[][]> = {
       [ChatType.CHANNEL]: [languageButton, timeZoneButton],
@@ -281,8 +289,8 @@ export class SettingsService {
     const replyMarkup: InlineKeyboardMarkup = {
       inline_keyboard: [
         ...features.slice(skip, skip + PAGE_SIZE),
-        getPagination(`${SettingsAction.FEATURES}?chatId=${chatId}`, { count: features.length, skip, take: PAGE_SIZE }),
-        [{ callback_data: SettingsAction.CHATS, text: `« ${t("settings:backToChats")}` }],
+        getPagination({ action: SettingsAction.FEATURES, chatId, count: features.length, skip }),
+        [{ callback_data: buildCbData({ action: SettingsAction.CHATS }), text: `« ${t("settings:backToChats")}` }],
       ],
     };
 

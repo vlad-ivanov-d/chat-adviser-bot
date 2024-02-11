@@ -7,7 +7,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
 import { NextFunction } from "src/types/next-function";
 import { CallbackCtx, TextMessageCtx } from "src/types/telegraf-context";
-import { getCallbackQueryParams, getChatHtmlLink, getUserOrChatHtmlLink } from "src/utils/telegraf";
+import { buildCbData, getChatHtmlLink, getUserOrChatHtmlLink, parseCbData } from "src/utils/telegraf";
 
 import { WarningsAction } from "./interfaces/action.interface";
 import { DELETE_MESSAGE_DELAY, OUTDATED_WARNING_TIMEOUT, WARNINGS_LIMIT } from "./warnings.constants";
@@ -32,7 +32,7 @@ export class WarningsService {
    */
   @On("callback_query")
   public async callbackQuery(ctx: CallbackCtx, next: NextFunction): Promise<void> {
-    const { action, chatId, value } = getCallbackQueryParams(ctx);
+    const { action, chatId, value } = parseCbData(ctx);
     switch (action) {
       case WarningsAction.SAVE:
         await this.saveSettings(ctx, chatId, value);
@@ -225,8 +225,13 @@ export class WarningsService {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
-            [{ callback_data: `${WarningsAction.SAVE}?chatId=${chatId}&v=true`, text: t("warnings:enable") }],
-            [{ callback_data: `${WarningsAction.SAVE}?chatId=${chatId}`, text: t("warnings:disable") }],
+            [
+              {
+                callback_data: buildCbData({ action: WarningsAction.SAVE, chatId, value: true }),
+                text: t("warnings:enable"),
+              },
+            ],
+            [{ callback_data: buildCbData({ action: WarningsAction.SAVE, chatId }), text: t("warnings:disable") }],
             this.settingsService.getBackToFeaturesButton(chatId),
           ],
         },

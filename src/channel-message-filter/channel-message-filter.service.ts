@@ -6,7 +6,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
 import { NextFunction } from "src/types/next-function";
 import { CallbackCtx, MessageCtx } from "src/types/telegraf-context";
-import { getCallbackQueryParams, getChatHtmlLink } from "src/utils/telegraf";
+import { buildCbData, getChatHtmlLink, parseCbData } from "src/utils/telegraf";
 
 import { ChannelMessageFilterAction } from "./interfaces/action.interface";
 
@@ -30,7 +30,7 @@ export class ChannelMessageFilterService {
    */
   @On("callback_query")
   public async callbackQuery(ctx: CallbackCtx, next: NextFunction): Promise<void> {
-    const { action, chatId, value } = getCallbackQueryParams(ctx);
+    const { action, chatId, value } = parseCbData(ctx);
     switch (action) {
       case ChannelMessageFilterAction.SAVE:
         await this.saveSettings(ctx, chatId, value);
@@ -103,8 +103,12 @@ export class ChannelMessageFilterService {
     }
 
     const chatLink = getChatHtmlLink(dbChat);
-    const disableCbData = `${ChannelMessageFilterAction.SAVE}?chatId=${chatId}`;
-    const filterCbData = `${ChannelMessageFilterAction.SAVE}?chatId=${chatId}&v=${ChannelMessageFilterRule.FILTER}`;
+    const disableCbData = buildCbData({ action: ChannelMessageFilterAction.SAVE, chatId });
+    const filterCbData = buildCbData({
+      action: ChannelMessageFilterAction.SAVE,
+      chatId,
+      value: ChannelMessageFilterRule.FILTER,
+    });
     const sanitizedValue = this.sanitizeValue(dbChat.channelMessageFilter);
     const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";
     const msg = t("channelMessageFilter:set", { CHAT: chatLink, VALUE: value });

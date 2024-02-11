@@ -6,7 +6,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
 import { NextFunction } from "src/types/next-function";
 import { CallbackCtx } from "src/types/telegraf-context";
-import { getCallbackQueryParams, getChatHtmlLink } from "src/utils/telegraf";
+import { buildCbData, getChatHtmlLink, parseCbData } from "src/utils/telegraf";
 
 import { LanguageAction } from "./interfaces/action.interface";
 import { DEFAULT_NS } from "./language.constants";
@@ -33,7 +33,7 @@ export class LanguageService {
    */
   @On("callback_query")
   public async callbackQuery(ctx: CallbackCtx, next: NextFunction): Promise<void> {
-    const { action, chatId, value } = getCallbackQueryParams(ctx);
+    const { action, chatId, value } = parseCbData(ctx);
     switch (action) {
       case LanguageAction.SAVE:
         await this.saveSettings(ctx, chatId, value);
@@ -87,8 +87,6 @@ export class LanguageService {
     }
 
     const chatLink = getChatHtmlLink(dbChat);
-    const enText = this.getOptions().find((l) => l.code === LanguageCode.EN)?.title ?? "";
-    const ruText = this.getOptions().find((l) => l.code === LanguageCode.RU)?.title ?? "";
     const value = this.getOptions().find((l) => l.code === dbChat.language)?.title ?? "";
     const msg = t("language:select", { CHAT: chatLink, VALUE: value });
 
@@ -98,8 +96,18 @@ export class LanguageService {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
-            [{ callback_data: `${LanguageAction.SAVE}?chatId=${chatId}&v=${LanguageCode.EN}`, text: enText }],
-            [{ callback_data: `${LanguageAction.SAVE}?chatId=${chatId}&v=${LanguageCode.RU}`, text: ruText }],
+            [
+              {
+                callback_data: buildCbData({ action: LanguageAction.SAVE, chatId, value: LanguageCode.EN }),
+                text: this.getOptions().find((l) => l.code === LanguageCode.EN)?.title ?? "",
+              },
+            ],
+            [
+              {
+                callback_data: buildCbData({ action: LanguageAction.SAVE, chatId, value: LanguageCode.RU }),
+                text: this.getOptions().find((l) => l.code === LanguageCode.RU)?.title ?? "",
+              },
+            ],
             this.settingsService.getBackToFeaturesButton(chatId),
           ],
         },

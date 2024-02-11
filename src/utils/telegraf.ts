@@ -1,9 +1,48 @@
 import { ChatType, type SenderChat, type User as PrismaUser } from "@prisma/client";
+import { PAGE_SIZE } from "src/app.constants";
 import type { CallbackCtx } from "src/types/telegraf-context";
 import type { Telegraf, Telegram } from "telegraf";
 import type { Chat, InlineKeyboardButton, User } from "telegraf/typings/core/types/typegram";
 
-export interface CallbackQueryParams {
+export interface BuildCbDataParams {
+  /**
+   * Callback action
+   */
+  action: string;
+  /**
+   * Chat id
+   */
+  chatId?: number;
+  /**
+   * Skip
+   */
+  skip?: number;
+  /**
+   * Value
+   */
+  value?: boolean | number | string | null;
+}
+
+/**
+ * Builds callback query data.
+ * @param params Parameters
+ * @returns Callback query data
+ */
+export const buildCbData = (params: BuildCbDataParams): string => {
+  const urlSearchParams = new URLSearchParams();
+  if (typeof params.chatId === "number") {
+    urlSearchParams.set("cId", params.chatId.toString());
+  }
+  if (typeof params.skip === "number") {
+    urlSearchParams.set("s", params.skip.toString());
+  }
+  if (typeof params.value !== "undefined" && params.value !== null) {
+    urlSearchParams.set("v", params.value.toString());
+  }
+  return [params.action, urlSearchParams.toString()].filter((p) => p).join("?");
+};
+
+export interface ParseCbDataParams {
   /**
    * Callback action
    */
@@ -31,19 +70,28 @@ export interface CallbackQueryParams {
  * @param ctx Callback context
  * @returns Callback query parameters
  */
-export const getCallbackQueryParams = (ctx: CallbackCtx): CallbackQueryParams => {
-  const params = new URLSearchParams(ctx.callbackQuery.data.split("?")[1] ?? "");
+export const parseCbData = (ctx: CallbackCtx): ParseCbDataParams => {
+  const params = new URLSearchParams(ctx.callbackQuery.data.split("?")[1]);
+  const skip = params.get("s");
   const value = params.get("v");
   return {
     action: ctx.callbackQuery.data.split("?")[0],
-    chatId: parseFloat(params.get("chatId") ?? ""),
-    skip: params.get("skip") ? parseFloat(params.get("skip") ?? "0") : undefined,
+    chatId: Number(params.get("cId") ?? params.get("chatId") ?? ""),
+    skip: skip ? Number(skip) : undefined,
     value,
-    valueNum: parseFloat(value ?? ""),
+    valueNum: Number(value ?? ""),
   };
 };
 
 export interface PaginationParams {
+  /**
+   * Callback action
+   */
+  action: string;
+  /**
+   * Chat id
+   */
+  chatId?: number;
   /**
    * Total items count
    */
@@ -54,26 +102,23 @@ export interface PaginationParams {
   skip: number;
   /**
    * Page size
+   * @default 5
    */
-  take: number;
+  take?: number;
 }
 
 /**
  * Gets pagination buttons.
- * @param action User action
- * @param {PaginationParams} params Pagination parameters
+ * @param params Pagination parameters
  * @returns Buttons
  */
-export const getPagination = (action: string, { count, skip, take }: PaginationParams): InlineKeyboardButton[] => {
-  const actionPart = action.split("?")[0];
-  const paramsPart = action.split("?")[1] ?? "";
-  const prevParams = new URLSearchParams(paramsPart);
-  prevParams.set("skip", Math.max(0, skip - take).toString());
-  const nextParams = new URLSearchParams(paramsPart);
-  nextParams.set("skip", (skip + take).toString());
+export const getPagination = (params: PaginationParams): InlineKeyboardButton[] => {
+  const { action, chatId, count, skip, take = PAGE_SIZE } = params;
   return [
-    ...(skip > 0 ? [{ callback_data: `${actionPart}?${prevParams.toString()}`, text: "«" }] : []),
-    ...(count > skip + take ? [{ callback_data: `${actionPart}?${nextParams.toString()}`, text: "»" }] : []),
+    ...(skip > 0
+      ? [{ callback_data: buildCbData({ action, chatId, skip: Math.max(0, skip - take) }), text: "«" }]
+      : []),
+    ...(count > skip + take ? [{ callback_data: buildCbData({ action, chatId, skip: skip + take }), text: "»" }] : []),
   ];
 };
 

@@ -6,7 +6,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
 import { NextFunction } from "src/types/next-function";
 import { CallbackCtx, NewChatMembersCtx } from "src/types/telegraf-context";
-import { getCallbackQueryParams, getChatHtmlLink, getUserHtmlLink, kickChatMember } from "src/utils/telegraf";
+import { buildCbData, getChatHtmlLink, getUserHtmlLink, kickChatMember, parseCbData } from "src/utils/telegraf";
 import { Telegraf } from "telegraf";
 
 import { AddingBotsAction } from "./interfaces/action.interface";
@@ -33,7 +33,7 @@ export class AddingBotsService {
    */
   @On("callback_query")
   public async callbackQuery(ctx: CallbackCtx, next: NextFunction): Promise<void> {
-    const { action, chatId, value } = getCallbackQueryParams(ctx);
+    const { action, chatId, value } = parseCbData(ctx);
     switch (action) {
       case AddingBotsAction.SAVE:
         await this.saveSettings(ctx, chatId, value);
@@ -121,9 +121,9 @@ export class AddingBotsService {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
-    const allowedCbData = `${AddingBotsAction.SAVE}?chatId=${chatId}`;
-    const banCbData = `${AddingBotsAction.SAVE}?chatId=${chatId}&v=${AddingBotsRule.BAN}`;
-    const restrictCbData = `${AddingBotsAction.SAVE}?chatId=${chatId}&v=${AddingBotsRule.RESTRICT}`;
+    const allowedCbData = buildCbData({ action: AddingBotsAction.SAVE, chatId });
+    const banCbData = buildCbData({ action: AddingBotsAction.SAVE, chatId, value: AddingBotsRule.BAN });
+    const restrictCbData = buildCbData({ action: AddingBotsAction.SAVE, chatId, value: AddingBotsRule.RESTRICT });
     const chatLink = getChatHtmlLink(dbChat);
     const sanitizedValue = this.sanitizeValue(dbChat.addingBots);
     const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";

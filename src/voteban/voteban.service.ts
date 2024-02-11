@@ -9,12 +9,13 @@ import { SettingsService } from "src/settings/settings.service";
 import { NextFunction } from "src/types/next-function";
 import { CallbackCtx, TextMessageCtx } from "src/types/telegraf-context";
 import {
-  getCallbackQueryParams,
+  buildCbData,
   getChatHtmlLink,
   getUserHtmlLink,
   getUserOrChatHtmlLink,
   isChatAdmin,
   isChatMember,
+  parseCbData,
 } from "src/utils/telegraf";
 import type { User as TelegramUser } from "telegraf/typings/core/types/typegram";
 
@@ -41,7 +42,7 @@ export class VotebanService {
    */
   @On("callback_query")
   public async callbackQuery(ctx: CallbackCtx, next: NextFunction): Promise<void> {
-    const { action, chatId, valueNum } = getCallbackQueryParams(ctx);
+    const { action, chatId, valueNum } = parseCbData(ctx);
     switch (action) {
       case VotebanAction.BAN:
       case VotebanAction.NO_BAN:
@@ -237,20 +238,33 @@ export class VotebanService {
         reply_markup: {
           inline_keyboard: [
             [
-              { callback_data: `${VotebanAction.SETTINGS}?chatId=${chatId}&v=${newValue - 1}`, text: "-1" },
+              {
+                callback_data: buildCbData({ action: VotebanAction.SETTINGS, chatId, value: newValue - 1 }),
+                text: "-1",
+              },
               {
                 // Value can't be equal to 1
-                callback_data: `${VotebanAction.SETTINGS}?chatId=${chatId}&v=${Math.max(2, newValue + 1)}`,
+                callback_data: buildCbData({
+                  action: VotebanAction.SETTINGS,
+                  chatId,
+                  value: Math.max(2, newValue + 1),
+                }),
                 text: "+1",
               },
             ],
             [
-              { callback_data: `${VotebanAction.SETTINGS}?chatId=${chatId}&v=${newValue - 50}`, text: "-50" },
-              { callback_data: `${VotebanAction.SETTINGS}?chatId=${chatId}&v=${newValue + 50}`, text: "+50" },
+              {
+                callback_data: buildCbData({ action: VotebanAction.SETTINGS, chatId, value: newValue - 50 }),
+                text: "-50",
+              },
+              {
+                callback_data: buildCbData({ action: VotebanAction.SETTINGS, chatId, value: newValue + 50 }),
+                text: "+50",
+              },
             ],
             [
               {
-                callback_data: `${VotebanAction.SAVE}?chatId=${chatId}&v=${newValue}`,
+                callback_data: buildCbData({ action: VotebanAction.SAVE, chatId, value: newValue }),
                 text: t("settings:save"),
               },
             ],
@@ -375,8 +389,8 @@ export class VotebanService {
       parse_mode: "HTML",
       reply_markup: {
         inline_keyboard: [
-          [{ callback_data: VotebanAction.BAN, text: banButtonText }],
-          [{ callback_data: VotebanAction.NO_BAN, text: noBanButtonText }],
+          [{ callback_data: buildCbData({ action: VotebanAction.BAN }), text: banButtonText }],
+          [{ callback_data: buildCbData({ action: VotebanAction.NO_BAN }), text: noBanButtonText }],
         ],
       },
     });

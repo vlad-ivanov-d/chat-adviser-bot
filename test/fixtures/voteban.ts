@@ -9,7 +9,7 @@ import { adminUser, bot, user } from "./users";
 export const cbSaveSettingsErrorWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${VotebanAction.SAVE}?chatId=error_id&v=2`,
+    data: `${VotebanAction.SAVE}?cId=error_id&v=2`,
     from: adminUser,
     id: "1",
     message: {
@@ -30,7 +30,7 @@ export const cbSaveSettingsErrorWebhook = {
 export const cbSettingsErrorWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${VotebanAction.SETTINGS}?chatId=error_id`,
+    data: `${VotebanAction.SETTINGS}?cId=error_id`,
     from: adminUser,
     id: "1",
     message: {

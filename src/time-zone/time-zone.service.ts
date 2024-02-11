@@ -8,7 +8,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
 import { NextFunction } from "src/types/next-function";
 import { CallbackCtx } from "src/types/telegraf-context";
-import { getCallbackQueryParams, getChatHtmlLink, getPagination } from "src/utils/telegraf";
+import { buildCbData, getChatHtmlLink, getPagination, parseCbData } from "src/utils/telegraf";
 import type { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 
 import { TimeZoneAction } from "./interfaces/action.interface";
@@ -33,7 +33,7 @@ export class TimeZoneService {
    */
   @On("callback_query")
   public async callbackQuery(ctx: CallbackCtx, next: NextFunction): Promise<void> {
-    const { action, chatId, skip, value } = getCallbackQueryParams(ctx);
+    const { action, chatId, skip, value } = parseCbData(ctx);
     switch (action) {
       case TimeZoneAction.SAVE:
         await this.saveSettings(ctx, chatId, value);
@@ -92,7 +92,7 @@ export class TimeZoneService {
     const valueIndex = timeZones.indexOf(dbChat.timeZone);
     // Use provided skip or the index of the current value. Use 0 as the last fallback.
     const patchedSkip = skip ?? (valueIndex > -1 ? valueIndex : 0);
-    const value = `${format(new Date(), "O", { timeZone: dbChat.timeZone })} ${dbChat.timeZone}`;
+    const value = `${format(Date.now(), "O", { timeZone: dbChat.timeZone })} ${dbChat.timeZone}`;
     const msg = t("timeZone:select", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
@@ -103,14 +103,15 @@ export class TimeZoneService {
           inline_keyboard: [
             ...timeZones.slice(patchedSkip, patchedSkip + PAGE_SIZE).map((tz): InlineKeyboardButton[] => [
               {
-                callback_data: `${TimeZoneAction.SAVE}?chatId=${chatId}&v=${tz}`,
-                text: `${format(new Date(), "O", { timeZone: tz })} ${tz}`,
+                callback_data: buildCbData({ action: TimeZoneAction.SAVE, chatId, value: tz }),
+                text: `${format(Date.now(), "O", { timeZone: tz })} ${tz}`,
               },
             ]),
-            getPagination(`${TimeZoneAction.SETTINGS}?chatId=${chatId}`, {
+            getPagination({
+              action: TimeZoneAction.SETTINGS,
+              chatId,
               count: timeZones.length,
               skip: patchedSkip,
-              take: PAGE_SIZE,
             }),
             this.settingsService.getBackToFeaturesButton(chatId),
           ],
