@@ -81,6 +81,7 @@
     "voteCounted": "Your vote has been counted"
   },
   "warnings": {
+    "banned": "User {{USER}} is banned",
     "cannotWarnAdmin": "I can't issue a warning to the administrator. It would be incorrect.",
     "cannotWarnMyself": "I can't issue a warning to myself. This would be weird.",
     "disable": "Disable",

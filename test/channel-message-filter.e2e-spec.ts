@@ -104,6 +104,6 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbSaveSettingsWebhookResponse);
     await sleep(ASYNC_REQUEST_DELAY);
-    expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayload);
+    expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayloadFunc());
   });
 });

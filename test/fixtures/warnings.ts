@@ -8,6 +8,16 @@ import { privateChat, supergroup } from "./chats";
 import { adminUser, bot, user } from "./users";
 
 /**
+ * Payload for send message request. It should be sent as a result of /warn command processing.
+ */
+export const banSendMessagePayload = {
+  chat_id: supergroup.id,
+  parse_mode: "HTML",
+  reply_to_message_id: 5,
+  text: `User <a href="tg:user?id=${user.id}">@${user.username}</a> is banned`,
+};
+
+/**
  * Webhook payload which contains voteban save settings callback with incorrect chat id
  */
 export const cbSaveSettingsErrorWebhook = {
@@ -104,9 +114,11 @@ export const answerCbSaveSettingsWebhookResponse = {
 };
 
 /**
- * Webhook payload which contains warnings save settings edit message payload
+ * Webhook payload which contains warnings save settings edit message payload.
+ * This fixture should be implemented via function to prevent issues related to dates.
+ * @returns Payload
  */
-export const cbSaveSettingsEditMessageTextPayload = {
+export const cbSaveSettingsEditMessageTextPayloadFunc = (): unknown => ({
   ...cbSettingsEditMessageTextPayload,
   text:
     "<b>Warnings</b>\nI can issue warnings to users by admin command. To do this, respond to the user's message " +
@@ -115,7 +127,7 @@ export const cbSaveSettingsEditMessageTextPayload = {
     `/warn - issue a warning\n\nEnable warnings in @${supergroup.username} chat?\n\nCurrent value: <b>enabled</b>\n` +
     `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
     `by <a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>`,
-};
+});
 
 /**
  * Webhook payload which contains warnings save settings callback

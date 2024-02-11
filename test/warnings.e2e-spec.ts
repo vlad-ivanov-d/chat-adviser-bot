@@ -44,19 +44,22 @@ describe("WarningsModule (e2e)", () => {
     ]);
     let banChatMemberPayload;
     let deleteMessagePayload;
-    let sendMessagePayload;
+    let sendMessagePayload1: unknown;
+    let sendMessagePayload2: unknown;
     server.use(
       http.post(`${TELEGRAM_API_BASE_URL}/banChatMember`, async (info) => {
         banChatMemberPayload = await info.request.json();
-        return HttpResponse.json({ ok: true });
+        return HttpResponse.json({ ok: true, result: true });
       }),
       http.post(`${TELEGRAM_API_BASE_URL}/deleteMessage`, async (info) => {
         deleteMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
       http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
-        sendMessagePayload = await info.request.json();
-        return HttpResponse.json({ ok: true });
+        const body = await info.request.json();
+        sendMessagePayload1 = sendMessagePayload1 ?? body;
+        sendMessagePayload2 = sendMessagePayload1 ? body : undefined;
+        return HttpResponse.json({ ok: true, result: { message_id: 5 } });
       }),
     );
 
@@ -66,7 +69,8 @@ describe("WarningsModule (e2e)", () => {
     expect(response.body).toEqual({ chat_id: supergroup.id, message_id: 4, method: "deleteMessage" });
     await sleep(ASYNC_REQUEST_DELAY);
     expect(banChatMemberPayload).toEqual({ chat_id: supergroup.id, user_id: user.id });
-    expect(sendMessagePayload).toEqual(fixtures.warnSendMessagePayload);
+    expect(sendMessagePayload1).toEqual(fixtures.warnSendMessagePayload);
+    expect(sendMessagePayload2).toEqual(fixtures.banSendMessagePayload);
 
     jest.runOnlyPendingTimers();
     await sleep(ASYNC_REQUEST_DELAY);
@@ -161,7 +165,7 @@ describe("WarningsModule (e2e)", () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbSaveSettingsWebhookResponse);
     await sleep(ASYNC_REQUEST_DELAY);
-    expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayload);
+    expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayloadFunc());
   });
 
   it("should say if the bot has no admin permissions", async () => {

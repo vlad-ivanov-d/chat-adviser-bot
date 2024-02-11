@@ -116,9 +116,11 @@ export const cbSettingsWebhook = {
 };
 
 /**
- * Webhook payload which contains channel message filter save settings edit message payload
+ * Webhook payload which contains channel message filter save settings edit message payload.
+ * This fixture should be implemented via function to prevent issues related to dates.
+ * @returns Payload
  */
-export const cbSaveSettingsEditMessageTextPayload = {
+export const cbSaveSettingsEditMessageTextPayloadFunc = (): unknown => ({
   ...cbSettingsEditMessageTextPayload,
   text:
     "<b>Messages On Behalf Of Channels</b>\nI can filter messages on behalf of channels (not to be confused with " +
@@ -129,7 +131,7 @@ export const cbSaveSettingsEditMessageTextPayload = {
     "Current value: <b>filter enabled</b>\n" +
     `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
     `by <a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>`,
-};
+});
 
 /**
  * Webhook payload which contains channel message filter save settings callback

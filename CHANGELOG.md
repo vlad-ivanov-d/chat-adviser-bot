@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.16.0 (2024-xx-xx)
+## 1.16.0 (2024-02-12)
 
 - Other: internal improvements
 

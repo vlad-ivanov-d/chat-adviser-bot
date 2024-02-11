@@ -9,7 +9,7 @@ import { NextFunction } from "src/types/next-function";
 import { CallbackCtx, TextMessageCtx } from "src/types/telegraf-context";
 import { buildCbData, getChatHtmlLink, getUserOrChatHtmlLink, parseCbData } from "src/utils/telegraf";
 
-import { WarningsAction } from "./interfaces/action.interface";
+import { WarningsAction, type WarnOptions } from "./interfaces/action.interface";
 import { DELETE_MESSAGE_DELAY, OUTDATED_WARNING_TIMEOUT, WARNINGS_LIMIT } from "./warnings.constants";
 
 @Update()
@@ -110,7 +110,6 @@ export class WarningsService {
 
     await Promise.all([
       this.deleteOutdatedWarnings(),
-      candidateSenderChat && this.prismaService.upsertSenderChat(candidateSenderChat, from),
       // An expected error may happen when bot has no enough permissions
       ctx.deleteMessage(messageId).catch(() => false),
     ]);
@@ -123,58 +122,72 @@ export class WarningsService {
 
     const existedWarning = await this.prismaService.warning.findFirst({
       select: { id: true },
-      where: { chatId: chat.id, messageId: replyToMessage.message_id, userId: from.id },
+      where: {
+        chatId: chat.id,
+        messageId: replyToMessage.message_id,
+        senderChatId: candidateSenderChat?.id ?? null,
+        userId: candidate.id,
+      },
     });
     if (candidateMember?.status === "kicked" || existedWarning) {
       return;
     }
 
+    await this.warn(ctx, { candidate, candidateMessageId: replyToMessage.message_id, candidateSenderChat });
+  }
+
+  /**
+   * Issues the warning without additional checks
+   * @param ctx Text message context
+   * @param options Options to warn
+   */
+  private async warn(ctx: TextMessageCtx, options: WarnOptions): Promise<void> {
+    const { candidate, candidateMessageId, candidateSenderChat } = options;
+    if (candidateSenderChat) {
+      await this.prismaService.upsertSenderChat(candidateSenderChat, ctx.from);
+    }
     const [, , warnings] = await this.prismaService.$transaction([
-      this.prismaService.upsertUser(candidate, from),
+      this.prismaService.upsertUser(candidate, ctx.from),
       this.prismaService.warning.create({
         data: {
-          authorId: from.id,
-          chatId: chat.id,
-          editorId: from.id,
-          messageId: replyToMessage.message_id,
-          senderChatId: candidateSenderChat?.id,
+          authorId: ctx.from.id,
+          chatId: ctx.chat.id,
+          editorId: ctx.from.id,
+          messageId: candidateMessageId,
+          senderChatId: candidateSenderChat?.id ?? null,
           userId: candidate.id,
         },
         select: { id: true },
       }),
       this.prismaService.warning.findMany({
         select: { id: true },
-        where: { chatId: chat.id, senderChatId: candidateSenderChat?.id, userId: candidate.id },
+        where: { chatId: ctx.chat.id, senderChatId: candidateSenderChat?.id ?? null, userId: candidate.id },
       }),
     ]);
 
     const candidateLink = getUserOrChatHtmlLink(candidate, candidateSenderChat);
-    const msg = t("warnings:text", { USER: candidateLink, WARNINGS_COUNT: warnings.length, WARNINGS_LIMIT });
-    await ctx.sendMessage(msg, {
-      parse_mode: "HTML",
-      reply_to_message_id: replyToMessage.message_id,
-    });
+    const { message_id: replyMessageId } = await ctx.reply(
+      t("warnings:text", { USER: candidateLink, WARNINGS_COUNT: warnings.length, WARNINGS_LIMIT }),
+      {
+        parse_mode: "HTML",
+        reply_to_message_id: candidateMessageId,
+      },
+    );
 
     if (warnings.length >= WARNINGS_LIMIT) {
-      await this.applyPenalties(ctx);
-    }
-  }
-
-  /**
-   * Applies penalties for exceeding the warning limit.
-   * @param ctx Text message context
-   */
-  private async applyPenalties(ctx: TextMessageCtx): Promise<void> {
-    const { from, sender_chat: senderChatId } = ctx.message.reply_to_message ?? {};
-    await Promise.all([
-      from &&
+      const [isChatMemberBanned, isSenderChatBanned] = await Promise.all([
+        // An expected error may happen when bot has no enough permissions
+        !candidateSenderChat && ctx.banChatMember(candidate.id).catch(() => false),
+        candidateSenderChat && ctx.banChatSenderChat(candidateSenderChat.id).catch(() => false),
         this.prismaService.warning.deleteMany({
-          where: { chatId: ctx.chat.id, senderChatId: senderChatId?.id, userId: from.id },
+          where: { chatId: ctx.chat.id, senderChatId: candidateSenderChat?.id ?? null, userId: candidate.id },
         }),
-      // An expected error may happen when bot has no enough permissions
-      senderChatId && ctx.banChatSenderChat(senderChatId.id).catch(() => false),
-      !senderChatId && from && ctx.banChatMember(from.id).catch(() => false),
-    ]);
+      ]);
+      if (isChatMemberBanned || isSenderChatBanned) {
+        const msg = t("warnings:banned", { USER: candidateLink });
+        await ctx.reply(msg, { parse_mode: "HTML", reply_to_message_id: replyMessageId });
+      }
+    }
   }
 
   /**
