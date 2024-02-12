@@ -74,6 +74,7 @@ model Chat {
   warnings            Warning[]
 
   @@index([displayTitle])
+  @@index([type])
   @@map("chats")
 }
 

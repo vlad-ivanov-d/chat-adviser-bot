@@ -69,7 +69,7 @@ describe("ChannelMessageFilterModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({});
-    expect(banChatSenderChatPayload).toBe(undefined);
+    expect(banChatSenderChatPayload).toBeUndefined();
   });
 
   it("should render settings", async () => {

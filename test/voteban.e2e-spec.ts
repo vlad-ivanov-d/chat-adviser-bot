@@ -48,7 +48,7 @@ describe("VotebanModule (e2e)", () => {
       .send(fixtures.votebanWithoutReplyWebhook);
 
     expect(response.status).toBe(200);
-    expect(sendMessagePayload).toBe(undefined);
+    expect(sendMessagePayload).toBeUndefined();
   });
 
   it("should not start voteban against itself", async () => {
