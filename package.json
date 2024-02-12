@@ -1,6 +1,6 @@
 {
   "name": "chat-adviser-bot",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "description": "Open source Telegram bot that helps to moderate chats.",
   "author": "Vlad Ivanov",
   "license": "MIT",
