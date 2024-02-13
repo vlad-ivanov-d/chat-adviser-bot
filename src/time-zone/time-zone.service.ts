@@ -154,6 +154,7 @@ export class TimeZoneService {
       this.prismaService.chat.update({ data: { timeZone }, select: { id: true }, where: { id: chatId } }),
       this.prismaService.upsertChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.TIME_ZONE),
     ]);
+    await this.prismaService.deleteChatCache(chatId);
     await Promise.all([this.settingsService.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId, skip)]);
   }
 }

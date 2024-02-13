@@ -88,10 +88,9 @@ beforeAll(() => {
 
 // Reset any request handlers that may be added during the tests, so they don't affect other tests.
 afterEach(async () => {
-  cache.clear();
   jest.useRealTimers();
   server.resetHandlers();
-  await cleanupDb();
+  await Promise.all([cache.reset(), cleanupDb()]);
 });
 
 // Clean up after the tests are finished

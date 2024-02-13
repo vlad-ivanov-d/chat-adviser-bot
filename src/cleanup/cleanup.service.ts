@@ -23,8 +23,10 @@ export class CleanupService {
   @On("left_chat_member")
   public async cleanupChats(ctx: LeftChatMemberContext, next: NextFunction): Promise<void> {
     if (ctx.update.message.left_chat_member.id === ctx.botInfo.id) {
-      this.prismaService.removeUpsertChatCache(ctx.chat.id);
-      await this.prismaService.chat.deleteMany({ where: { id: ctx.chat.id } });
+      await Promise.all([
+        this.prismaService.deleteChatCache(ctx.chat.id),
+        this.prismaService.chat.deleteMany({ where: { id: ctx.chat.id } }),
+      ]);
     }
     await next();
   }

@@ -138,8 +138,10 @@ export class SettingsService {
       const errorCode = getErrorCode(e);
       if (errorCode === 400 || errorCode === 403) {
         // Chat was deleted, remove it from the cache and database.
-        this.prismaService.removeUpsertChatCache(chatId);
-        await this.prismaService.chat.deleteMany({ where: { id: chatId } });
+        await Promise.all([
+          this.prismaService.deleteChatCache(chatId),
+          this.prismaService.chat.deleteMany({ where: { id: chatId } }),
+        ]);
       }
     }
 

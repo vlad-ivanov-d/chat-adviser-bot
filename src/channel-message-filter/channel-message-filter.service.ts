@@ -165,6 +165,7 @@ export class ChannelMessageFilterService {
         ChatSettingName.CHANNEL_MESSAGE_FILTER,
       ),
     ]);
+    await this.prismaService.deleteChatCache(chatId);
     await Promise.all([this.settingsService.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId)]);
   }
 }

@@ -169,6 +169,7 @@ export class AddingBotsService {
       this.prismaService.chat.update({ data: { addingBots }, select: { id: true }, where: { id: chatId } }),
       this.prismaService.upsertChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.ADDING_BOTS),
     ]);
+    await this.prismaService.deleteChatCache(chatId);
     await Promise.all([this.settingsService.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId)]);
   }
 

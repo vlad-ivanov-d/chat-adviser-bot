@@ -1,12 +1,13 @@
-import { Injectable } from "@nestjs/common";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Inject, Injectable } from "@nestjs/common";
 import { ChatSettingName, ProfanityFilterRule } from "@prisma/client";
+import { Cache as CacheManager } from "cache-manager";
 import { changeLanguage, t } from "i18next";
 import { Ctx, Next, On, Update } from "nestjs-telegraf";
 import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
 import { NextFunction } from "src/types/next-function";
 import { CallbackCtx, MessageCtx } from "src/types/telegraf-context";
-import { cache } from "src/utils/cache";
 import { Profanity } from "src/utils/profanity";
 import { buildCbData, getChatHtmlLink, getUserFullName, parseCbData } from "src/utils/telegraf";
 
@@ -18,10 +19,12 @@ import { WORDS_CACHE_KEY, WORDS_CACHE_TIMEOUT } from "./profanity-filter.constan
 export class ProfanityFilterService {
   /**
    * Creates profanity filter service
+   * @param cacheManager Cache manager
    * @param prismaService Database service
    * @param settingsService Settings service
    */
   public constructor(
+    @Inject(CACHE_MANAGER) private cacheManager: CacheManager,
     private readonly prismaService: PrismaService,
     private readonly settingsService: SettingsService,
   ) {}
@@ -79,8 +82,12 @@ export class ProfanityFilterService {
     }
 
     const stringsToFilter = this.getStringsToFilter(ctx);
-    const profaneWords = await this.getCachedProfaneWords();
-    const profanity = new Profanity(profaneWords);
+    const profaneWords = await this.cacheManager.wrap(
+      WORDS_CACHE_KEY,
+      () => this.prismaService.profaneWord.findMany({ select: { word: true } }),
+      WORDS_CACHE_TIMEOUT,
+    );
+    const profanity = new Profanity(profaneWords.map((i) => i.word));
 
     if (
       profanity.filter(stringsToFilter.forwardChatTitle).hasProfanity ||
@@ -100,21 +107,6 @@ export class ProfanityFilterService {
     }
 
     await next();
-  }
-
-  /**
-   * Gets profane words with caching
-   * @returns Cached profane words
-   */
-  private async getCachedProfaneWords(): Promise<string[]> {
-    const cachedProfaneWords = cache.getItem<string[]>(WORDS_CACHE_KEY);
-    if (cachedProfaneWords) {
-      return cachedProfaneWords;
-    }
-    const profaneWordRows = await this.prismaService.profaneWord.findMany({ select: { word: true } });
-    const profaneWords = profaneWordRows.map(({ word }) => word);
-    cache.setItem(WORDS_CACHE_KEY, profaneWords, WORDS_CACHE_TIMEOUT);
-    return profaneWords;
   }
 
   /**
@@ -257,6 +249,7 @@ export class ProfanityFilterService {
       this.prismaService.chat.update({ data: { profanityFilter }, select: { id: true }, where: { id: chatId } }),
       this.prismaService.upsertChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.PROFANITY_FILTER),
     ]);
+    await this.prismaService.deleteChatCache(chatId);
     await Promise.all([this.settingsService.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId)]);
   }
 }
