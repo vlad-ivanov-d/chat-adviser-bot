@@ -4,7 +4,7 @@ import { ChatType } from "@prisma/client";
 import { On, Update } from "nestjs-telegraf";
 import { PrismaService } from "src/prisma/prisma.service";
 import { NextFunction } from "src/types/next-function";
-import { LeftChatMemberContext } from "src/types/telegraf-context";
+import { MyChatMemberCtx } from "src/types/telegraf-context";
 
 @Update()
 @Injectable()
@@ -16,13 +16,14 @@ export class CleanupService {
   public constructor(private readonly prismaService: PrismaService) {}
 
   /**
-   * Initiates cleanup module
+   * Cleanups chats
    * @param ctx Callback context
    * @param next Function to continue processing
    */
-  @On("left_chat_member")
-  public async cleanupChats(ctx: LeftChatMemberContext, next: NextFunction): Promise<void> {
-    if (ctx.update.message.left_chat_member.id === ctx.botInfo.id) {
+  @On("my_chat_member")
+  public async cleanupChats(ctx: MyChatMemberCtx, next: NextFunction): Promise<void> {
+    const { status } = ctx.update.my_chat_member.new_chat_member;
+    if (status === "kicked" || status === "left") {
       await Promise.all([
         this.prismaService.deleteChatCache(ctx.chat.id),
         this.prismaService.chat.deleteMany({ where: { id: ctx.chat.id } }),
