@@ -123,11 +123,7 @@ export class SettingsService {
    * @returns True if validation is successfully passed
    */
   public async resolveChat(ctx: CallbackCtx | MessageCtx, chatId: number): Promise<UpsertedChat | undefined> {
-    const from = "message" in ctx.update ? ctx.update.message.from : ctx.callbackQuery?.from;
-    if (!from) {
-      throw new Error("User is not defined to resolve database chat.");
-    }
-
+    const { from } = typeof ctx.callbackQuery === "undefined" ? ctx.update.message : ctx.callbackQuery;
     try {
       const chat = await ctx.telegram.getChat(chatId);
       const dbChat = await this.prismaService.upsertChat(chat, from);
