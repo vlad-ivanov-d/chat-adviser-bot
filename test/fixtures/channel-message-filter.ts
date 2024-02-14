@@ -46,7 +46,7 @@ export const cbSaveSettingsErrorWebhook = {
 };
 
 /**
- * Webhook payload which contains channel message filter settings callback
+ * Payload for edit message text request. It should be sent as a result of settings callback.
  */
 export const cbSettingsEditMessageTextPayload = {
   chat_id: privateChat.id,

@@ -39,7 +39,7 @@ export const cbSaveSettingsErrorWebhook = {
 };
 
 /**
- * Webhook payload which contains warnings settings callback
+ * Payload for edit message text request. It should be sent as a result of settings callback.
  */
 export const cbSettingsEditMessageTextPayload = {
   chat_id: privateChat.id,
@@ -114,7 +114,7 @@ export const answerCbSaveSettingsWebhookResponse = {
 };
 
 /**
- * Webhook payload which contains warnings save settings edit message payload.
+ * Payload for edit message text request. It should be sent as a result of save settings callback.
  * This fixture should be implemented via function to prevent issues related to dates.
  * @returns Payload
  */
