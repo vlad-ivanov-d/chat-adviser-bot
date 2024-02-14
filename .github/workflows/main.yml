@@ -45,6 +45,11 @@ jobs:
           node-version: 20.11.0
       - name: Restore dependencies
         run: npm ci
+      - name: Check
+        run: |
+          docker -v
+          docker compose version
+        shell: bash
       - name: Run unit tests
         run: npm run test:cov
       - name: Run e2e tests
