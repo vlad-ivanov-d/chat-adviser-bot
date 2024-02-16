@@ -80,7 +80,7 @@
     "url": "https://github.com/vlad-ivanov-d/chat-adviser-bot/issues"
   },
   "engines": {
-    "node": "20.11.0",
+    "node": "20.11.1",
     "npm": "10.2.4"
   },
   "homepage": "https://github.com/vlad-ivanov-d/chat-adviser-bot#readme",
@@ -98,7 +98,7 @@
     "url": "git+https://github.com:vlad-ivanov-d/chat-adviser-bot.git"
   },
   "volta": {
-    "node": "20.11.0",
+    "node": "20.11.1",
     "npm": "10.2.4"
   }
 }
