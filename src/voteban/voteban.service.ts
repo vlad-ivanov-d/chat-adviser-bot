@@ -418,7 +418,7 @@ export class VotebanService {
             noBanVoters: { select: { authorId: true }, where: { authorId: from.id } },
           },
           where: {
-            NOT: { isCompleted: true },
+            OR: [{ isCompleted: false }, { isCompleted: null }],
             chatId_messageId: { chatId: message.chat.id, messageId: message.message_id },
           },
         }),
