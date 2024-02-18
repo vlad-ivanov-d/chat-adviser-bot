@@ -12,6 +12,7 @@ const config: Config = {
   preset: "ts-jest",
   restoreMocks: true,
   setupFilesAfterEnv: ["<rootDir>/test/utils/setup-after-env.ts"],
+  testMatch: ["<rootDir>/src/**/*.spec.ts"],
 };
 
 // Jest config should have default export

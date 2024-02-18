@@ -16,6 +16,9 @@
     "strict": true,
     "target": "ESNext"
   },
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  },
   "watchOptions": {
     "watchFile": "fixedPollingInterval"
   }

@@ -3,7 +3,7 @@ import { Test } from "@nestjs/testing";
 import { http, HttpResponse } from "msw";
 import request from "supertest";
 import type { App } from "supertest/types";
-import { server } from "test/utils/setup-after-env";
+import { server } from "test/utils/server";
 
 import { AppModule } from "../src/app.module";
 import * as fixtures from "./fixtures/channel-message-filter";

@@ -17,7 +17,9 @@ export const cleanupDb = async (): Promise<void> => {
   if (NODE_ENV === "test") {
     // Cleanup is allowed only in the test environment
     await prisma.$transaction([prisma.chat.deleteMany(), prisma.user.deleteMany()]);
+    return;
   }
+  throw new Error("Database cleanup is allowed only in test environment");
 };
 
 /**

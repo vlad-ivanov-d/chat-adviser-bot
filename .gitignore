@@ -19,6 +19,7 @@ lerna-debug.log*
 /coverage
 /coverage-e2e
 /coverage-total
+/k6/dist
 
 # IDEs and editors
 /.idea
