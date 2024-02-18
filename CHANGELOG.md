@@ -2,6 +2,7 @@
 
 ## 1.17.0 (2024-xx-xx)
 
+- Fix: duplicate message about completion of voteban
 - Other: internal improvements
 
 ## 1.16.0 (2024-02-12)

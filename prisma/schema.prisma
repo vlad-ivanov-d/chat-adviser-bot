@@ -217,6 +217,7 @@ model Voteban {
   editor              User        @relation("VotebanEditor", fields: [editorId], references: [id])
 
   @@unique([chatId, messageId])
+  @@index([isCompleted])
   @@index([createdAt])
   @@map("votebans")
 }

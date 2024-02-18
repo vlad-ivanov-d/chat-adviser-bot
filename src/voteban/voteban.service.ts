@@ -417,7 +417,10 @@ export class VotebanService {
             id: true,
             noBanVoters: { select: { authorId: true }, where: { authorId: from.id } },
           },
-          where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
+          where: {
+            NOT: { isCompleted: true },
+            chatId_messageId: { chatId: message.chat.id, messageId: message.message_id },
+          },
         }),
       ]),
       isChatMember(ctx.telegram, message.chat.id, from.id),
