@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.18.0 (2024-xx-xx)
+
+- Other: internal improvements
+
 ## 1.17.0 (2024-02-19)
 
 - Fix: duplicate message about completion of voteban

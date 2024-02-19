@@ -64,7 +64,7 @@ Execute the following command to run unit and end-to-end tests with a code cover
 npm run test:total:cov
 ```
 
-### Load testing
+### Load Tests
 
 Execute the following command to run all load tests sequentially.
 

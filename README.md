@@ -36,7 +36,7 @@ The bot can work in different time zones and display dates in the appropriate fo
 
 ### Warnings
 
-The bot can issue warnings to users upon admin command. To give a warning to a user, respond to their message with the appropriate command. In this case, the user's message will be deleted. Each warning is valid for 90 days, then it is automatically removed. If 3 warnings are received, the user will be banned. A warning cannot be issued to an administrator.
+The bot can issue warnings to users by admin command. To do this, respond to the user's message with the appropriate command. In this case, the user's message will be deleted. Each warning is valid for 90 days, then it is automatically removed. If 3 warnings are received, the user will be banned.
 
 `/warn` - issue a warning
 
