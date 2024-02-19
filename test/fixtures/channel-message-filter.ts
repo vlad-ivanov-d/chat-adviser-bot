@@ -8,17 +8,6 @@ import { channel, privateChat, supergroup } from "./chats";
 import { adminUser, bot, systemChannelBot } from "./users";
 
 /**
- * Webhook response which contains answer callback query method.
- * It should be sent as a result of callback save settings processing.
- */
-export const answerCbSaveSettingsWebhookResponse = {
-  callback_query_id: "1",
-  method: "answerCallbackQuery",
-  show_alert: true,
-  text: "Changes saved",
-};
-
-/**
  * Payload for ban sender chat request. It should be sent as a result of channel message
  * processing in a supergroup chat.
  */
@@ -46,7 +35,7 @@ export const cbSaveSettingsErrorWebhook = {
 };
 
 /**
- * Webhook payload which contains channel message filter settings callback
+ * Payload for edit message text request. It should be sent as a result of settings callback.
  */
 export const cbSettingsEditMessageTextPayload = {
   chat_id: privateChat.id,

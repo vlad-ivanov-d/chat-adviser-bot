@@ -88,9 +88,9 @@ export class ChannelMessageFilterService {
    * Renders settings
    * @param ctx Callback context
    * @param chatId Id of the chat which is edited
-   * @param sendAnswerCallback Answer callback query will be sent if true
+   * @param shouldAnswerCallback Answer callback query will be sent if true
    */
-  private async renderSettings(ctx: CallbackCtx, chatId: number, sendAnswerCallback?: boolean): Promise<void> {
+  private async renderSettings(ctx: CallbackCtx, chatId: number, shouldAnswerCallback?: boolean): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Chat is not defined to render channel message filter settings
     }
@@ -114,7 +114,7 @@ export class ChannelMessageFilterService {
     const msg = t("channelMessageFilter:set", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
-      sendAnswerCallback && ctx.answerCbQuery(),
+      shouldAnswerCallback && ctx.answerCbQuery(),
       ctx.editMessageText(this.prismaService.joinModifiedInfo(msg, ChatSettingName.CHANNEL_MESSAGE_FILTER, dbChat), {
         parse_mode: "HTML",
         reply_markup: {
@@ -165,6 +165,7 @@ export class ChannelMessageFilterService {
         ChatSettingName.CHANNEL_MESSAGE_FILTER,
       ),
     ]);
+    await this.prismaService.deleteChatCache(chatId);
     await Promise.all([this.settingsService.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId)]);
   }
 }

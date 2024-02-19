@@ -1,4 +1,5 @@
-import { Injectable, type OnModuleDestroy, type OnModuleInit } from "@nestjs/common";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Inject, Injectable, type OnModuleDestroy, type OnModuleInit } from "@nestjs/common";
 import {
   AddingBotsRule,
   ChannelMessageFilterRule,
@@ -10,11 +11,11 @@ import {
   ProfanityFilterRule,
   type User,
 } from "@prisma/client";
+import { Cache as CacheManager } from "cache-manager";
 import { formatInTimeZone } from "date-fns-tz";
 import i18next, { t } from "i18next";
 import { InjectBot } from "nestjs-telegraf";
 import { DATE_FORMAT } from "src/app.constants";
-import { cache } from "src/utils/cache";
 import { getDateLocale } from "src/utils/dates";
 import { getChatDisplayTitle, getUserDisplayName, getUserHtmlLink } from "src/utils/telegraf";
 import { Telegraf } from "telegraf";
@@ -28,9 +29,23 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
   /**
    * Creates app service
    * @param bot Telegram bot instance
+   * @param cacheManager Cache manager
    */
-  public constructor(@InjectBot() private readonly bot: Telegraf) {
+  public constructor(
+    @InjectBot() private readonly bot: Telegraf,
+    @Inject(CACHE_MANAGER) private cacheManager: CacheManager,
+  ) {
     super();
+  }
+
+  /**
+   * Deletes cache for upsert chat method
+   * @param chatId Chat id
+   */
+  public async deleteChatCache(chatId: number): Promise<void> {
+    const cacheKey = this.getChatCacheKey(chatId);
+    const keys = await this.cacheManager.store.keys();
+    await Promise.all(keys.filter((k) => k.startsWith(cacheKey)).map((k) => this.cacheManager.del(k)));
   }
 
   /**
@@ -87,19 +102,6 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
   }
 
   /**
-   * Removes cache for upsert chat method
-   * @param chatId Chat id
-   */
-  public removeUpsertChatCache(chatId: number): void {
-    const cacheKey = this.getChatCacheKey(chatId);
-    cache.forEach((key) => {
-      if (key.startsWith(cacheKey)) {
-        cache.removeItem(key);
-      }
-    });
-  }
-
-  /**
    * Resolves supported language code
    * @param languageCode Language code
    * @returns Language code which is supported by the bot
@@ -115,77 +117,15 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
   }
 
   /**
-   * Gets the chat from the database. The chat will be created if it's not exists.
-   * @param chat Telegram chat or chat id
+   * Gets the chat from the database. The chat will be created if it does not exist.
+   * The result of this request will be cached for 10 seconds.
+   * @param chat Telegram chat
    * @param editor Telegram user who makes upsert
    * @returns Chat
    */
   public async upsertChat(chat: Chat, editor: TelegramUser): Promise<UpsertedChat> {
     const cacheKey = this.getChatCacheKey(chat.id, editor.id);
-    const cachedChat = cache.getItem<UpsertedChat>(cacheKey);
-    if (cachedChat) {
-      return cachedChat;
-    }
-
-    const { botInfo, telegram } = this.bot;
-    const [admins, membersCount] = await Promise.all([
-      // An expected error may happen if administrators are hidden
-      chat.type === "private" ? [] : telegram.getChatAdministrators(chat.id).catch(() => []),
-      telegram.getChatMembersCount(chat.id),
-    ]);
-
-    const adminIds = admins.map((a) => ({ id: a.user.id }));
-    const update = {
-      admins: { set: adminIds },
-      displayTitle: getChatDisplayTitle(chat),
-      editorId: editor.id,
-      firstName: "first_name" in chat ? chat.first_name : null,
-      lastName: "last_name" in chat ? chat.last_name ?? null : null,
-      membersCount,
-      title: "title" in chat ? chat.title : null,
-      type: this.resolveChatType(chat.type),
-      username: "username" in chat ? chat.username ?? null : null,
-    };
-
-    const transaction = await this.$transaction([
-      ...[editor, ...admins.map((a) => a.user)]
-        .filter((u, i, arr) => arr.findIndex((au) => au.id === u.id) === i) // Trim duplicates
-        .map((u) => this.upsertUser(u, editor)),
-      this.chat.upsert({
-        create: {
-          ...update,
-          ...(chat.type === "group" || chat.type === "supergroup"
-            ? {
-                addingBots: AddingBotsRule.RESTRICT,
-                channelMessageFilter: ChannelMessageFilterRule.FILTER,
-                hasWarnings: true,
-                profanityFilter: ProfanityFilterRule.FILTER,
-              }
-            : {}),
-          admins: { connect: adminIds },
-          authorId: editor.id,
-          id: chat.id,
-          language: this.resolveLanguage(editor.language_code),
-          timeZone: this.resolveTimeZone(editor.language_code),
-        },
-        include: { admins: true, chatSettingsHistory: { include: { editor: true } } },
-        update,
-        where: { id: chat.id },
-      }),
-    ]);
-
-    const dbChat = transaction[transaction.length - 1];
-    if (!("admins" in dbChat)) {
-      throw new Error("Something went wrong during chat upsertion.");
-    }
-
-    // Patch display title of the chat with the bot
-    const patchedChat =
-      botInfo && chat.id === editor.id
-        ? { ...dbChat, displayTitle: getUserDisplayName(botInfo, "full"), username: botInfo.username }
-        : dbChat;
-    cache.setItem(cacheKey, patchedChat, CHAT_CACHE_TIMEOUT);
-    return patchedChat;
+    return this.cacheManager.wrap(cacheKey, () => this.upsertChatWithoutCache(chat, editor), CHAT_CACHE_TIMEOUT);
   }
 
   /**
@@ -200,7 +140,6 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
     editorId: number,
     settingName: ChatSettingName,
   ): Prisma.Prisma__ChatSettingsHistoryClient<{ id: bigint }> {
-    this.removeUpsertChatCache(chatId);
     return this.chatSettingsHistory.upsert({
       create: { authorId: editorId, chatId, editorId, settingName },
       select: { id: true },
@@ -300,5 +239,68 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
       default:
         return "Etc/UTC";
     }
+  }
+
+  /**
+   * Gets the chat from the database. The chat will be created if it does not exists.
+   * @param chat Telegram chat
+   * @param editor Telegram user who makes upsert
+   * @returns Chat
+   */
+  private async upsertChatWithoutCache(chat: Chat, editor: TelegramUser): Promise<UpsertedChat> {
+    const { botInfo, telegram } = this.bot;
+    const [admins, membersCount] = await Promise.all([
+      // An expected error may happen if administrators are hidden
+      chat.type === "private" ? [] : telegram.getChatAdministrators(chat.id).catch(() => []),
+      telegram.getChatMembersCount(chat.id),
+    ]);
+
+    const adminIds = admins.map((a) => ({ id: a.user.id }));
+    const isGroupChat = chat.type === "group" || chat.type === "supergroup";
+    const update = {
+      admins: { set: adminIds },
+      displayTitle: getChatDisplayTitle(chat),
+      editorId: editor.id,
+      firstName: "first_name" in chat ? chat.first_name : null,
+      lastName: "last_name" in chat ? chat.last_name ?? null : null,
+      membersCount,
+      title: "title" in chat ? chat.title : null,
+      type: this.resolveChatType(chat.type),
+      username: "username" in chat ? chat.username ?? null : null,
+    };
+
+    const transaction = await this.$transaction([
+      ...[editor, ...admins.map((a) => a.user)]
+        .filter((u, i, arr) => arr.findIndex((au) => au.id === u.id) === i) // Trim duplicates
+        .map((u) => this.upsertUser(u, editor)),
+      this.chat.upsert({
+        create: {
+          ...update,
+          addingBots: isGroupChat ? AddingBotsRule.RESTRICT : undefined,
+          admins: { connect: adminIds },
+          authorId: editor.id,
+          channelMessageFilter: isGroupChat ? ChannelMessageFilterRule.FILTER : undefined,
+          hasWarnings: isGroupChat || undefined,
+          id: chat.id,
+          language: this.resolveLanguage(editor.language_code),
+          profanityFilter: isGroupChat ? ProfanityFilterRule.FILTER : undefined,
+          timeZone: this.resolveTimeZone(editor.language_code),
+        },
+        include: { admins: true, chatSettingsHistory: { include: { editor: true } } },
+        update,
+        where: { id: chat.id },
+      }),
+    ]);
+
+    const dbChat = transaction[transaction.length - 1];
+    if (!("admins" in dbChat)) {
+      throw new Error("Something went wrong during chat upsertion.");
+    }
+
+    return {
+      ...dbChat,
+      // Patch display title for the chat with the bot
+      displayTitle: botInfo && chat.id === editor.id ? getUserDisplayName(botInfo, "full") : dbChat.displayTitle,
+    };
   }
 }

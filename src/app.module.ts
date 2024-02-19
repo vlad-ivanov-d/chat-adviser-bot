@@ -1,3 +1,4 @@
+import { CacheModule } from "@nestjs/cache-manager";
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
@@ -14,11 +15,13 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { ProfanityFilterModule } from "./profanity-filter/profanity-filter.module";
 import { SettingsModule } from "./settings/settings.module";
 import { TimeZoneModule } from "./time-zone/time-zone.module";
+import { cache } from "./utils/cache";
 import { VotebanModule } from "./voteban/voteban.module";
 import { WarningsModule } from "./warnings/warnings.module";
 
 @Module({
   imports: [
+    CacheModule.register({ isGlobal: true, store: cache }),
     ConfigModule.forRoot(),
     ScheduleModule.forRoot(),
     TelegrafModule.forRoot({

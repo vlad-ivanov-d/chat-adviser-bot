@@ -3,9 +3,9 @@ import type { CallbackQuery, Message, Update } from "telegraf/typings/core/types
 
 export type CallbackCtx = NarrowedContext<Context, Update.CallbackQueryUpdate<CallbackQuery.DataQuery>>;
 
-export type LeftChatMemberContext = NarrowedContext<Context, Update.MessageUpdate<Message.LeftChatMemberMessage>>;
-
 export type MessageCtx = NarrowedContext<Context, Update.MessageUpdate>;
+
+export type MyChatMemberCtx = NarrowedContext<Context, Update.MyChatMemberUpdate>;
 
 export type NewChatMembersCtx = NarrowedContext<Context, Update.MessageUpdate<Message.NewChatMembersMessage>>;
 

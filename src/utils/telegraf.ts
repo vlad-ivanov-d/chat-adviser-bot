@@ -79,7 +79,7 @@ export const parseCbData = (ctx: CallbackCtx): ParseCbDataParams => {
     chatId: Number(params.get("cId") ?? params.get("chatId") ?? ""),
     skip: skip ? Number(skip) : undefined,
     value,
-    valueNum: Number(value ?? ""),
+    valueNum: value ? Number(value) : NaN,
   };
 };
 

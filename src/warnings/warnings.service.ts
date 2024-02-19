@@ -213,9 +213,9 @@ export class WarningsService {
    * Renders settings
    * @param ctx Callback context
    * @param chatId Id of the chat which is edited
-   * @param sendAnswerCallback Answer callback query will be sent if true
+   * @param shouldAnswerCallback Answer callback query will be sent if true
    */
-  private async renderSettings(ctx: CallbackCtx, chatId: number, sendAnswerCallback?: boolean): Promise<void> {
+  private async renderSettings(ctx: CallbackCtx, chatId: number, shouldAnswerCallback?: boolean): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
       return; // Chat is not defined to render warnings settings
     }
@@ -233,7 +233,7 @@ export class WarningsService {
     const msg = t("warnings:set", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
-      sendAnswerCallback && ctx.answerCbQuery(),
+      shouldAnswerCallback && ctx.answerCbQuery(),
       ctx.editMessageText(this.prismaService.joinModifiedInfo(msg, ChatSettingName.HAS_WARNINGS, dbChat), {
         parse_mode: "HTML",
         reply_markup: {
@@ -288,6 +288,7 @@ export class WarningsService {
       this.prismaService.chat.update({ data: { hasWarnings }, select: { id: true }, where: { id: chatId } }),
       this.prismaService.upsertChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.HAS_WARNINGS),
     ]);
+    await this.prismaService.deleteChatCache(chatId);
     await Promise.all([this.settingsService.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId)]);
   }
 }

@@ -9,6 +9,13 @@ import { VotebanAction } from "src/voteban/interfaces/action.interface";
 import { group, privateChat, supergroup } from "./chats";
 import { adminUser, bot } from "./users";
 
+const chatsText =
+  "Below is a list of chats that are available to me, and where you are an administrator. " +
+  "Select the chat for which you want to change the settings.\n\nIf the list doesn't contain the chat you need, " +
+  "try writing any message in it and clicking the <b>↻ Refresh the list</b> button " +
+  "(the last button in this message).";
+const refreshListText = "↻ Refresh the list";
+
 /**
  * Webhook payload which contains update about adding the bot to a new chat
  */
@@ -60,6 +67,92 @@ export const addedToNewChatSendMessagePayload2 = {
   text:
     `Select the feature you want to configure for the @${supergroup.username} chat. The list of features depends ` +
     "on the type of chat (channel, group, etc.).",
+};
+
+/**
+ * Webhook response which contains answer callback query method.
+ * It should be sent as a result of callback save settings processing.
+ */
+export const answerCbSaveSettingsWebhookResponse = {
+  callback_query_id: "1",
+  method: "answerCallbackQuery",
+  show_alert: true,
+  text: "Changes saved",
+};
+
+/**
+ * Payload for edit message text request. It should be sent as a result of chats callback.
+ */
+export const cbChatsEditMessageTextPayload = {
+  chat_id: privateChat.id,
+  message_id: 1,
+  parse_mode: "HTML",
+  reply_markup: {
+    inline_keyboard: [
+      [{ callback_data: `${SettingsAction.CHATS}?s=0`, text: "«" }],
+      [{ callback_data: SettingsAction.REFRESH, text: refreshListText }],
+    ],
+  },
+  text: chatsText,
+};
+
+/**
+ * Webhook payload which contains chats callback
+ */
+export const cbChatsWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: `${SettingsAction.CHATS}?s=4`,
+    from: adminUser,
+    id: "1",
+    message: {
+      chat: privateChat,
+      date: Date.now(),
+      edit_date: Date.now(),
+      from: bot,
+      message_id: 1,
+      text: "",
+    },
+  },
+  update_id: 1,
+};
+
+/**
+ * Payload for edit message text request. It should be sent as a result of refresh callback.
+ */
+export const cbRefreshEditMessageTextPayload = {
+  chat_id: privateChat.id,
+  message_id: 1,
+  parse_mode: "HTML",
+  reply_markup: {
+    inline_keyboard: [
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${privateChat.id}`, text: `@${bot.username}` }],
+      [],
+      [{ callback_data: SettingsAction.REFRESH, text: refreshListText }],
+    ],
+  },
+  text: chatsText,
+};
+
+/**
+ * Webhook payload which contains refresh callback
+ */
+export const cbRefreshWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: SettingsAction.REFRESH,
+    from: adminUser,
+    id: "1",
+    message: {
+      chat: privateChat,
+      date: Date.now(),
+      edit_date: Date.now(),
+      from: bot,
+      message_id: 1,
+      text: "",
+    },
+  },
+  update_id: 1,
 };
 
 /**
@@ -127,14 +220,10 @@ export const myChatsInPrivateChatSendMessagePayload = {
     inline_keyboard: [
       [{ callback_data: `${SettingsAction.FEATURES}?cId=${privateChat.id}`, text: `@${bot.username}` }],
       [],
-      [{ callback_data: SettingsAction.REFRESH, text: "↻ Refresh the list" }],
+      [{ callback_data: SettingsAction.REFRESH, text: refreshListText }],
     ],
   },
-  text:
-    "Below is a list of chats that are available to me, and where you are an administrator. " +
-    "Select the chat for which you want to change the settings.\n\n" +
-    "If the list doesn't contain the chat you need, try writing any message in it and clicking the " +
-    "<b>↻ Refresh the list</b> button (the last button in this message).",
+  text: chatsText,
 };
 
 /**

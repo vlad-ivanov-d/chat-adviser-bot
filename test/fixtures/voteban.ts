@@ -1,7 +1,45 @@
+import { formatInTimeZone } from "date-fns-tz";
+import { DATE_FORMAT } from "src/app.constants";
+import { SettingsAction } from "src/settings/interfaces/action.interface";
 import { VotebanAction } from "src/voteban/interfaces/action.interface";
 
 import { privateChat, supergroup } from "./chats";
 import { adminUser, bot, user } from "./users";
+
+/**
+ * Payload for edit message text request. It should be sent as a result of save settings callback.
+ * This fixture should be implemented via function to prevent issues related to dates.
+ * @returns Payload
+ */
+export const cbSaveSettingsEditMessageTextPayloadFunc = (): unknown => ({
+  chat_id: privateChat.id,
+  message_id: 1,
+  parse_mode: "HTML",
+  reply_markup: {
+    inline_keyboard: [
+      [
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}&v=2`, text: "-1" },
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}&v=4`, text: "+1" },
+      ],
+      [
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}&v=-47`, text: "-50" },
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}&v=53`, text: "+50" },
+      ],
+      [{ callback_data: `${VotebanAction.SAVE}?cId=${supergroup.id}&v=3`, text: "Save" }],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}`, text: "« Back to features" }],
+    ],
+  },
+  text:
+    "<b>Ban Voting</b>\nI can run votes to ban a user in a chat. The user will be banned and their message deleted " +
+    "if the appropriate number of votes is reached. This feature will help users ban the violator when " +
+    "administrators are offline. Messages sent more than 48 hours ago won't be deleted according to Telegram rules.\n" +
+    "/voteban - start voting (can be used without the slash)\n\n<b>Tip:</b> Don't set your vote limit too low. " +
+    "Otherwise, a user who has several accounts will be able to single-handedly collect the required number of votes " +
+    `and ban other chat members.\n\nSet the vote limit for making a decision in @${supergroup.username} chat. ` +
+    "If set a value less than 2, the feature will be disabled.\n\nCurrent value: <b>3</b>\n" +
+    `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
+    `by <a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>`,
+});
 
 /**
  * Webhook payload which contains voteban save settings callback with incorrect chat id
@@ -25,6 +63,20 @@ export const cbSaveSettingsErrorWebhook = {
 };
 
 /**
+ * Webhook payload which contains voteban save settings callback
+ */
+export const cbSaveSettingsWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: `${VotebanAction.SAVE}?cId=${supergroup.id}&v=3`,
+    from: adminUser,
+    id: "1",
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
+  },
+  update_id: 1,
+};
+
+/**
  * Webhook payload which contains voteban settings callback with incorrect chat id
  */
 export const cbSettingsErrorWebhook = {
@@ -41,6 +93,52 @@ export const cbSettingsErrorWebhook = {
       message_id: 1,
       text: "Select the feature",
     },
+  },
+  update_id: 1,
+};
+
+/**
+ * Payload for edit message text request. It should be sent as a result of settings callback.
+ */
+export const cbSettingsEditMessageTextPayload = {
+  chat_id: privateChat.id,
+  message_id: 1,
+  parse_mode: "HTML",
+  reply_markup: {
+    inline_keyboard: [
+      [
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}&v=-1`, text: "-1" },
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}&v=2`, text: "+1" },
+      ],
+      [
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}&v=-50`, text: "-50" },
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}&v=50`, text: "+50" },
+      ],
+      [{ callback_data: `${VotebanAction.SAVE}?cId=${supergroup.id}&v=0`, text: "Save" }],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}`, text: "« Back to features" }],
+    ],
+  },
+  text:
+    "<b>Ban Voting</b>\nI can run votes to ban a user in a chat. The user will be banned and their " +
+    "message deleted if the appropriate number of votes is reached. This feature will help users ban the violator " +
+    "when administrators are offline. Messages sent more than 48 hours ago won't be deleted according to " +
+    "Telegram rules.\n/voteban - start voting (can be used without the slash)\n\n<b>Tip:</b> " +
+    "Don't set your vote limit too low. Otherwise, a user who has several accounts will be able to single-handedly " +
+    "collect the required number of votes and ban other chat members.\n\nSet the vote limit for making a decision " +
+    `in @${supergroup.username} chat. If set a value less than 2, the feature will be disabled.\n\n` +
+    "Current state: <b>disabled</b>",
+};
+
+/**
+ * Webhook payload which contains voteban settings callback
+ */
+export const cbSettingsWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}`,
+    from: adminUser,
+    id: "1",
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
 };

@@ -1,9 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
-import { Ctx, Next, On, Update } from "nestjs-telegraf";
+import { ChatType } from "@prisma/client";
+import { On, Update } from "nestjs-telegraf";
 import { PrismaService } from "src/prisma/prisma.service";
 import { NextFunction } from "src/types/next-function";
-import { LeftChatMemberContext } from "src/types/telegraf-context";
+import { MyChatMemberCtx } from "src/types/telegraf-context";
 
 @Update()
 @Injectable()
@@ -15,15 +16,18 @@ export class CleanupService {
   public constructor(private readonly prismaService: PrismaService) {}
 
   /**
-   * Initiates cleanup module
+   * Cleanups chats
    * @param ctx Callback context
    * @param next Function to continue processing
    */
-  @On("left_chat_member")
-  public async cleanupChats(@Ctx() ctx: LeftChatMemberContext, @Next() next: NextFunction): Promise<void> {
-    if (ctx.update.message.left_chat_member.id === ctx.botInfo.id) {
-      this.prismaService.removeUpsertChatCache(ctx.chat.id);
-      await this.prismaService.chat.deleteMany({ where: { id: ctx.chat.id } });
+  @On("my_chat_member")
+  public async cleanupChats(ctx: MyChatMemberCtx, next: NextFunction): Promise<void> {
+    const { status } = ctx.update.my_chat_member.new_chat_member;
+    if (status === "kicked" || status === "left") {
+      await Promise.all([
+        this.prismaService.deleteChatCache(ctx.chat.id),
+        this.prismaService.chat.deleteMany({ where: { id: ctx.chat.id } }),
+      ]);
     }
     await next();
   }
@@ -33,6 +37,7 @@ export class CleanupService {
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   public async cleanup(): Promise<void> {
+    await this.checkUnusedPrivateChats();
     await this.prismaService.$transaction([
       this.prismaService.senderChat.deleteMany({
         where: {
@@ -73,14 +78,28 @@ export class CleanupService {
         },
       }),
     ]);
-    await this.cleanupPotentiallyUnusedUsers();
+    await this.checkUnusedUsers();
+  }
+
+  /**
+   * Removes private chats where there is no activity
+   */
+  private async checkUnusedPrivateChats(): Promise<void> {
+    const chatsToCheck = await this.prismaService.chat.findMany({
+      select: { createdAt: true, id: true, updatedAt: true },
+      where: { chatSettingsHistory: { none: {} }, type: ChatType.PRIVATE },
+    });
+    const unusedChats = chatsToCheck.filter((c) => c.createdAt.getTime() === c.updatedAt.getTime());
+    if (unusedChats.length > 0) {
+      await this.prismaService.chat.deleteMany({ where: { id: { in: unusedChats.map((c) => c.id) } } });
+    }
   }
 
   /**
    * Removes users which are authors and editors only for themselves
    */
-  private async cleanupPotentiallyUnusedUsers(): Promise<void> {
-    const maybeUnusedUsers = await this.prismaService.user.findMany({
+  private async checkUnusedUsers(): Promise<void> {
+    const usersToCheck = await this.prismaService.user.findMany({
       select: { id: true, userAuthors: { select: { id: true } }, userEditors: { select: { id: true } } },
       where: {
         AND: [
@@ -110,13 +129,15 @@ export class CleanupService {
         ],
       },
     });
-    const unusedUsers = maybeUnusedUsers.filter(
+    const unusedUsers = usersToCheck.filter(
       ({ id, userAuthors, userEditors }) =>
         userAuthors.length === 1 &&
         userAuthors.map((a) => a.id).includes(id) &&
         userEditors.length === 1 &&
         userEditors.map((a) => a.id).includes(id),
     );
-    await this.prismaService.user.deleteMany({ where: { id: { in: unusedUsers.map((u) => u.id) } } });
+    if (unusedUsers.length > 0) {
+      await this.prismaService.user.deleteMany({ where: { id: { in: unusedUsers.map((u) => u.id) } } });
+    }
   }
 }

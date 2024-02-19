@@ -39,7 +39,7 @@ export const cbSaveSettingsErrorWebhook = {
 };
 
 /**
- * Webhook payload which contains warnings settings callback
+ * Payload for edit message text request. It should be sent as a result of settings callback.
  */
 export const cbSettingsEditMessageTextPayload = {
   chat_id: privateChat.id,
@@ -90,31 +90,13 @@ export const cbSettingsWebhook = {
     data: `${WarningsAction.SETTINGS}?cId=${supergroup.id}`,
     from: adminUser,
     id: "1",
-    message: {
-      chat: privateChat,
-      date: Date.now(),
-      edit_date: Date.now(),
-      from: bot,
-      message_id: 1,
-      text: "Select the feature",
-    },
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
 };
 
 /**
- * Webhook response which contains answer callback query method.
- * It should be sent as a result of callback save settings processing.
- */
-export const answerCbSaveSettingsWebhookResponse = {
-  callback_query_id: "1",
-  method: "answerCallbackQuery",
-  show_alert: true,
-  text: "Changes saved",
-};
-
-/**
- * Webhook payload which contains warnings save settings edit message payload.
+ * Payload for edit message text request. It should be sent as a result of save settings callback.
  * This fixture should be implemented via function to prevent issues related to dates.
  * @returns Payload
  */
@@ -138,7 +120,7 @@ export const cbSaveSettingsWebhook = {
     data: `${WarningsAction.SAVE}?cId=${supergroup.id}&v=true`,
     from: adminUser,
     id: "1",
-    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "Warnings" },
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
 };

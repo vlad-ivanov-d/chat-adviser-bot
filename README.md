@@ -10,7 +10,7 @@ Open source Telegram bot that helps to moderate chats.
 
 The bot can run votes to ban a user in a chat. The user will be banned and their message deleted if the appropriate number of votes is reached. This feature will help users ban the violator when administrators are offline. Messages sent more than 48 hours ago won't be deleted according to Telegram rules.
 
-/voteban - start voting (can be used without the slash)
+`/voteban` - start voting (can be used without the slash)
 
 **Tip:** Don't set your vote limit too low. Otherwise, a user who has several accounts will be able to single-handedly collect the required number of votes and ban other chat members.
 
@@ -38,7 +38,7 @@ The bot can work in different time zones and display dates in the appropriate fo
 
 The bot can issue warnings to users upon admin command. To give a warning to a user, respond to their message with the appropriate command. In this case, the user's message will be deleted. Each warning is valid for 90 days, then it is automatically removed. If 3 warnings are received, the user will be banned. A warning cannot be issued to an administrator.
 
-/warn - issue a warning
+`/warn` - issue a warning
 
 ## Getting Started
 
@@ -96,7 +96,7 @@ Get more details in [Contributing](./CONTRIBUTING.md)
 
 | Statements                  | Branches                | Functions                 | Lines             |
 | --------------------------- | ----------------------- | ------------------------- | ----------------- |
-| ![Statements](https://img.shields.io/badge/statements-65.95%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-46.83%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-61.53%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-64.6%25-red.svg?style=flat) |
+| ![Statements](https://img.shields.io/badge/statements-68.75%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-52.57%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-64.97%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-67.38%25-red.svg?style=flat) |
 
 ## License
 

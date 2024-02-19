@@ -3,10 +3,11 @@ import { Test } from "@nestjs/testing";
 import { http, HttpResponse } from "msw";
 import request from "supertest";
 import type { App } from "supertest/types";
-import { server } from "test/utils/setup-after-env";
+import { server } from "test/utils/server";
 
 import { AppModule } from "../src/app.module";
 import * as fixtures from "./fixtures/channel-message-filter";
+import * as settingsFixtures from "./fixtures/settings";
 import {
   ASYNC_REQUEST_DELAY,
   TELEGRAM_API_BASE_URL,
@@ -69,7 +70,7 @@ describe("ChannelMessageFilterModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({});
-    expect(banChatSenderChatPayload).toBe(undefined);
+    expect(banChatSenderChatPayload).toBeUndefined();
   });
 
   it("should render settings", async () => {
@@ -102,7 +103,7 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSaveSettingsWebhook);
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual(fixtures.answerCbSaveSettingsWebhookResponse);
+    expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
     await sleep(ASYNC_REQUEST_DELAY);
     expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayloadFunc());
   });

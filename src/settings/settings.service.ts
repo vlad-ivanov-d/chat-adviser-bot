@@ -123,11 +123,7 @@ export class SettingsService {
    * @returns True if validation is successfully passed
    */
   public async resolveChat(ctx: CallbackCtx | MessageCtx, chatId: number): Promise<UpsertedChat | undefined> {
-    const from = "message" in ctx.update ? ctx.update.message.from : ctx.callbackQuery?.from;
-    if (!from) {
-      throw new Error("User is not defined to resolve database chat.");
-    }
-
+    const { from } = typeof ctx.callbackQuery === "undefined" ? ctx.update.message : ctx.callbackQuery;
     try {
       const chat = await ctx.telegram.getChat(chatId);
       const dbChat = await this.prismaService.upsertChat(chat, from);
@@ -138,8 +134,10 @@ export class SettingsService {
       const errorCode = getErrorCode(e);
       if (errorCode === 400 || errorCode === 403) {
         // Chat was deleted, remove it from the cache and database.
-        this.prismaService.removeUpsertChatCache(chatId);
-        await this.prismaService.chat.deleteMany({ where: { id: chatId } });
+        await Promise.all([
+          this.prismaService.deleteChatCache(chatId),
+          this.prismaService.chat.deleteMany({ where: { id: chatId } }),
+        ]);
       }
     }
 
@@ -154,16 +152,10 @@ export class SettingsService {
    * @param skip Skip count
    */
   private async renderChats(ctx: CallbackCtx | MessageCtx, skip = 0): Promise<void> {
-    const from = ctx.callbackQuery?.from ?? ctx.message?.from;
+    const { from } = typeof ctx.callbackQuery === "undefined" ? ctx.update.message : ctx.callbackQuery;
     const take = skip === 0 ? PAGE_SIZE - 1 : PAGE_SIZE;
-    if (!from) {
-      throw new Error("User is not defined to render chats.");
-    }
-    if (!ctx.chat) {
-      throw new Error("Chat is not defined to render chats.");
-    }
-    if (isNaN(skip)) {
-      throw new Error('Parameter "skip" is not correct to render chats.');
+    if (!ctx.chat || isNaN(skip)) {
+      return; // Incorrect parameters to render chats
     }
 
     const [[chats, count], dbChat] = await Promise.all([
@@ -211,15 +203,9 @@ export class SettingsService {
    */
   private async renderFeatures(ctx: CallbackCtx | MessageCtx, chatId: number, skip = 0): Promise<void> {
     const { callbackQuery: cbQuery, chat, telegram, update } = ctx;
-    const from = "message" in update ? update.message.from : cbQuery?.from;
-    if (!from) {
-      throw new Error("User is not defined to render features.");
-    }
-    if (!chat || isNaN(chatId)) {
-      throw new Error("Chat is not defined to render features.");
-    }
-    if (isNaN(skip)) {
-      throw new Error('Parameter "skip" is not correct to render features.');
+    const { from } = typeof cbQuery === "undefined" ? update.message : cbQuery;
+    if (!chat || isNaN(chatId) || isNaN(skip)) {
+      return; // Incorrect parameters to render features
     }
 
     const destDbChat = await (cbQuery ? this.prismaService.upsertChat(chat, from) : this.resolveChat(ctx, from.id));
