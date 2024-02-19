@@ -90,27 +90,9 @@ export const cbSettingsWebhook = {
     data: `${WarningsAction.SETTINGS}?cId=${supergroup.id}`,
     from: adminUser,
     id: "1",
-    message: {
-      chat: privateChat,
-      date: Date.now(),
-      edit_date: Date.now(),
-      from: bot,
-      message_id: 1,
-      text: "Select the feature",
-    },
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
-};
-
-/**
- * Webhook response which contains answer callback query method.
- * It should be sent as a result of callback save settings processing.
- */
-export const answerCbSaveSettingsWebhookResponse = {
-  callback_query_id: "1",
-  method: "answerCallbackQuery",
-  show_alert: true,
-  text: "Changes saved",
 };
 
 /**
@@ -138,7 +120,7 @@ export const cbSaveSettingsWebhook = {
     data: `${WarningsAction.SAVE}?cId=${supergroup.id}&v=true`,
     from: adminUser,
     id: "1",
-    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "Warnings" },
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
 };

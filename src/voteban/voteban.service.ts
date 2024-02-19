@@ -20,6 +20,7 @@ import {
 import type { User as TelegramUser } from "telegraf/typings/core/types/typegram";
 
 import { VotebanAction } from "./interfaces/action.interface";
+import type { VotebanRenderSettingsOptions } from "./interfaces/settings-options.interface";
 import { EXPIRED_VOTEBAN_TIMEOUT } from "./voteban.constants";
 
 @Update()
@@ -52,7 +53,7 @@ export class VotebanService {
         await this.saveSettings(ctx, chatId, valueNum);
         break;
       case VotebanAction.SETTINGS:
-        await this.renderSettings(ctx, chatId, valueNum);
+        await this.renderSettings(ctx, { chatId, shouldAnswerCallback: true, value: valueNum });
         break;
       default:
         await next();
@@ -210,10 +211,10 @@ export class VotebanService {
   /**
    * Renders settings
    * @param ctx Callback context
-   * @param chatId Id of the chat which is edited
-   * @param value Voteban limit value
+   * @param options Render options
    */
-  private async renderSettings(ctx: CallbackCtx, chatId: number, value?: number): Promise<void> {
+  private async renderSettings(ctx: CallbackCtx, options: VotebanRenderSettingsOptions): Promise<void> {
+    const { chatId, shouldAnswerCallback, value } = options;
     if (!ctx.chat || isNaN(chatId)) {
       return; // Chat is not defined to render voteban settings
     }
@@ -232,7 +233,7 @@ export class VotebanService {
     const msg = t("voteban:setLimit", { CHAT: chatLink, TIP: tip, count: newValue });
 
     await Promise.all([
-      ctx.answerCbQuery(),
+      shouldAnswerCallback && ctx.answerCbQuery(),
       ctx.editMessageText(this.prismaService.joinModifiedInfo(msg, ChatSettingName.VOTEBAN_LIMIT, dbChat), {
         parse_mode: "HTML",
         reply_markup: {
@@ -308,7 +309,7 @@ export class VotebanService {
       this.prismaService.upsertChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.VOTEBAN_LIMIT),
     ]);
     await this.prismaService.deleteChatCache(chatId);
-    await Promise.all([this.settingsService.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId)]);
+    await Promise.all([this.settingsService.notifyChangesSaved(ctx), this.renderSettings(ctx, { chatId })]);
   }
 
   /**

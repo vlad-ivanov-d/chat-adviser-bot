@@ -7,9 +7,16 @@ import { server } from "test/utils/server";
 
 import { AppModule } from "../src/app.module";
 import { privateChat } from "./fixtures/chats";
+import * as settingsFixtures from "./fixtures/settings";
 import * as fixtures from "./fixtures/voteban";
-import { TELEGRAM_API_BASE_URL, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./utils/constants";
+import {
+  ASYNC_REQUEST_DELAY,
+  TELEGRAM_API_BASE_URL,
+  TEST_WEBHOOK_BASE_URL,
+  TEST_WEBHOOK_PATH,
+} from "./utils/constants";
 import { createDbSupergroupChat } from "./utils/database";
+import { sleep } from "./utils/sleep";
 
 describe("VotebanModule (e2e)", () => {
   let app: INestApplication<App>;
@@ -67,6 +74,41 @@ describe("VotebanModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(sendMessagePayload).toEqual(fixtures.votebanAgainstBotSendMessagePayload);
+  });
+
+  it("should render settings", async () => {
+    await createDbSupergroupChat();
+    let editMessageTextPayload;
+    server.use(
+      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+        editMessageTextPayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsWebhook);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ callback_query_id: "1", method: "answerCallbackQuery" });
+    expect(editMessageTextPayload).toEqual(fixtures.cbSettingsEditMessageTextPayload);
+  });
+
+  it("should save settings", async () => {
+    await createDbSupergroupChat();
+    let editMessageTextPayload;
+    server.use(
+      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+        editMessageTextPayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSaveSettingsWebhook);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
+    await sleep(ASYNC_REQUEST_DELAY);
+    expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayloadFunc());
   });
 
   it("should say if there is no admin permissions", async () => {

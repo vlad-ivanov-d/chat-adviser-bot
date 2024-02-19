@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.17.0 (2024-xx-xx)
+## 1.17.0 (2024-02-19)
 
 - Fix: duplicate message about completion of voteban
 - Fix: incorrect display of the vote limit in the voteban settings
