@@ -1,5 +1,4 @@
 import { type Chat, ChatType, LanguageCode, type Prisma, PrismaClient } from "@prisma/client";
-import { NODE_ENV } from "src/app.constants";
 import { getChatDisplayTitle } from "src/utils/telegraf";
 import type { User } from "telegraf/typings/core/types/typegram";
 import { privateChat, supergroup } from "test/fixtures/chats";
@@ -14,7 +13,7 @@ export const prisma = new PrismaClient();
  * Cleanups database
  */
 export const cleanupDb = async (): Promise<void> => {
-  if (NODE_ENV === "test") {
+  if (process.env.NODE_ENV === "test") {
     // Cleanup is allowed only in the test environment
     await prisma.$transaction([prisma.chat.deleteMany(), prisma.user.deleteMany()]);
     return;

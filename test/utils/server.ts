@@ -1,6 +1,5 @@
 import { http, HttpResponse, type HttpResponseResolver, passthrough, type PathParams } from "msw";
 import { setupServer } from "msw/node";
-import { WEBHOOK_PATH } from "src/app.constants";
 import { group, privateChat, supergroup } from "test/fixtures/chats";
 import { adminUser, bot, user } from "test/fixtures/users";
 import { TELEGRAM_API_BASE_URL } from "test/utils/constants";
@@ -67,7 +66,7 @@ const getChatResolver: HttpResponseResolver<PathParams, { chat_id: number }> = a
  * MSW server
  */
 export const server = setupServer(
-  ...(WEBHOOK_PATH ? [http.post(`**${WEBHOOK_PATH}`, passthrough)] : []),
+  ...(process.env.WEBHOOK_PATH ? [http.post(`**${process.env.WEBHOOK_PATH}`, passthrough)] : []),
   http.post(`${TELEGRAM_API_BASE_URL}/getChat`, getChatResolver),
   http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, getChatAdministratorsResolver),
   http.post(`${TELEGRAM_API_BASE_URL}/getChatMember`, getChatMemberResolver),

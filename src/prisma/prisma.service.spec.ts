@@ -1,7 +1,6 @@
 import { CacheModule } from "@nestjs/cache-manager";
 import { Test } from "@nestjs/testing";
 import { TelegrafModule } from "nestjs-telegraf";
-import { BOT_TOKEN } from "src/app.constants";
 import { cache } from "src/utils/cache";
 
 import { PrismaService } from "./prisma.service";
@@ -13,7 +12,7 @@ describe("PrismaService", () => {
     const testingModule = await Test.createTestingModule({
       imports: [
         CacheModule.register({ isGlobal: true, store: cache }),
-        TelegrafModule.forRoot({ launchOptions: false, token: BOT_TOKEN }),
+        TelegrafModule.forRoot({ launchOptions: false, token: process.env.BOT_TOKEN ?? "" }),
       ],
       providers: [PrismaService],
     }).compile();

@@ -5,7 +5,6 @@ import { ScheduleModule } from "@nestjs/schedule";
 import { TelegrafModule } from "nestjs-telegraf";
 
 import { AddingBotsModule } from "./adding-bots/adding-bots.module";
-import { BOT_TOKEN, WEBHOOK_DOMAIN, WEBHOOK_PATH, WEBHOOK_PORT } from "./app.constants";
 import { ChannelMessageFilterModule } from "./channel-message-filter/channel-message-filter.module";
 import { CleanupModule } from "./cleanup/cleanup.module";
 import { HelpModule } from "./help/help.module";
@@ -26,9 +25,15 @@ import { WarningsModule } from "./warnings/warnings.module";
     ScheduleModule.forRoot(),
     TelegrafModule.forRoot({
       launchOptions: {
-        webhook: WEBHOOK_DOMAIN ? { domain: WEBHOOK_DOMAIN, path: WEBHOOK_PATH, port: WEBHOOK_PORT } : undefined,
+        webhook: process.env.WEBHOOK_DOMAIN
+          ? {
+              domain: process.env.WEBHOOK_DOMAIN,
+              path: process.env.WEBHOOK_PATH,
+              port: process.env.WEBHOOK_PORT ? Number(process.env.WEBHOOK_PORT) : undefined,
+            }
+          : undefined,
       },
-      token: BOT_TOKEN,
+      token: process.env.BOT_TOKEN ?? "",
     }),
     ProfanityFilterModule,
     AddingBotsModule,
