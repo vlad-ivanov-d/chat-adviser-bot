@@ -148,7 +148,7 @@ export class WarningsService {
           userId: candidate.id,
         },
         select: { createdAt: true, id: true },
-        update: {},
+        update: { editorId: ctx.from.id, updatedAt: createdAt },
         where: { chatId_messageId: { chatId: ctx.chat.id, messageId: candidateMessageId } },
       }),
       this.prismaService.warning.findMany({
