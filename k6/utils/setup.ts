@@ -8,6 +8,7 @@ dotenv.config({ path: ".env.test" });
 process.env.NODE_ENV = "test";
 import { build } from "esbuild";
 import { AppModule } from "src/app.module";
+import { cache } from "src/utils/cache";
 import { cleanupDb } from "test/utils/database";
 
 import { server } from "./server";
@@ -84,7 +85,7 @@ const setup = async (): Promise<void> => {
   const files = process.argv[2] ? [`${path.parse(process.argv[2]).name}.js`] : readdirSync("k6/dist");
   for (const file of files) {
     await runTest(path.resolve("k6/dist", file));
-    await cleanupDb();
+    await Promise.all([cleanupDb(), cache.reset()]);
   }
 
   // Stop the env

@@ -134,6 +134,42 @@ describe("WarningsModule (e2e)", () => {
     expect(sendMessagePayload).toEqual(fixtures.warnAgainstBotSendMessagePayload);
   });
 
+  it("should not issue duplicate warnings", async () => {
+    await createDbSupergroupChat({ hasWarnings: true });
+    await prisma.$transaction([
+      createDbUser(),
+      prisma.warning.createMany({
+        data: [
+          { authorId: adminUser.id, chatId: supergroup.id, editorId: adminUser.id, messageId: 2, userId: user.id },
+          { authorId: adminUser.id, chatId: supergroup.id, editorId: adminUser.id, messageId: 3, userId: user.id },
+        ],
+      }),
+    ]);
+    let deleteMessagePayload;
+    let sendMessagePayload: unknown;
+    server.use(
+      http.post(`${TELEGRAM_API_BASE_URL}/deleteMessage`, async (info) => {
+        deleteMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+        sendMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true, result: { message_id: 5 } });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.warnWebhook);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ chat_id: supergroup.id, message_id: 4, method: "deleteMessage" });
+    await sleep(ASYNC_REQUEST_DELAY);
+    expect(sendMessagePayload).toBeUndefined();
+
+    jest.runOnlyPendingTimers();
+    await sleep(ASYNC_REQUEST_DELAY);
+    expect(deleteMessagePayload).toEqual({ chat_id: supergroup.id, message_id: 3 });
+  });
+
   it("should render settings", async () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;

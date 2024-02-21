@@ -271,6 +271,7 @@ model Warning {
   senderChat SenderChat? @relation("WarningSenderChat", fields: [senderChatId], references: [id])
   user       User        @relation("WarningUser", fields: [userId], references: [id])
 
+  @@unique([chatId, messageId])
   @@index([createdAt])
   @@map("warnings")
 }

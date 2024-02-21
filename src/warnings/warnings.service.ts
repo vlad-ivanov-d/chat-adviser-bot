@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
-import { ChatSettingName } from "@prisma/client";
+import { ChatSettingName, type Prisma } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
 import { Ctx, Hears, On, Update } from "nestjs-telegraf";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -108,11 +108,8 @@ export class WarningsService {
       return; // Candidate is an admin, return.
     }
 
-    await Promise.all([
-      this.deleteOutdatedWarnings(),
-      // An expected error may happen when bot has no enough permissions
-      ctx.deleteMessage(messageId).catch(() => false),
-    ]);
+    // An expected error may happen when bot has no enough permissions
+    await ctx.deleteMessage(messageId).catch(() => false);
 
     // Delete the message with a delay to let users know the reason
     setTimeout(() => {
@@ -120,24 +117,13 @@ export class WarningsService {
       ctx.deleteMessage(replyToMessage.message_id).catch(() => false);
     }, DELETE_MESSAGE_DELAY);
 
-    const existedWarning = await this.prismaService.warning.findFirst({
-      select: { id: true },
-      where: {
-        chatId: chat.id,
-        messageId: replyToMessage.message_id,
-        senderChatId: candidateSenderChat?.id ?? null,
-        userId: candidate.id,
-      },
-    });
-    if (candidateMember?.status === "kicked" || existedWarning) {
-      return;
+    if (candidateMember?.status !== "kicked") {
+      await this.warn(ctx, { candidate, candidateMessageId: replyToMessage.message_id, candidateSenderChat });
     }
-
-    await this.warn(ctx, { candidate, candidateMessageId: replyToMessage.message_id, candidateSenderChat });
   }
 
   /**
-   * Issues the warning without additional checks
+   * Issues the warning without additional checks (except warn duplication)
    * @param ctx Text message context
    * @param options Options to warn
    */
@@ -146,24 +132,34 @@ export class WarningsService {
     if (candidateSenderChat) {
       await this.prismaService.upsertSenderChat(candidateSenderChat, ctx.from);
     }
-    const [, , warnings] = await this.prismaService.$transaction([
+    const createdAt = new Date();
+    const [, , warning, warnings] = await this.prismaService.$transaction([
+      this.deleteOutdatedWarnings(),
       this.prismaService.upsertUser(candidate, ctx.from),
-      this.prismaService.warning.create({
-        data: {
+      this.prismaService.warning.upsert({
+        create: {
           authorId: ctx.from.id,
           chatId: ctx.chat.id,
+          createdAt,
           editorId: ctx.from.id,
           messageId: candidateMessageId,
           senderChatId: candidateSenderChat?.id ?? null,
+          updatedAt: createdAt,
           userId: candidate.id,
         },
-        select: { id: true },
+        select: { createdAt: true, id: true },
+        update: {},
+        where: { chatId_messageId: { chatId: ctx.chat.id, messageId: candidateMessageId } },
       }),
       this.prismaService.warning.findMany({
         select: { id: true },
         where: { chatId: ctx.chat.id, senderChatId: candidateSenderChat?.id ?? null, userId: candidate.id },
       }),
     ]);
+
+    if (warning.createdAt.getTime() !== createdAt.getTime()) {
+      return; // Warning issued previously. There is no need to issue the warning again.
+    }
 
     const candidateLink = getUserOrChatHtmlLink(candidate, candidateSenderChat);
     const { message_id: replyMessageId } = await ctx.reply(
@@ -192,10 +188,11 @@ export class WarningsService {
 
   /**
    * Deletes outdated warnings
+   * @returns Prisma promise
    */
-  private async deleteOutdatedWarnings(): Promise<void> {
+  private deleteOutdatedWarnings(): Prisma.PrismaPromise<Prisma.BatchPayload> {
     const date = new Date(Date.now() - OUTDATED_WARNING_TIMEOUT);
-    await this.prismaService.warning.deleteMany({ where: { createdAt: { lt: date } } });
+    return this.prismaService.warning.deleteMany({ where: { createdAt: { lt: date } } });
   }
 
   /**
