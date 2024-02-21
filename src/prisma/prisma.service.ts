@@ -1,5 +1,5 @@
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
-import { Inject, Injectable, type OnModuleDestroy, type OnModuleInit } from "@nestjs/common";
+import { Inject, Injectable, type OnModuleDestroy } from "@nestjs/common";
 import {
   AddingBotsRule,
   ChannelMessageFilterRule,
@@ -25,7 +25,7 @@ import type { UpsertedChat } from "./interfaces/upserted-chat.interface";
 import { CHAT_CACHE_TIMEOUT } from "./prisma.constants";
 
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleDestroy, OnModuleInit {
+export class PrismaService extends PrismaClient implements OnModuleDestroy {
   /**
    * Creates app service
    * @param bot Telegram bot instance
@@ -53,13 +53,6 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
    */
   public async onModuleDestroy(): Promise<void> {
     await this.$disconnect();
-  }
-
-  /**
-   * Lifecycle event called once the host module's dependencies have been resolved
-   */
-  public async onModuleInit(): Promise<void> {
-    await this.$connect();
   }
 
   /**

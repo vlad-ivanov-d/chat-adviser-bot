@@ -10,7 +10,7 @@ export { options };
 /**
  * Virtual user code
  */
-const vuCode = (): void => {
+export default (): void => {
   const res = http.post(K6_WEBHOOK_URL, JSON.stringify(fixtures.warnWebhook), {
     headers: { "Content-Type": "application/json" },
   });
@@ -24,5 +24,3 @@ const vuCode = (): void => {
   });
   sleep(1);
 };
-
-export default vuCode;
