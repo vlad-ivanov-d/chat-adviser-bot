@@ -1,5 +1,5 @@
-import { execSync, spawn } from "node:child_process";
-import { readdirSync, readFileSync, rmSync } from "node:fs";
+import { exec, execSync } from "node:child_process";
+import { readdirSync, rmSync } from "node:fs";
 import path from "node:path";
 
 import { Test } from "@nestjs/testing";
@@ -24,24 +24,17 @@ const runTest = (filePath: string): Promise<void> => {
   console.log(path.parse(filePath).base);
 
   // Should be handled on a higher level
-  // eslint-disable-next-line security/detect-non-literal-fs-filename
-  const scriptContent = readFileSync(filePath, "utf-8");
-
-  const testProcess = spawn("docker", ["run", "--rm", "-i", "grafana/k6", "run", "-"]);
-  testProcess.stderr.on("data", (data: Buffer) => {
-    // Show k6 error output
-    // eslint-disable-next-line no-console
-    console.error(data.toString());
-  });
-  testProcess.stdout.on("data", (data: Buffer) => {
-    // Show k6 log
-    // eslint-disable-next-line no-console
-    console.log(data.toString());
-  });
-
-  // Run test script
-  testProcess.stdin.write(scriptContent);
-  testProcess.stdin.end();
+  // eslint-disable-next-line security/detect-child-process
+  const testProcess = exec(
+    // --add-host to fix issues in GitHub Actions
+    `docker run --add-host=host.docker.internal:host-gateway --rm -i grafana/k6 run - <${filePath}`,
+  );
+  // Show k6 errors
+  // eslint-disable-next-line no-console
+  testProcess.stderr?.on("data", console.error);
+  // Show k6 logs
+  // eslint-disable-next-line no-console
+  testProcess.stdout?.on("data", console.log);
 
   // Wait for test completion
   return new Promise((resolve, reject) =>
