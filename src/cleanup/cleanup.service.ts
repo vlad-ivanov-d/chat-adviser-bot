@@ -90,10 +90,8 @@ export class CleanupService {
       where: { chatSettingsHistory: { none: {} }, type: ChatType.PRIVATE },
     });
     const unusedChats = chatsToCheck.filter((c) => {
-      // It's possible that there will be a very small difference in milliseconds, so check seconds instead.
-      const createdAtSecond = Math.floor(c.createdAt.getTime() / 1000);
-      const updatedAtSecond = Math.floor(c.updatedAt.getTime() / 1000);
-      return createdAtSecond === updatedAtSecond;
+      // It's possible that there will be a small difference in milliseconds. Check that it's less than 1000 ms.
+      return Math.abs(c.updatedAt.getTime() - c.createdAt.getTime()) < 1000;
     });
     if (unusedChats.length > 0) {
       await this.prismaService.chat.deleteMany({ where: { id: { in: unusedChats.map((c) => c.id) } } });
