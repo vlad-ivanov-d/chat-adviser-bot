@@ -144,6 +144,15 @@ export const cbSettingsWebhook = {
 };
 
 /**
+ * Payload for send message request. It should be sent as a result of voteban command against the admin.
+ */
+export const votebanAgainstAdminSendMessagePayload = {
+  chat_id: supergroup.id,
+  reply_to_message_id: 2,
+  text: "I can't start voting to ban the administrator. This would be incorrect.",
+};
+
+/**
  * Payload for send message request. It should be sent as a result of voteban command against the bot itself.
  */
 export const votebanAgainstBotSendMessagePayload = {
@@ -184,6 +193,25 @@ export const votebanNoAdminPermsSendMessagePayload = {
   chat_id: supergroup.id,
   reply_to_message_id: 2,
   text: "I need administrator permissions for this feature to work.",
+};
+
+/**
+ * Payload for send message request. It should be sent as a result of voteban command.
+ */
+export const votebanSendMessagePayload = {
+  chat_id: supergroup.id,
+  parse_mode: "HTML",
+  reply_markup: {
+    inline_keyboard: [
+      [{ callback_data: VotebanAction.BAN, text: "Ban (1/2)" }],
+      [{ callback_data: VotebanAction.NO_BAN, text: "Keep (0/2)" }],
+    ],
+  },
+  reply_to_message_id: 1,
+  text:
+    `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a> offers to ban ` +
+    `<a href="tg:user?id=${user.id}">@${user.username}</a>. This requires 2 votes. ` +
+    `Do you want to ban <a href="tg:user?id=${user.id}">@${user.username}</a>?`,
 };
 
 /**

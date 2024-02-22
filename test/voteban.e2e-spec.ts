@@ -8,6 +8,7 @@ import { server } from "test/utils/server";
 import { AppModule } from "../src/app.module";
 import { privateChat } from "./fixtures/chats";
 import * as settingsFixtures from "./fixtures/settings";
+import { user } from "./fixtures/users";
 import * as fixtures from "./fixtures/voteban";
 import {
   ASYNC_REQUEST_DELAY,
@@ -74,6 +75,25 @@ describe("VotebanModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(sendMessagePayload).toEqual(fixtures.votebanAgainstBotSendMessagePayload);
+  });
+
+  it("should not start voteban against the admin", async () => {
+    await createDbSupergroupChat({ votebanLimit: 2 });
+    let sendMessagePayload;
+    server.use(
+      http.post(`${TELEGRAM_API_BASE_URL}/getChatMember`, () =>
+        HttpResponse.json({ ok: true, result: { is_anonymous: false, status: "administrator", user } }),
+      ),
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+        sendMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.votebanWebhook);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload).toEqual(fixtures.votebanAgainstAdminSendMessagePayload);
   });
 
   it("should render settings", async () => {
@@ -143,6 +163,22 @@ describe("VotebanModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(sendMessagePayload).toEqual({ chat_id: privateChat.id, text: "This command is not for private chats." });
+  });
+
+  it("should start voteban", async () => {
+    await createDbSupergroupChat({ votebanLimit: 2 });
+    let sendMessagePayload;
+    server.use(
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+        sendMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true, result: { message_id: 3 } });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.votebanWebhook);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload).toEqual(fixtures.votebanSendMessagePayload);
   });
 
   it("should tell how to use the voteban command correctly", async () => {
