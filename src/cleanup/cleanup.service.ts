@@ -117,8 +117,7 @@ export class CleanupService {
           { profaneWordEditors: { none: {} } },
           { senderChatAuthors: { none: {} } },
           { senderChatEditors: { none: {} } },
-          { NOT: { userAuthors: { none: {} } } },
-          { NOT: { userEditors: { none: {} } } },
+          { OR: [{ NOT: { userAuthors: { none: {} } } }, { NOT: { userEditors: { none: {} } } }] },
           { votebanAuthors: { none: {} } },
           { votebanBanVoterAuthors: { none: {} } },
           { votebanBanVoterEditors: { none: {} } },
@@ -134,10 +133,8 @@ export class CleanupService {
     });
     const unusedUsers = usersToCheck.filter(
       ({ id, userAuthors, userEditors }) =>
-        userAuthors.length === 1 &&
-        userAuthors.map((a) => a.id).includes(id) &&
-        userEditors.length === 1 &&
-        userEditors.map((a) => a.id).includes(id),
+        (userAuthors.length === 0 || (userAuthors.length === 1 && userAuthors[0].id === id)) &&
+        (userEditors.length === 0 || (userEditors.length === 1 && userEditors[0].id === id)),
     );
     if (unusedUsers.length > 0) {
       await this.prismaService.user.deleteMany({ where: { id: { in: unusedUsers.map((u) => u.id) } } });
