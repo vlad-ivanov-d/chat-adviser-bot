@@ -1,4 +1,3 @@
-import { ChannelMessageFilterRule } from "@prisma/client";
 import { formatInTimeZone } from "date-fns-tz";
 import { DATE_FORMAT } from "src/app.constants";
 import { ChannelMessageFilterAction } from "src/channel-message-filter/interfaces/action.interface";
@@ -19,7 +18,7 @@ export const banSenderChatPayload = { chat_id: supergroup.id, sender_chat_id: ch
 export const cbSaveSettingsErrorWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${ChannelMessageFilterAction.SAVE}?cId=error_id&v=${ChannelMessageFilterRule.FILTER}`,
+    data: `${ChannelMessageFilterAction.SAVE}?cId=error_id&v=FILTER`,
     from: adminUser,
     id: "1",
     message: {
@@ -45,7 +44,7 @@ export const cbSettingsEditMessageTextPayload = {
     inline_keyboard: [
       [
         {
-          callback_data: `${ChannelMessageFilterAction.SAVE}?cId=${supergroup.id}&v=${ChannelMessageFilterRule.FILTER}`,
+          callback_data: `${ChannelMessageFilterAction.SAVE}?cId=${supergroup.id}&v=FILTER`,
           text: "Enable filter",
         },
       ],
@@ -128,7 +127,7 @@ export const cbSaveSettingsEditMessageTextPayloadFunc = (): unknown => ({
 export const cbSaveSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${ChannelMessageFilterAction.SAVE}?cId=${supergroup.id}&v=${ChannelMessageFilterRule.FILTER}`,
+    data: `${ChannelMessageFilterAction.SAVE}?cId=${supergroup.id}&v=FILTER`,
     from: adminUser,
     id: "1",
     message: {

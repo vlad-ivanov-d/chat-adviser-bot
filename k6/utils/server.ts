@@ -5,10 +5,10 @@ import { adminUser, bot, user } from "test/fixtures/users";
 import { TELEGRAM_API_BASE_URL } from "test/utils/constants";
 
 /**
- * Resolves response for /deleteMessage endpoint.
+ * Resolves response for /banChatSenderChat and /deleteMessage endpoint.
  * @returns HTTP response
  */
-const deleteMessageResolver: HttpResponseResolver = async () => {
+const actionResolver: HttpResponseResolver = async () => {
   await delay();
   return HttpResponse.json({ ok: true });
 };
@@ -107,7 +107,8 @@ const setWebhookResolver: HttpResponseResolver = async () => {
  */
 export const server = setupServer(
   ...(process.env.WEBHOOK_PATH ? [http.post(`**${process.env.WEBHOOK_PATH}`, passthrough)] : []),
-  http.post(`${TELEGRAM_API_BASE_URL}/deleteMessage`, deleteMessageResolver),
+  http.post(`${TELEGRAM_API_BASE_URL}/banChatSenderChat`, actionResolver),
+  http.post(`${TELEGRAM_API_BASE_URL}/deleteMessage`, actionResolver),
   http.post(`${TELEGRAM_API_BASE_URL}/getChat`, getChatResolver),
   http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, getChatAdministratorsResolver),
   http.post(`${TELEGRAM_API_BASE_URL}/getChatMember`, getChatMemberResolver),
