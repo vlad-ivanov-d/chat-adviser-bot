@@ -196,17 +196,6 @@ export class WarningsService {
   }
 
   /**
-   * Gets available warnings options
-   * @returns Warnings options
-   */
-  private getOptions(): { id: true | null; title: string }[] {
-    return [
-      { id: true, title: t("warnings:enabled") },
-      { id: null, title: t("warnings:disabled") },
-    ];
-  }
-
-  /**
    * Renders settings
    * @param ctx Callback context
    * @param chatId Id of the chat which is edited
@@ -226,7 +215,7 @@ export class WarningsService {
 
     const chatLink = getChatHtmlLink(dbChat);
     const hasWarnings = this.sanitizeValue(dbChat.hasWarnings);
-    const value = this.getOptions().find((o) => o.id === hasWarnings)?.title ?? "";
+    const value = hasWarnings ? t("warnings:enabled") : t("warnings:disabled");
     const msg = t("warnings:set", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([

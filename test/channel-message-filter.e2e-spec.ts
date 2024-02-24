@@ -33,7 +33,7 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     server.use(
       http.post(`${TELEGRAM_API_BASE_URL}/banChatSenderChat`, async (info) => {
         banChatSenderChatPayload = await info.request.json();
-        return HttpResponse.json({ ok: true });
+        return new HttpResponse(null, { status: 400 });
       }),
     );
 
@@ -79,7 +79,7 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     server.use(
       http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
-        return HttpResponse.json({ ok: true });
+        return new HttpResponse(null, { status: 400 });
       }),
     );
 

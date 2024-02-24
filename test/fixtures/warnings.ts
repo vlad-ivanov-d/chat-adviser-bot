@@ -8,6 +8,17 @@ import { privateChat, supergroup } from "./chats";
 import { adminUser, bot, user } from "./users";
 
 /**
+ * Webhook response which contains answer callback query method.
+ * It should be sent as a result of callback settings or save settings processing if the user is not an admin.
+ */
+export const answerCbSettingsNotAdminWebhookResponse = {
+  callback_query_id: "1",
+  method: "answerCallbackQuery",
+  show_alert: true,
+  text: "Unfortunately, this action is no longer available to you.",
+};
+
+/**
  * Payload for send message request. It should be sent as a result of /warn command processing.
  */
 export const banSendMessagePayload = {
@@ -18,7 +29,7 @@ export const banSendMessagePayload = {
 };
 
 /**
- * Webhook payload which contains voteban save settings callback with incorrect chat id
+ * Webhook payload which contains save settings callback with incorrect chat id
  */
 export const cbSaveSettingsErrorWebhook = {
   callback_query: {
@@ -26,14 +37,7 @@ export const cbSaveSettingsErrorWebhook = {
     data: `${WarningsAction.SAVE}?cId=error_id&v=true`,
     from: adminUser,
     id: "1",
-    message: {
-      chat: privateChat,
-      date: Date.now(),
-      edit_date: Date.now(),
-      from: bot,
-      message_id: 1,
-      text: "Warnings",
-    },
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
 };
@@ -61,7 +65,7 @@ export const cbSettingsEditMessageTextPayload = {
 };
 
 /**
- * Webhook payload which contains voteban settings callback with incorrect chat id
+ * Webhook payload which contains settings callback with incorrect chat id
  */
 export const cbSettingsErrorWebhook = {
   callback_query: {
@@ -69,20 +73,34 @@ export const cbSettingsErrorWebhook = {
     data: `${WarningsAction.SETTINGS}?cId=error_id`,
     from: adminUser,
     id: "1",
-    message: {
-      chat: privateChat,
-      date: Date.now(),
-      edit_date: Date.now(),
-      from: bot,
-      message_id: 1,
-      text: "Warnings",
-    },
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
 };
 
 /**
- * Webhook payload which contains warnings settings callback
+ * Payload for edit message text request. It should be sent as a result of settings or save settings callback
+ * if the user is not an admin.
+ */
+export const cbSettingsNotAdminEditMessageTextPayload = {
+  chat_id: privateChat.id,
+  message_id: 1,
+  parse_mode: "HTML",
+  reply_markup: {
+    inline_keyboard: [
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${privateChat.id}`, text: `@${bot.username}` }],
+      [],
+      [{ callback_data: SettingsAction.REFRESH, text: "↻ Refresh the list" }],
+    ],
+  },
+  text:
+    "Below is a list of chats that are available to me, and where you are an administrator. Select the chat " +
+    "for which you want to change the settings.\n\nIf the list doesn't contain the chat you need, try " +
+    "writing any message in it and clicking the <b>↻ Refresh the list</b> button (the last button in this message).",
+};
+
+/**
+ * Webhook payload which contains settings callback
  */
 export const cbSettingsWebhook = {
   callback_query: {
@@ -112,12 +130,26 @@ export const cbSaveSettingsEditMessageTextPayloadFunc = (): unknown => ({
 });
 
 /**
- * Webhook payload which contains warnings save settings callback
+ * Webhook payload which contains save settings callback
  */
 export const cbSaveSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
     data: `${WarningsAction.SAVE}?cId=${supergroup.id}&v=true`,
+    from: adminUser,
+    id: "1",
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
+  },
+  update_id: 1,
+};
+
+/**
+ * Webhook payload which contains unknown callback
+ */
+export const cbUnknownWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: "unknown",
     from: adminUser,
     id: "1",
     message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },

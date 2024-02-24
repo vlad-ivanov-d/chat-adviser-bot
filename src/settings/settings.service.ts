@@ -39,7 +39,7 @@ export class SettingsService {
     switch (action) {
       case SettingsAction.CHATS:
       case SettingsAction.REFRESH:
-        await this.renderChats(ctx, skip);
+        await this.renderChats(ctx, skip, true);
         break;
       case SettingsAction.FEATURES:
         await this.renderFeatures(ctx, chatId, skip);
@@ -150,8 +150,9 @@ export class SettingsService {
    * Renders chats
    * @param ctx Callback or message context
    * @param skip Skip count
+   * @param shouldAnswerCallback Answer callback query will be sent if true
    */
-  private async renderChats(ctx: CallbackCtx | MessageCtx, skip = 0): Promise<void> {
+  private async renderChats(ctx: CallbackCtx | MessageCtx, skip = 0, shouldAnswerCallback?: boolean): Promise<void> {
     const { from } = typeof ctx.callbackQuery === "undefined" ? ctx.update.message : ctx.callbackQuery;
     const take = skip === 0 ? PAGE_SIZE - 1 : PAGE_SIZE;
     if (!ctx.chat || isNaN(skip)) {
@@ -189,7 +190,7 @@ export class SettingsService {
     await (typeof ctx.callbackQuery === "undefined"
       ? ctx.reply(msg, { parse_mode: "HTML", reply_markup: replyMarkup })
       : Promise.all([
-          ctx.answerCbQuery(),
+          shouldAnswerCallback && ctx.answerCbQuery(),
           // An expected error may happen if the message won't change during edit
           ctx.editMessageText(msg, { parse_mode: "HTML", reply_markup: replyMarkup }).catch(() => undefined),
         ]));

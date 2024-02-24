@@ -13,7 +13,7 @@ import { adminUser, bot, systemChannelBot } from "./users";
 export const banSenderChatPayload = { chat_id: supergroup.id, sender_chat_id: channel.id };
 
 /**
- * Webhook payload which contains channel message filter save settings callback with incorrect chat id
+ * Webhook payload which contains save settings callback with incorrect chat id
  */
 export const cbSaveSettingsErrorWebhook = {
   callback_query: {
@@ -21,14 +21,7 @@ export const cbSaveSettingsErrorWebhook = {
     data: `${ChannelMessageFilterAction.SAVE}?cId=error_id&v=FILTER`,
     from: adminUser,
     id: "1",
-    message: {
-      chat: privateChat,
-      date: Date.now(),
-      edit_date: Date.now(),
-      from: bot,
-      message_id: 1,
-      text: "Messages On Behalf Of Channels",
-    },
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
 };
@@ -62,7 +55,7 @@ export const cbSettingsEditMessageTextPayload = {
 };
 
 /**
- * Webhook payload which contains channel message filter settings callback with incorrect chat id
+ * Webhook payload which contains settings callback with incorrect chat id
  */
 export const cbSettingsErrorWebhook = {
   callback_query: {
@@ -70,20 +63,13 @@ export const cbSettingsErrorWebhook = {
     data: `${ChannelMessageFilterAction.SETTINGS}?cId=error_id`,
     from: adminUser,
     id: "1",
-    message: {
-      chat: privateChat,
-      date: Date.now(),
-      edit_date: Date.now(),
-      from: bot,
-      message_id: 1,
-      text: "Select the feature",
-    },
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
 };
 
 /**
- * Webhook payload which contains channel message filter settings callback
+ * Webhook payload which contains settings callback
  */
 export const cbSettingsWebhook = {
   callback_query: {
@@ -91,20 +77,13 @@ export const cbSettingsWebhook = {
     data: `${ChannelMessageFilterAction.SETTINGS}?cId=${supergroup.id}`,
     from: adminUser,
     id: "1",
-    message: {
-      chat: privateChat,
-      date: Date.now(),
-      edit_date: Date.now(),
-      from: bot,
-      message_id: 1,
-      text: "Select the feature",
-    },
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
 };
 
 /**
- * Webhook payload which contains channel message filter save settings edit message payload.
+ * Webhook payload which contains save settings edit message payload.
  * This fixture should be implemented via function to prevent issues related to dates.
  * @returns Payload
  */
@@ -122,7 +101,7 @@ export const cbSaveSettingsEditMessageTextPayloadFunc = (): unknown => ({
 });
 
 /**
- * Webhook payload which contains channel message filter save settings callback
+ * Webhook payload which contains save settings callback
  */
 export const cbSaveSettingsWebhook = {
   callback_query: {
@@ -130,14 +109,7 @@ export const cbSaveSettingsWebhook = {
     data: `${ChannelMessageFilterAction.SAVE}?cId=${supergroup.id}&v=FILTER`,
     from: adminUser,
     id: "1",
-    message: {
-      chat: privateChat,
-      date: Date.now(),
-      edit_date: Date.now(),
-      from: bot,
-      message_id: 1,
-      text: "Messages On Behalf Of Channels",
-    },
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
 };
@@ -152,7 +124,7 @@ export const channelMessageWebhook = {
     from: systemChannelBot,
     message_id: 1,
     sender_chat: channel,
-    text: "Test message",
+    text: "Test",
   },
   update_id: 1,
 };
