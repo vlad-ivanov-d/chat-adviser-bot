@@ -11,9 +11,7 @@ export { options };
  * Virtual user code
  */
 export default (): void => {
-  const res = http.post(K6_WEBHOOK_URL, JSON.stringify(fixtures.supergroupHelpWebhook), {
-    headers: { "Content-Type": "application/json" },
-  });
+  const res = http.post(K6_WEBHOOK_URL, JSON.stringify(fixtures.supergroupHelpWebhook));
   check(res, {
     /**
      * Checks status code

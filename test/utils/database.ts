@@ -27,7 +27,7 @@ export const cleanupDb = async (): Promise<void> => {
  */
 export const createDbPrivateChat = async (chat?: Partial<Chat>): Promise<void> => {
   await prisma.$transaction([
-    createDbAdminUser(),
+    createDbUser(userFixtures.adminUser),
     prisma.chat.create({
       data: {
         authorId: chat?.authorId ?? userFixtures.adminUser.id,
@@ -46,6 +46,7 @@ export const createDbPrivateChat = async (chat?: Partial<Chat>): Promise<void> =
         ...chat,
         type: ChatType.PRIVATE,
       },
+      select: { id: true },
     }),
   ]);
 };
@@ -56,7 +57,7 @@ export const createDbPrivateChat = async (chat?: Partial<Chat>): Promise<void> =
  */
 export const createDbSupergroupChat = async (chat?: Partial<Chat>): Promise<void> => {
   await prisma.$transaction([
-    createDbAdminUser(),
+    createDbUser(userFixtures.adminUser),
     prisma.chat.create({
       data: {
         admins: { connect: { id: userFixtures.adminUser.id } },
@@ -76,26 +77,27 @@ export const createDbSupergroupChat = async (chat?: Partial<Chat>): Promise<void
         ...chat,
         type: ChatType.SUPERGROUP,
       },
+      select: { id: true },
     }),
   ]);
 };
 
 /**
- * Creates database chat admin user
- * @param user Telegram user which will be merged with the default one
+ * Creates database chat user
+ * @param user Telegram user
  * @returns Prisma user client
  */
-export const createDbAdminUser = (user?: Partial<User>): Prisma.Prisma__UserClient<unknown> => {
-  const userPayload: User = { ...userFixtures.adminUser, ...user };
+export const createDbUser = (user: User): Prisma.Prisma__UserClient<unknown> => {
   return prisma.user.create({
-    data: { authorId: userPayload.id, editorId: userPayload.id, firstName: userPayload.first_name, id: userPayload.id },
+    data: {
+      authorId: user.id,
+      editorId: user.id,
+      firstName: user.first_name,
+      id: user.id,
+      languageCode: user.language_code,
+      lastName: user.last_name,
+      username: user.username,
+    },
+    select: { id: true },
   });
 };
-
-/**
- * Creates database chat user
- * @param user Telegram user which will be merged with the default one
- * @returns Prisma user client
- */
-export const createDbUser = (user?: Partial<User>): Prisma.Prisma__UserClient<unknown> =>
-  createDbAdminUser({ ...userFixtures.user, ...user });

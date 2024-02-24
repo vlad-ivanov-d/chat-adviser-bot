@@ -11,9 +11,7 @@ export { options };
  * Virtual user code
  */
 export default (): void => {
-  const res = http.post(K6_WEBHOOK_URL, JSON.stringify(fixtures.channelMessageWebhook), {
-    headers: { "Content-Type": "application/json" },
-  });
+  const res = http.post(K6_WEBHOOK_URL, JSON.stringify(fixtures.channelMessageWebhook));
   check(res, {
     /**
      * Checks status code

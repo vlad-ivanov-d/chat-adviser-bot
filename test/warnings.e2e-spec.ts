@@ -35,7 +35,7 @@ describe("WarningsModule (e2e)", () => {
   it("should ban a user for 3 warnings", async () => {
     await createDbSupergroupChat({ hasWarnings: true });
     await prisma.$transaction([
-      createDbUser(),
+      createDbUser(user),
       prisma.warning.createMany({
         data: [
           { authorId: adminUser.id, chatId: supergroup.id, editorId: adminUser.id, messageId: 1, userId: user.id },
@@ -137,7 +137,7 @@ describe("WarningsModule (e2e)", () => {
   it("should not issue duplicate warnings", async () => {
     await createDbSupergroupChat({ hasWarnings: true });
     await prisma.$transaction([
-      createDbUser(),
+      createDbUser(user),
       prisma.warning.createMany({
         data: [
           { authorId: adminUser.id, chatId: supergroup.id, editorId: adminUser.id, messageId: 2, userId: user.id },
@@ -173,7 +173,7 @@ describe("WarningsModule (e2e)", () => {
   it("should not fail without ban and delete message permissions", async () => {
     await createDbSupergroupChat({ hasWarnings: true });
     await prisma.$transaction([
-      createDbUser(),
+      createDbUser(user),
       prisma.warning.createMany({
         data: [
           { authorId: adminUser.id, chatId: supergroup.id, editorId: adminUser.id, messageId: 1, userId: user.id },

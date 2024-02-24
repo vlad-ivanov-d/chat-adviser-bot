@@ -7,6 +7,130 @@ import { privateChat, supergroup } from "./chats";
 import { adminUser, bot, user } from "./users";
 
 /**
+ * Webhook response which contains answer callback query method.
+ * It should be sent as a result of callback vote processing if the vote is duplicated.
+ */
+export const answerCbVoteDuplicatedWebhookResponse = {
+  callback_query_id: "1",
+  method: "answerCallbackQuery",
+  show_alert: true,
+  text: "You have already voted",
+};
+
+/**
+ * Webhook response which contains answer callback query method.
+ * It should be sent as a result of callback vote processing if the voting has expired.
+ */
+export const answerCbVoteExpiredWebhookResponse = {
+  callback_query_id: "1",
+  method: "answerCallbackQuery",
+  show_alert: true,
+  text: "Voting has expired",
+};
+
+/**
+ * Webhook response which contains answer callback query method.
+ * It should be sent as a result of callback vote processing.
+ */
+export const answerCbVoteWebhookResponse = {
+  callback_query_id: "1",
+  method: "answerCallbackQuery",
+  text: "Your vote has been counted",
+};
+
+/**
+ * Payload for edit message text request. It should be sent as a result of ban callback.
+ */
+export const cbBanEditMessageTextPayload = {
+  chat_id: supergroup.id,
+  message_id: 3,
+  parse_mode: "HTML",
+  text:
+    `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a> offers to ban ` +
+    `<a href="tg:user?id=${user.id}">@${user.username}</a>. This requires 2 votes. ` +
+    `Do you want to ban <a href="tg:user?id=${user.id}">@${user.username}</a>?\n\nDecided: <b>ban</b>.\n\n` +
+    `Voted for ban: <a href="tg:user?id=${user.id}">@${user.username}</a>, ` +
+    `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>.`,
+};
+
+/**
+ * Webhook payload which contains ban callback
+ */
+export const cbBanWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: VotebanAction.BAN,
+    from: adminUser,
+    id: "1",
+    message: {
+      chat: supergroup,
+      date: Date.now(),
+      from: bot,
+      message_id: 3,
+      message_thread_id: 1,
+      reply_to_message: { chat: supergroup, date: Date.now(), from: user, message_id: 1, text: "Bad word" },
+      text: "",
+    },
+  },
+  update_id: 1,
+};
+
+/**
+ * Payload for edit message text request. It should be sent as a result of no ban callback if the voting is cancelled.
+ */
+export const cbCancelledEditMessageTextPayload = {
+  chat_id: supergroup.id,
+  message_id: 3,
+  parse_mode: "HTML",
+  text:
+    `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a> offers to ban ` +
+    `<a href="tg:user?id=${user.id}">@${user.username}</a>. Do you want to ban ` +
+    `<a href="tg:user?id=${user.id}">@${user.username}</a>?\n\n<b>Voting has been cancelled.</b> ` +
+    "Ban Voting feature is disabled.",
+};
+
+/**
+ * Payload for edit message text request. It should be sent as a result of no ban callback.
+ */
+export const cbNoBanEditMessageTextPayload = {
+  chat_id: supergroup.id,
+  message_id: 3,
+  parse_mode: "HTML",
+  reply_markup: {
+    inline_keyboard: [
+      [{ callback_data: VotebanAction.BAN, text: "Ban (0/2)" }],
+      [{ callback_data: VotebanAction.NO_BAN, text: "Keep (1/2)" }],
+    ],
+  },
+  text:
+    `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a> offers to ban ` +
+    `<a href="tg:user?id=${user.id}">@${user.username}</a>. This requires 2 votes. ` +
+    `Do you want to ban <a href="tg:user?id=${user.id}">@${user.username}</a>?`,
+};
+
+/**
+ * Webhook payload which contains no ban callback
+ */
+export const cbNoBanWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: VotebanAction.NO_BAN,
+    from: adminUser,
+    id: "1",
+    message: {
+      chat: supergroup,
+      date: Date.now(),
+      from: bot,
+      message_id: 3,
+      message_thread_id: 1,
+      reply_to_message: { chat: supergroup, date: Date.now(), from: user, message_id: 1, text: "Bad word" },
+      text: "",
+    },
+  },
+  update_id: 1,
+};
+
+/**
  * Payload for edit message text request. It should be sent as a result of save settings callback.
  * This fixture should be implemented via function to prevent issues related to dates.
  * @returns Payload
