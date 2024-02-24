@@ -108,18 +108,18 @@ export class WarningsService {
       return; // Candidate is an admin, return.
     }
 
-    // An expected error may happen when bot has no enough permissions
-    await ctx.deleteMessage(messageId).catch(() => false);
-
     // Delete the message with a delay to let users know the reason
     setTimeout(() => {
       // An expected error may happen when bot has no enough permissions
       ctx.deleteMessage(replyToMessage.message_id).catch(() => false);
     }, DELETE_MESSAGE_DELAY);
 
-    if (candidateMember?.status !== "kicked") {
-      await this.warn(ctx, { candidate, candidateMessageId: replyToMessage.message_id, candidateSenderChat });
-    }
+    await Promise.all([
+      // An expected error may happen when bot has no enough permissions
+      ctx.deleteMessage(messageId).catch(() => false),
+      candidateMember?.status !== "kicked" &&
+        this.warn(ctx, { candidate, candidateMessageId: replyToMessage.message_id, candidateSenderChat }),
+    ]);
   }
 
   /**
