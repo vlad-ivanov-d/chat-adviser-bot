@@ -15,7 +15,7 @@ describe("PrismaService", () => {
           isGlobal: true,
           /**
            * Initiates Redis store
-           * @returns Cache factory with Redis store
+           * @returns Cache manager with Redis store
            */
           useFactory: () => ({ store }),
         }),
