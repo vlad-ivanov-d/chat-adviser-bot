@@ -10,7 +10,7 @@ import { MyChatMemberCtx } from "src/types/telegraf-context";
 @Injectable()
 export class CleanupService {
   /**
-   * Creates cleanup service
+   * Creates service
    * @param prismaService Database service
    */
   public constructor(private readonly prismaService: PrismaService) {}

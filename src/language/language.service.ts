@@ -17,7 +17,7 @@ import ru from "./translations/ru.json";
 @Injectable()
 export class LanguageService {
   /**
-   * Creates language service
+   * Creates service
    * @param prismaService Database service
    * @param settingsService Settings service
    */
@@ -79,7 +79,7 @@ export class LanguageService {
       throw new Error("Chat is not defined to render language settings.");
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
@@ -135,7 +135,7 @@ export class LanguageService {
       throw new Error("Chat is not defined to save language settings.");
     }
 
-    const { language: lng } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language: lng } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(lng);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {

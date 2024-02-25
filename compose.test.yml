@@ -1,6 +1,12 @@
 name: "chat-adviser-bot-test"
 
 services:
+  cache:
+    command: --requirepass ${REDIS_PASSWORD}
+    image: redis:7.2.4-alpine
+    ports:
+      - ${REDIS_PORT:-}:6379
+
   db:
     environment:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}

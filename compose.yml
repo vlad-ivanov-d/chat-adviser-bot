@@ -4,11 +4,25 @@ services:
   app:
     build: .
     depends_on:
+      - cache
       - db
     environment:
       BOT_TOKEN: ${BOT_TOKEN}
       DATABASE_URL: ${DATABASE_URL}
+      REDIS_HOST: ${REDIS_HOST:-cache}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_PORT: ${REDIS_PORT}
     restart: unless-stopped
+
+  cache:
+    command: --requirepass ${REDIS_PASSWORD}
+    image: redis:7.2.4-alpine
+    ports:
+      - ${REDIS_PORT:-}:6379
+    restart: unless-stopped
+    volumes:
+      - redis:/var/lib/redis
+      - redis-config:/usr/local/etc/redis/redis.conf
 
   db:
     environment:
@@ -26,3 +40,5 @@ services:
 
 volumes:
   pgdata:
+  redis:
+  redis-config:

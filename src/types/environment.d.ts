@@ -9,6 +9,18 @@ declare namespace NodeJS {
      */
     NODE_ENV?: "development" | "production" | "test";
     /**
+     * Redis host
+     */
+    REDIS_HOST?: string;
+    /**
+     * Redis password
+     */
+    REDIS_PASSWORD?: string;
+    /**
+     * Redis port
+     */
+    REDIS_PORT?: string;
+    /**
      * Telegram bot webhook domain
      */
     WEBHOOK_DOMAIN?: string;

@@ -27,7 +27,7 @@ import { EXPIRED_VOTEBAN_TIMEOUT } from "./voteban.constants";
 @Injectable()
 export class VotebanService {
   /**
-   * Creates voteban service
+   * Creates service
    * @param prismaService Database service
    * @param settingsService Settings service
    */
@@ -88,7 +88,7 @@ export class VotebanService {
     }
 
     const [chat, isCandidateAdmin] = await Promise.all([
-      this.prismaService.upsertChat(ctx.chat, from),
+      this.prismaService.upsertChatWithCache(ctx.chat, from),
       typeof candidate?.id === "number" && !candidateSenderChat
         ? // Check seperately, because other bots are not included in admin list.
           isChatAdmin(ctx.telegram, ctx.chat.id, candidate.id)
@@ -219,7 +219,7 @@ export class VotebanService {
       return; // Chat is not defined to render voteban settings
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
@@ -296,7 +296,7 @@ export class VotebanService {
       return; // Chat is not defined to save voteban settings
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
@@ -323,7 +323,7 @@ export class VotebanService {
     }
 
     const [chat, voting] = await Promise.all([
-      this.prismaService.upsertChat(message.chat, from),
+      this.prismaService.upsertChatWithCache(message.chat, from),
       this.prismaService.voteban.findUniqueOrThrow({
         select: {
           author: true,
@@ -428,7 +428,7 @@ export class VotebanService {
     ]);
 
     // Do not upsert chat if it's not found. It means that bot was removed from the chat.
-    const chat = existedChat ? await this.prismaService.upsertChat(message.chat, from) : undefined;
+    const chat = existedChat ? await this.prismaService.upsertChatWithCache(message.chat, from) : undefined;
     const lng = chat?.language ?? this.prismaService.resolveLanguage(from.language_code);
     await changeLanguage(lng);
     if (!chat || !voting) {

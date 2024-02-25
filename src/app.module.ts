@@ -14,13 +14,20 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { ProfanityFilterModule } from "./profanity-filter/profanity-filter.module";
 import { SettingsModule } from "./settings/settings.module";
 import { TimeZoneModule } from "./time-zone/time-zone.module";
-import { cache } from "./utils/cache";
+import { store } from "./utils/redis";
 import { VotebanModule } from "./voteban/voteban.module";
 import { WarningsModule } from "./warnings/warnings.module";
 
 @Module({
   imports: [
-    CacheModule.register({ isGlobal: true, store: cache }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      /**
+       * Initiates Redis store
+       * @returns Cache factory with Redis store
+       */
+      useFactory: () => ({ store }),
+    }),
     ConfigModule.forRoot(),
     ScheduleModule.forRoot(),
     TelegrafModule.forRoot({

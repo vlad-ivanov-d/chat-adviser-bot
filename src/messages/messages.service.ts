@@ -11,7 +11,7 @@ import { OUTDATED_MESSAGE_TIMEOUT } from "./messages.constants";
 @Injectable()
 export class MessagesService {
   /**
-   * Creates messages service
+   * Creates service
    * @param prismaService Database service
    */
   public constructor(private readonly prismaService: PrismaService) {}
@@ -33,7 +33,7 @@ export class MessagesService {
   @On("message")
   public async saveMessage(@Ctx() ctx: MessageCtx, @Next() next: NextFunction): Promise<void> {
     if ("media_group_id" in ctx.update.message) {
-      await this.prismaService.upsertChat(ctx.update.message.chat, ctx.update.message.from);
+      await this.prismaService.upsertChatWithCache(ctx.update.message.chat, ctx.update.message.from);
       await this.prismaService.message.create({
         data: {
           authorId: ctx.update.message.from.id,

@@ -16,7 +16,7 @@ import { DELETE_MESSAGE_DELAY, OUTDATED_WARNING_TIMEOUT, WARNINGS_LIMIT } from "
 @Injectable()
 export class WarningsService {
   /**
-   * Creates warnings service
+   * Creates service
    * @param prismaService Database service
    * @param settingsService Settings service
    */
@@ -75,7 +75,7 @@ export class WarningsService {
         ? // An expected error may happen if the bot have no permissions to see the member list.
           ctx.telegram.getChatMember(ctx.chat.id, candidate.id).catch(() => undefined)
         : undefined,
-      this.prismaService.upsertChat(ctx.chat, from),
+      this.prismaService.upsertChatWithCache(ctx.chat, from),
     ]);
     await changeLanguage(chat.language);
 
@@ -206,7 +206,7 @@ export class WarningsService {
       return; // Chat is not defined to render warnings settings
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
@@ -261,7 +261,7 @@ export class WarningsService {
       return; // Chat is not defined to save warnings settings
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {

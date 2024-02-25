@@ -18,7 +18,7 @@ import { WORDS_CACHE_KEY, WORDS_CACHE_TIMEOUT } from "./profanity-filter.constan
 @Injectable()
 export class ProfanityFilterService {
   /**
-   * Creates profanity filter service
+   * Creates service
    * @param cacheManager Cache manager
    * @param prismaService Database service
    * @param settingsService Settings service
@@ -71,7 +71,7 @@ export class ProfanityFilterService {
       return;
     }
 
-    const dbChat = await this.prismaService.upsertChat(chat, from);
+    const dbChat = await this.prismaService.upsertChatWithCache(chat, from);
     if (
       !dbChat.profanityFilter || // Filter is disabled
       this.prismaService.isChatAdmin(dbChat, from.id, senderChat?.id) || // Current user is an admin
@@ -187,7 +187,7 @@ export class ProfanityFilterService {
       throw new Error("Chat is not defined to render profanity filter settings.");
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
@@ -236,7 +236,7 @@ export class ProfanityFilterService {
       throw new Error("Chat is not defined to save profanity filter settings.");
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {

@@ -2,7 +2,7 @@ import { CacheModule } from "@nestjs/cache-manager";
 import { Test } from "@nestjs/testing";
 import { TelegrafModule } from "nestjs-telegraf";
 import { PrismaModule } from "src/prisma/prisma.module";
-import { cache } from "src/utils/cache";
+import { store } from "src/utils/redis";
 
 import { HelpService } from "./help.service";
 
@@ -12,7 +12,14 @@ describe("HelpService", () => {
   beforeEach(async () => {
     const testingModule = await Test.createTestingModule({
       imports: [
-        CacheModule.register({ isGlobal: true, store: cache }),
+        CacheModule.registerAsync({
+          isGlobal: true,
+          /**
+           * Initiates Redis store
+           * @returns Cache factory with Redis store
+           */
+          useFactory: () => ({ store }),
+        }),
         TelegrafModule.forRoot({ launchOptions: false, token: process.env.BOT_TOKEN ?? "" }),
         PrismaModule,
       ],

@@ -17,7 +17,7 @@ import { TimeZoneAction } from "./interfaces/action.interface";
 @Injectable()
 export class TimeZoneService {
   /**
-   * Creates time zone service
+   * Creates service
    * @param prismaService Database service
    * @param settingsService Settings service
    */
@@ -80,7 +80,7 @@ export class TimeZoneService {
       throw new Error("Chat is not defined to render time zone settings.");
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
@@ -140,7 +140,7 @@ export class TimeZoneService {
       throw new Error("Chat is not defined to save time zone settings.");
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {

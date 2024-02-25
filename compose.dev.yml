@@ -1,6 +1,16 @@
 name: "chat-adviser-bot"
 
 services:
+  cache:
+    command: --requirepass ${REDIS_PASSWORD}
+    image: redis:7.2.4-alpine
+    ports:
+      - ${REDIS_PORT:-}:6379
+    restart: unless-stopped
+    volumes:
+      - redis:/var/lib/redis
+      - redis-config:/usr/local/etc/redis/redis.conf
+
   db:
     environment:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
@@ -17,3 +27,5 @@ services:
 
 volumes:
   pgdata:
+  redis:
+  redis-config:
