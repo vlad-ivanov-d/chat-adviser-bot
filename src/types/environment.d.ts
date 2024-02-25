@@ -32,5 +32,9 @@ declare namespace NodeJS {
      * Telegram bot webhook port
      */
     WEBHOOK_PORT?: string;
+    /**
+     * Secret token to be sent back in Telegram webhook header for security
+     */
+    WEBHOOK_SECRET_TOKEN?: string;
   }
 }

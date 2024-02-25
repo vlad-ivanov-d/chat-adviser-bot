@@ -37,6 +37,7 @@ import { WarningsModule } from "./warnings/warnings.module";
               domain: process.env.WEBHOOK_DOMAIN,
               path: process.env.WEBHOOK_PATH,
               port: process.env.WEBHOOK_PORT ? Number(process.env.WEBHOOK_PORT) : undefined,
+              secretToken: process.env.WEBHOOK_SECRET_TOKEN,
             }
           : undefined,
       },

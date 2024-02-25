@@ -1,7 +1,7 @@
 /**
  * The delay in milliseconds that is required to run asynchronous requests
  */
-export const ASYNC_REQUEST_DELAY = 125;
+export const ASYNC_REQUEST_DELAY = 150;
 
 /**
  * Telegram API base url for mocking API calls
