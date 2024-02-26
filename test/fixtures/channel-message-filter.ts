@@ -7,6 +7,17 @@ import { channel, privateChat, supergroup } from "./chats";
 import { adminUser, bot, systemChannelBot } from "./users";
 
 /**
+ * Webhook response which contains answer callback query method.
+ * It should be sent as a result of callback settings or save settings processing if the user is not an admin.
+ */
+export const answerCbSettingsNotAdminWebhookResponse = {
+  callback_query_id: "1",
+  method: "answerCallbackQuery",
+  show_alert: true,
+  text: "Unfortunately, this action is no longer available to you.",
+};
+
+/**
  * Payload for ban sender chat request. It should be sent as a result of channel message
  * processing in a supergroup chat.
  */
@@ -66,6 +77,27 @@ export const cbSettingsErrorWebhook = {
     message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
+};
+
+/**
+ * Payload for edit message text request. It should be sent as a result of settings or save settings callback
+ * if the user is not an admin.
+ */
+export const cbSettingsNotAdminEditMessageTextPayload = {
+  chat_id: privateChat.id,
+  message_id: 1,
+  parse_mode: "HTML",
+  reply_markup: {
+    inline_keyboard: [
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${privateChat.id}`, text: `@${bot.username}` }],
+      [],
+      [{ callback_data: SettingsAction.REFRESH, text: "↻ Refresh the list" }],
+    ],
+  },
+  text:
+    "Below is a list of chats that are available to me, and where you are an administrator. Select the chat " +
+    "for which you want to change the settings.\n\nIf the list doesn't contain the chat you need, try " +
+    "writing any message in it and clicking the <b>↻ Refresh the list</b> button (the last button in this message).",
 };
 
 /**

@@ -74,17 +74,6 @@ export class ChannelMessageFilterService {
   }
 
   /**
-   * Gets available channel message filter options
-   * @returns Channel message filter options
-   */
-  private getOptions(): { id: ChannelMessageFilterRule | null; title: string }[] {
-    return [
-      { id: ChannelMessageFilterRule.FILTER, title: t("channelMessageFilter:filterEnabled") },
-      { id: null, title: t("channelMessageFilter:filterDisabled") },
-    ];
-  }
-
-  /**
    * Renders settings
    * @param ctx Callback context
    * @param chatId Id of the chat which is edited
@@ -110,7 +99,10 @@ export class ChannelMessageFilterService {
       value: ChannelMessageFilterRule.FILTER,
     });
     const sanitizedValue = this.sanitizeValue(dbChat.channelMessageFilter);
-    const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";
+    const value =
+      sanitizedValue === ChannelMessageFilterRule.FILTER
+        ? t("channelMessageFilter:filterEnabled")
+        : t("channelMessageFilter:filterDisabled");
     const msg = t("channelMessageFilter:set", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
