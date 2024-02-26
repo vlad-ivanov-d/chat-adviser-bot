@@ -12,6 +12,10 @@ services:
       REDIS_HOST: ${REDIS_HOST:-cache}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_PORT: ${REDIS_PORT}
+      WEBHOOK_DOMAIN: ${WEBHOOK_DOMAIN}
+      WEBHOOK_PATH: ${WEBHOOK_PATH}
+      WEBHOOK_PORT: ${WEBHOOK_PORT}
+      WEBHOOK_SECRET_TOKEN: ${WEBHOOK_SECRET_TOKEN}
     restart: unless-stopped
 
   cache:

@@ -10,7 +10,7 @@ const config: Config = {
   forceExit: true,
   globalSetup: "<rootDir>/test/utils/global-setup.ts",
   globalTeardown: "<rootDir>/test/utils/global-teardown.ts",
-  maxWorkers: 1, // Use sequential tests to prevent conflicts in database
+  maxWorkers: 1, // Use sequential tests to prevent conflicts in cache and database
   modulePaths: ["<rootDir>"],
   preset: "ts-jest",
   restoreMocks: true,
