@@ -119,7 +119,7 @@ export const cbSettingsWebhook = {
  * This fixture should be implemented via function to prevent issues related to dates.
  * @returns Payload
  */
-export const cbSaveSettingsEditMessageTextPayloadFunc = (): unknown => ({
+export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
   ...cbSettingsEditMessageTextPayload,
   text:
     "<b>Messages On Behalf Of Channels</b>\nI can filter messages on behalf of channels (not to be confused with " +

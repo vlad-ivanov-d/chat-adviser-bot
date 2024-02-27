@@ -29,6 +29,20 @@ export const banSendMessagePayload = {
 };
 
 /**
+ * Webhook payload which contains save settings callback with incorrect value
+ */
+export const cbSaveIncorrectValueSettingsWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: `${WarningsAction.SAVE}?cId=${supergroup.id}&v=incorrect`,
+    from: adminUser,
+    id: "1",
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
+  },
+  update_id: 1,
+};
+
+/**
  * Webhook payload which contains save settings callback with incorrect chat id
  */
 export const cbSaveSettingsErrorWebhook = {
@@ -57,8 +71,8 @@ export const cbSettingsEditMessageTextPayload = {
     ],
   },
   text:
-    "<b>Warnings</b>\nI can issue warnings to users by admin command. To do this, respond to the user's message " +
-    "with the appropriate command. In this case, the user's message will be deleted. Each warning is valid for " +
+    "<b>Warnings</b>\nI can issue warnings to users by admin command. To do this, respond to the user's message with " +
+    "the appropriate command. In this case, the user's message will be deleted. Each warning is valid for " +
     `90 days, then it is automatically removed. If ${WARNINGS_LIMIT} warnings are received, the user will ` +
     `be banned.\n/warn - issue a warning\n\nEnable warnings in @${supergroup.username} chat?\n\nCurrent value: ` +
     "<b>disabled</b>",
@@ -114,11 +128,27 @@ export const cbSettingsWebhook = {
 };
 
 /**
+ * Payload for edit message text request. It should be sent as a result of save settings callback with incorrect value.
+ * This fixture should be implemented via function to prevent issues related to dates.
+ * @returns Payload
+ */
+export const cbSaveIncorrectValueSettingsEditMessageTextPayload = (): unknown => ({
+  ...cbSettingsEditMessageTextPayload,
+  text:
+    "<b>Warnings</b>\nI can issue warnings to users by admin command. To do this, respond to the user's message " +
+    "with the appropriate command. In this case, the user's message will be deleted. Each warning is valid for " +
+    "90 days, then it is automatically removed. If 3 warnings are received, the user will be banned.\n" +
+    `/warn - issue a warning\n\nEnable warnings in @${supergroup.username} chat?\n\nCurrent value: <b>disabled</b>\n` +
+    `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
+    `by <a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>`,
+});
+
+/**
  * Payload for edit message text request. It should be sent as a result of save settings callback.
  * This fixture should be implemented via function to prevent issues related to dates.
  * @returns Payload
  */
-export const cbSaveSettingsEditMessageTextPayloadFunc = (): unknown => ({
+export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
   ...cbSettingsEditMessageTextPayload,
   text:
     "<b>Warnings</b>\nI can issue warnings to users by admin command. To do this, respond to the user's message " +

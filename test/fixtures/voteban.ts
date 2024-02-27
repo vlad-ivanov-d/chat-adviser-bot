@@ -135,7 +135,7 @@ export const cbNoBanWebhook = {
  * This fixture should be implemented via function to prevent issues related to dates.
  * @returns Payload
  */
-export const cbSaveSettingsEditMessageTextPayloadFunc = (): unknown => ({
+export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
   chat_id: privateChat.id,
   message_id: 1,
   parse_mode: "HTML",
