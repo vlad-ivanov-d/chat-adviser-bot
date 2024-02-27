@@ -247,7 +247,7 @@ export const myChatsInPrivateChatWebhook = {
 export const myChatsInSupergroupSendMessagePayload = {
   chat_id: supergroup.id,
   parse_mode: "HTML",
-  reply_to_message_id: 1,
+  reply_parameters: { message_id: 1 },
   text:
     `Send this command to me in <a href="tg:user?id=${bot.id}">private messages</a> ` +
     "and I'll help you to configure your chats.",

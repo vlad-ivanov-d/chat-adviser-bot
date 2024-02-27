@@ -59,7 +59,7 @@ export class SettingsService {
       const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.message.from);
       await changeLanguage(language);
       const msg = t("common:commandForPrivateChat", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}` });
-      await ctx.reply(msg, { parse_mode: "HTML", reply_to_message_id: ctx.message.message_id });
+      await ctx.reply(msg, { parse_mode: "HTML", reply_parameters: { message_id: ctx.message.message_id } });
       return;
     }
     await this.renderChats(ctx, 0);

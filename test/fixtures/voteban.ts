@@ -258,7 +258,7 @@ export const cbSettingsWebhook = {
  */
 export const votebanAgainstAdminSendMessagePayload = {
   chat_id: supergroup.id,
-  reply_to_message_id: 2,
+  reply_parameters: { message_id: 2 },
   text: "I can't start voting to ban the administrator. This would be incorrect.",
 };
 
@@ -267,7 +267,7 @@ export const votebanAgainstAdminSendMessagePayload = {
  */
 export const votebanAgainstBotSendMessagePayload = {
   chat_id: supergroup.id,
-  reply_to_message_id: 2,
+  reply_parameters: { message_id: 2 },
   text: "I can't start voting to ban myself. This would be weird.",
 };
 
@@ -301,7 +301,7 @@ export const votebanInPrivateChatWebhook = {
  */
 export const votebanNoAdminPermsSendMessagePayload = {
   chat_id: supergroup.id,
-  reply_to_message_id: 2,
+  reply_parameters: { message_id: 2 },
   text: "I need administrator permissions for this feature to work.",
 };
 
@@ -317,7 +317,7 @@ export const votebanSendMessagePayload = {
       [{ callback_data: VotebanAction.NO_BAN, text: "Keep (0/2)" }],
     ],
   },
-  reply_to_message_id: 1,
+  reply_parameters: { allow_sending_without_reply: true, message_id: 1 },
   text:
     `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a> offers to ban ` +
     `<a href="tg:user?id=${user.id}">@${user.username}</a>. This requires 2 votes. ` +
@@ -346,7 +346,7 @@ export const votebanWebhook = {
  */
 export const votebanWithoutReplySendMessagePayload = {
   chat_id: supergroup.id,
-  reply_to_message_id: 1,
+  reply_parameters: { message_id: 1 },
   text:
     "You should respond with this command to a message that you consider incorrect in order to start voting " +
     "to ban the user.",

@@ -90,7 +90,7 @@ describe("VotebanModule (e2e)", () => {
       select: { id: true },
     });
     let banChatMemberPayload;
-    let deleteMessagePayload;
+    let deleteMessagesPayload;
     let editMessageTextPayload;
     let sendMessagePayload;
     server.use(
@@ -98,8 +98,8 @@ describe("VotebanModule (e2e)", () => {
         banChatMemberPayload = await info.request.json();
         return new HttpResponse(null, { status: 400 });
       }),
-      http.post(`${TELEGRAM_API_BASE_URL}/deleteMessage`, async (info) => {
-        deleteMessagePayload = await info.request.json();
+      http.post(`${TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
+        deleteMessagesPayload = await info.request.json();
         return new HttpResponse(null, { status: 400 });
       }),
       http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
@@ -118,9 +118,9 @@ describe("VotebanModule (e2e)", () => {
     expect(response.body).toEqual(fixtures.answerCbVoteWebhookResponse);
     await sleep(ASYNC_REQUEST_DELAY);
     expect(banChatMemberPayload).toEqual({ chat_id: supergroup.id, user_id: user.id });
-    expect(deleteMessagePayload).toEqual({ chat_id: supergroup.id, message_id: 1 });
+    expect(deleteMessagesPayload).toEqual({ chat_id: supergroup.id, message_ids: [1] });
     expect(editMessageTextPayload).toEqual(fixtures.cbBanEditMessageTextPayload);
-    expect(sendMessagePayload).toEqual({ chat_id: 12, reply_to_message_id: 3, text: "Voting completed" });
+    expect(sendMessagePayload).toEqual({ chat_id: 12, reply_parameters: { message_id: 3 }, text: "Voting completed" });
   });
 
   it("should cancel the voting if the feature is disabled", async () => {

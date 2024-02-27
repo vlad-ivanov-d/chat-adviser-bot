@@ -23,7 +23,7 @@ export class HelpService {
     await changeLanguage(language);
     await ctx.reply(t("common:help", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}` }), {
       parse_mode: "HTML",
-      reply_to_message_id: ctx.chat.type === "private" ? undefined : ctx.message.message_id,
+      ...(ctx.chat.type !== "private" && { reply_parameters: { message_id: ctx.message.message_id } }),
     });
   }
 }

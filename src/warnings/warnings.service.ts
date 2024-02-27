@@ -83,19 +83,19 @@ export class WarningsService {
       return; // The feature is disabled, return.
     }
     if (!this.prismaService.isChatAdmin(chat, ctx.botInfo.id)) {
-      await ctx.reply(t("common:needAdminPermissions"), { reply_to_message_id: messageId });
+      await ctx.reply(t("common:needAdminPermissions"), { reply_parameters: { message_id: messageId } });
       return; // Bot is not an admin, return.
     }
     if (!this.prismaService.isChatAdmin(chat, from.id, senderChat?.id)) {
-      await ctx.reply(t("common:commandForAdmins"), { reply_to_message_id: messageId });
+      await ctx.reply(t("common:commandForAdmins"), { reply_parameters: { message_id: messageId } });
       return; // The user is not an admin, return.
     }
     if (!candidate) {
-      await ctx.reply(t("warnings:replyToSomeonesMessage"), { reply_to_message_id: messageId });
+      await ctx.reply(t("warnings:replyToSomeonesMessage"), { reply_parameters: { message_id: messageId } });
       return; // No candidate, return.
     }
     if (candidate.id === ctx.botInfo.id) {
-      await ctx.reply(t("warnings:cannotWarnMyself"), { reply_to_message_id: messageId });
+      await ctx.reply(t("warnings:cannotWarnMyself"), { reply_parameters: { message_id: messageId } });
       return; // Candidate is the bot itself, return.
     }
     if (
@@ -104,7 +104,7 @@ export class WarningsService {
       candidateMember?.status === "creator" ||
       candidateSenderChat?.id === ctx.chat.id
     ) {
-      await ctx.reply(t("warnings:cannotWarnAdmin"), { reply_to_message_id: messageId });
+      await ctx.reply(t("warnings:cannotWarnAdmin"), { reply_parameters: { message_id: messageId } });
       return; // Candidate is an admin, return.
     }
 
@@ -166,7 +166,7 @@ export class WarningsService {
       t("warnings:text", { USER: candidateLink, WARNINGS_COUNT: warnings.length, WARNINGS_LIMIT }),
       {
         parse_mode: "HTML",
-        reply_to_message_id: candidateMessageId,
+        reply_parameters: { allow_sending_without_reply: true, message_id: candidateMessageId },
       },
     );
 
@@ -181,7 +181,7 @@ export class WarningsService {
       ]);
       if (isChatMemberBanned || isSenderChatBanned) {
         const msg = t("warnings:banned", { USER: candidateLink });
-        await ctx.reply(msg, { parse_mode: "HTML", reply_to_message_id: replyMessageId });
+        await ctx.reply(msg, { parse_mode: "HTML", reply_parameters: { message_id: replyMessageId } });
       }
     }
   }

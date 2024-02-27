@@ -100,19 +100,19 @@ export class VotebanService {
       return; // The feature is disabled, return.
     }
     if (!this.prismaService.isChatAdmin(chat, ctx.botInfo.id)) {
-      await ctx.reply(t("common:needAdminPermissions"), { reply_to_message_id: messageId });
+      await ctx.reply(t("common:needAdminPermissions"), { reply_parameters: { message_id: messageId } });
       return; // Bot is not an admin, return.
     }
     if (!candidate) {
-      await ctx.reply(t("voteban:replyToSomeonesMessage"), { reply_to_message_id: messageId });
+      await ctx.reply(t("voteban:replyToSomeonesMessage"), { reply_parameters: { message_id: messageId } });
       return; // No candidate, return.
     }
     if (candidate.id === ctx.botInfo.id) {
-      await ctx.reply(t("voteban:cannotVoteAgainstMyself"), { reply_to_message_id: messageId });
+      await ctx.reply(t("voteban:cannotVoteAgainstMyself"), { reply_parameters: { message_id: messageId } });
       return; // Candidate is the bot itself, return.
     }
     if (isCandidateAutomaticForward || isCandidateAdmin) {
-      await ctx.reply(t("voteban:cannotVoteAgainstAdmin"), { reply_to_message_id: messageId });
+      await ctx.reply(t("voteban:cannotVoteAgainstAdmin"), { reply_parameters: { message_id: messageId } });
       return; // Candidate is an admin, return.
     }
 
@@ -132,7 +132,7 @@ export class VotebanService {
             [{ callback_data: VotebanAction.NO_BAN, text: noBanButtonText }],
           ],
         },
-        reply_to_message_id: replyToMessage.message_id,
+        reply_parameters: { allow_sending_without_reply: true, message_id: replyToMessage.message_id },
       }),
       candidateSenderChat && this.prismaService.upsertSenderChat(candidateSenderChat, from),
       fromSenderChat && this.prismaService.upsertSenderChat(fromSenderChat, from),
@@ -171,18 +171,12 @@ export class VotebanService {
           where: { chatId: ctx.chat?.id, mediaGroupId, messageId: { not: messageId } },
         })
       : [];
-    const toDeleteIds = [messageId, ...mediaGroupMessages.map((m) => m.messageId)].filter(
+    const deleteIds = [messageId, ...mediaGroupMessages.map((m) => m.messageId)].filter(
       (id): id is number => typeof id === "number",
     );
-    const deletionResult = await Promise.all(
-      toDeleteIds.map(async (id) => {
-        const isDeleted = await ctx.deleteMessage(id).catch(() => false);
-        return isDeleted ? id : undefined;
-      }),
-    );
-    const deletedIds = deletionResult.filter((id): id is number => typeof id === "number");
-    if (deletedIds.length > 0) {
-      await this.prismaService.message.deleteMany({ where: { messageId: { in: deletedIds } } });
+    const isDeleted = deleteIds.length > 0 ? await ctx.deleteMessages(deleteIds).catch(() => false) : false;
+    if (isDeleted) {
+      await this.prismaService.message.deleteMany({ where: { messageId: { in: deleteIds } } });
     }
   }
 
@@ -376,7 +370,7 @@ export class VotebanService {
           where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
         }),
         ctx.editMessageText([questionMsg, resultsMsg].join("\n\n"), { parse_mode: "HTML" }),
-        ctx.reply(t("voteban:completed"), { reply_to_message_id: message.message_id }),
+        ctx.reply(t("voteban:completed"), { reply_parameters: { message_id: message.message_id } }),
         isBan && this.deleteMessages(ctx, candidateMessageId, candidateMediaGroupId),
         // An expected error may happen if there are no enough permissions
         isBan && candidateSenderChat && ctx.banChatSenderChat(candidateSenderChat.id).catch(() => undefined),

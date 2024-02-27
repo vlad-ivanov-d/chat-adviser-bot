@@ -24,7 +24,7 @@ export const answerCbSettingsNotAdminWebhookResponse = {
 export const banSendMessagePayload = {
   chat_id: supergroup.id,
   parse_mode: "HTML",
-  reply_to_message_id: 5,
+  reply_parameters: { message_id: 5 },
   text: `User <a href="tg:user?id=${user.id}">@${user.username}</a> is banned`,
 };
 
@@ -162,7 +162,7 @@ export const cbUnknownWebhook = {
  */
 export const warnAgainstAdminSendMessagePayload = {
   chat_id: supergroup.id,
-  reply_to_message_id: 4,
+  reply_parameters: { message_id: 4 },
   text: "I can't issue a warning to the administrator. It would be incorrect.",
 };
 
@@ -171,7 +171,7 @@ export const warnAgainstAdminSendMessagePayload = {
  */
 export const warnAgainstBotSendMessagePayload = {
   chat_id: supergroup.id,
-  reply_to_message_id: 2,
+  reply_parameters: { message_id: 2 },
   text: "I can't issue a warning to myself. This would be weird.",
 };
 
@@ -197,7 +197,7 @@ export const warnAgainstBotWebhook = {
  */
 export const warnBotHasNoAdminPermsSendMessagePayload = {
   chat_id: supergroup.id,
-  reply_to_message_id: 4,
+  reply_parameters: { message_id: 4 },
   text: "I need administrator permissions for this feature to work.",
 };
 
@@ -215,7 +215,7 @@ export const warnInPrivateChatWebhook = {
 export const warnSendMessagePayload = {
   chat_id: supergroup.id,
   parse_mode: "HTML",
-  reply_to_message_id: 3,
+  reply_parameters: { allow_sending_without_reply: true, message_id: 3 },
   text:
     `<a href="tg:user?id=${user.id}">@${user.username}</a>, you are receiving a warning for violating the rules. ` +
     `The warning is valid for 90 days. If you receive ${WARNINGS_LIMIT} warnings, you will be banned.\n\n` +
@@ -228,7 +228,7 @@ export const warnSendMessagePayload = {
  */
 export const warnUserHasNoAdminPermsSendMessagePayload = {
   chat_id: supergroup.id,
-  reply_to_message_id: 4,
+  reply_parameters: { message_id: 4 },
   text: "This command is only available to administrators.",
 };
 
@@ -254,7 +254,7 @@ export const warnWebhook = {
  */
 export const warnWithoutReplySendMessagePayload = {
   chat_id: supergroup.id,
-  reply_to_message_id: 1,
+  reply_parameters: { message_id: 1 },
   text:
     "You should respond with this command to a message that you consider incorrect in order " +
     "to issue a warning to the user.",

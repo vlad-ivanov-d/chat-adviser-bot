@@ -37,7 +37,7 @@ export const privateHelpWebhook = {
 export const supergroupSendMessagePayload = {
   chat_id: supergroup.id,
   parse_mode: "HTML",
-  reply_to_message_id: 1,
+  reply_parameters: { message_id: 1 },
   text: privateHelpSendMessagePayload.text,
 };
 
