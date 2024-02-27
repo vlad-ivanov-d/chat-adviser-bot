@@ -96,7 +96,7 @@ Get more details in [Contributing](./CONTRIBUTING.md)
 
 | Statements                  | Branches                | Functions                 | Lines             |
 | --------------------------- | ----------------------- | ------------------------- | ----------------- |
-| ![Statements](https://img.shields.io/badge/statements-77.07%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-62.3%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-73.29%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-75.96%25-red.svg?style=flat) |
+| ![Statements](https://img.shields.io/badge/statements-77.68%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-63.85%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-74.86%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-76.63%25-red.svg?style=flat) |
 
 ## License
 

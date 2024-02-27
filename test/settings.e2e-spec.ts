@@ -45,8 +45,8 @@ describe("SettingsModule (e2e)", () => {
     server.use(
       http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         const body = await info.request.json();
-        sendMessagePayload1 = sendMessagePayload1 ?? body;
         sendMessagePayload2 = sendMessagePayload1 ? body : undefined;
+        sendMessagePayload1 = sendMessagePayload1 ?? body;
         return HttpResponse.json({ ok: true });
       }),
     );
@@ -65,8 +65,8 @@ describe("SettingsModule (e2e)", () => {
     server.use(
       http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         const body = await info.request.json();
-        sendMessagePayload1 = sendMessagePayload1 ?? body;
         sendMessagePayload2 = sendMessagePayload1 ? body : undefined;
+        sendMessagePayload1 = sendMessagePayload1 ?? body;
         return HttpResponse.json({ ok: true });
       }),
     );

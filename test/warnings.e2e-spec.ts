@@ -6,9 +6,9 @@ import type { App } from "supertest/types";
 import { server } from "test/utils/server";
 
 import { AppModule } from "../src/app.module";
-import { privateChat, supergroup } from "./fixtures/chats";
+import { channel, privateChat, supergroup } from "./fixtures/chats";
 import * as settingsFixtures from "./fixtures/settings";
-import { adminUser, bot, user } from "./fixtures/users";
+import { adminUser, bot, systemChannelBot, user } from "./fixtures/users";
 import * as fixtures from "./fixtures/warnings";
 import {
   ASYNC_REQUEST_DELAY,
@@ -61,8 +61,8 @@ describe("WarningsModule (e2e)", () => {
       }),
       http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         const body = await info.request.json();
-        sendMessagePayload1 = sendMessagePayload1 ?? body;
         sendMessagePayload2 = sendMessagePayload1 ? body : undefined;
+        sendMessagePayload1 = sendMessagePayload1 ?? body;
         return HttpResponse.json({ ok: true, result: { message_id: 5 } });
       }),
     );
@@ -79,6 +79,76 @@ describe("WarningsModule (e2e)", () => {
     jest.runOnlyPendingTimers();
     await sleep(ASYNC_REQUEST_DELAY);
     expect(deleteMessagesPayload).toEqual({ chat_id: supergroup.id, message_ids: [3, 2] });
+  });
+
+  it("should ban a sender chat for 3 warnings", async () => {
+    await createDbSupergroupChat({ hasWarnings: true });
+    await prisma.$transaction([
+      createDbUser(systemChannelBot),
+      prisma.senderChat.create({
+        data: {
+          authorId: adminUser.id,
+          editorId: adminUser.id,
+          id: channel.id,
+          title: channel.title,
+          type: "CHANNEL",
+          username: channel.username,
+        },
+      }),
+      prisma.warning.createMany({
+        data: [
+          {
+            authorId: adminUser.id,
+            chatId: supergroup.id,
+            editorId: adminUser.id,
+            messageId: 1,
+            senderChatId: channel.id,
+            userId: systemChannelBot.id,
+          },
+          {
+            authorId: adminUser.id,
+            chatId: supergroup.id,
+            editorId: adminUser.id,
+            messageId: 2,
+            senderChatId: channel.id,
+            userId: systemChannelBot.id,
+          },
+        ],
+      }),
+    ]);
+    let banChatSenderChatPayload;
+    let deleteMessagesPayload;
+    let sendMessagePayload1: unknown;
+    let sendMessagePayload2: unknown;
+    server.use(
+      http.post(`${TELEGRAM_API_BASE_URL}/banChatSenderChat`, async (info) => {
+        banChatSenderChatPayload = await info.request.json();
+        return new HttpResponse(null, { status: 400 });
+      }),
+      http.post(`${TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
+        deleteMessagesPayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+        const body = await info.request.json();
+        sendMessagePayload2 = sendMessagePayload1 ? body : undefined;
+        sendMessagePayload1 = sendMessagePayload1 ?? body;
+        return HttpResponse.json({ ok: true, result: { message_id: 5 } });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.warnSenderChatWebhook);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ chat_id: supergroup.id, message_id: 4, method: "deleteMessage" });
+    await sleep(ASYNC_REQUEST_DELAY);
+    expect(banChatSenderChatPayload).toEqual({ chat_id: supergroup.id, sender_chat_id: channel.id });
+    expect(sendMessagePayload1).toEqual(fixtures.warnSenderChatSendMessagePayload);
+    expect(sendMessagePayload2).toBeUndefined();
+
+    jest.runOnlyPendingTimers();
+    await sleep(ASYNC_REQUEST_DELAY);
+    expect(deleteMessagesPayload).toEqual({ chat_id: supergroup.id, message_ids: [3] });
   });
 
   it("should handle an error if chat id is incorrect during settings rendering", async () => {
@@ -295,6 +365,7 @@ describe("WarningsModule (e2e)", () => {
     let sendMessagePayload;
     server.use(
       http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
+      http.post(`${TELEGRAM_API_BASE_URL}/getChatMember`, () => new HttpResponse(null, { status: 400 })),
       http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });

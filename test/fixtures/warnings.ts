@@ -4,8 +4,8 @@ import { SettingsAction } from "src/settings/interfaces/action.interface";
 import { WarningsAction } from "src/warnings/interfaces/action.interface";
 import { WARNINGS_LIMIT } from "src/warnings/warnings.constants";
 
-import { privateChat, supergroup } from "./chats";
-import { adminUser, bot, user } from "./users";
+import { channel, privateChat, supergroup } from "./chats";
+import { adminUser, bot, systemChannelBot, user } from "./users";
 
 /**
  * Webhook response which contains answer callback query method.
@@ -223,6 +223,20 @@ export const warnSendMessagePayload = {
 };
 
 /**
+ * Payload for send message request. It should be sent as a result of /warn command
+ * for a sender chat in a supergroup chat.
+ */
+export const warnSenderChatSendMessagePayload = {
+  chat_id: supergroup.id,
+  parse_mode: "HTML",
+  reply_parameters: { allow_sending_without_reply: true, message_id: 3 },
+  text:
+    `@${channel.username}, you are receiving a warning for violating the rules. ` +
+    `The warning is valid for 90 days. If you receive ${WARNINGS_LIMIT} warnings, you will be banned.\n\n` +
+    `Number of warnings: <b>${WARNINGS_LIMIT} of ${WARNINGS_LIMIT}</b>`,
+};
+
+/**
  * Payload for send message request. It should be sent as a result of /warn command processing in a supergroup chat
  * without admin permissions for the user.
  */
@@ -249,6 +263,29 @@ export const warnMediaGroupWebhook = {
       media_group_id: "100",
       message_id: 3,
       text: "Bad photos",
+    },
+    text: "/warn",
+  },
+  update_id: 1,
+};
+
+/**
+ * Webhook payload which contains /warn command for sender chat in a supergroup chat
+ */
+export const warnSenderChatWebhook = {
+  message: {
+    chat: supergroup,
+    date: Date.now(),
+    from: adminUser,
+    message_id: 4,
+    message_thread_id: 3,
+    reply_to_message: {
+      chat: supergroup,
+      date: Date.now(),
+      from: systemChannelBot,
+      message_id: 3,
+      sender_chat: channel,
+      text: "Sender chat message",
     },
     text: "/warn",
   },
