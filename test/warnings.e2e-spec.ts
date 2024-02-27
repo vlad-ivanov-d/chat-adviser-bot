@@ -36,6 +36,9 @@ describe("WarningsModule (e2e)", () => {
     await createDbSupergroupChat({ hasWarnings: true });
     await prisma.$transaction([
       createDbUser(user),
+      prisma.message.createMany({
+        data: [{ authorId: user.id, chatId: supergroup.id, editorId: user.id, mediaGroupId: "100", messageId: 2 }],
+      }),
       prisma.warning.createMany({
         data: [
           { authorId: adminUser.id, chatId: supergroup.id, editorId: adminUser.id, messageId: 1, userId: user.id },
@@ -44,7 +47,7 @@ describe("WarningsModule (e2e)", () => {
       }),
     ]);
     let banChatMemberPayload;
-    let deleteMessagePayload;
+    let deleteMessagesPayload;
     let sendMessagePayload1: unknown;
     let sendMessagePayload2: unknown;
     server.use(
@@ -52,8 +55,8 @@ describe("WarningsModule (e2e)", () => {
         banChatMemberPayload = await info.request.json();
         return HttpResponse.json({ ok: true, result: true });
       }),
-      http.post(`${TELEGRAM_API_BASE_URL}/deleteMessage`, async (info) => {
-        deleteMessagePayload = await info.request.json();
+      http.post(`${TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
+        deleteMessagesPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
       http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
@@ -64,7 +67,7 @@ describe("WarningsModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.warnWebhook);
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.warnMediaGroupWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ chat_id: supergroup.id, message_id: 4, method: "deleteMessage" });
@@ -75,7 +78,7 @@ describe("WarningsModule (e2e)", () => {
 
     jest.runOnlyPendingTimers();
     await sleep(ASYNC_REQUEST_DELAY);
-    expect(deleteMessagePayload).toEqual({ chat_id: supergroup.id, message_id: 3 });
+    expect(deleteMessagesPayload).toEqual({ chat_id: supergroup.id, message_ids: [3, 2] });
   });
 
   it("should handle an error if chat id is incorrect during settings rendering", async () => {
@@ -152,11 +155,11 @@ describe("WarningsModule (e2e)", () => {
         ],
       }),
     ]);
-    let deleteMessagePayload;
+    let deleteMessagesPayload;
     let sendMessagePayload: unknown;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/deleteMessage`, async (info) => {
-        deleteMessagePayload = await info.request.json();
+      http.post(`${TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
+        deleteMessagesPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
       http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
@@ -174,7 +177,7 @@ describe("WarningsModule (e2e)", () => {
 
     jest.runOnlyPendingTimers();
     await sleep(ASYNC_REQUEST_DELAY);
-    expect(deleteMessagePayload).toEqual({ chat_id: supergroup.id, message_id: 3 });
+    expect(deleteMessagesPayload).toEqual({ chat_id: supergroup.id, message_ids: [3] });
   });
 
   it("should not fail without ban and delete message permissions", async () => {
@@ -189,14 +192,14 @@ describe("WarningsModule (e2e)", () => {
       }),
     ]);
     let banChatMemberPayload;
-    let deleteMessagePayload;
+    let deleteMessagesPayload;
     server.use(
       http.post(`${TELEGRAM_API_BASE_URL}/banChatMember`, async (info) => {
         banChatMemberPayload = await info.request.json();
         return new HttpResponse(null, { status: 400 });
       }),
-      http.post(`${TELEGRAM_API_BASE_URL}/deleteMessage`, async (info) => {
-        deleteMessagePayload = await info.request.json();
+      http.post(`${TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
+        deleteMessagesPayload = await info.request.json();
         return new HttpResponse(null, { status: 400 });
       }),
       http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, () =>
@@ -213,7 +216,7 @@ describe("WarningsModule (e2e)", () => {
 
     jest.runOnlyPendingTimers();
     await sleep(ASYNC_REQUEST_DELAY);
-    expect(deleteMessagePayload).toEqual({ chat_id: supergroup.id, message_id: 3 });
+    expect(deleteMessagesPayload).toEqual({ chat_id: supergroup.id, message_ids: [3] });
   });
 
   it("should not render settings if the user is not an admin", async () => {

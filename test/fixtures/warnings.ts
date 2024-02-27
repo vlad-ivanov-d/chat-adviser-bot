@@ -233,6 +233,29 @@ export const warnUserHasNoAdminPermsSendMessagePayload = {
 };
 
 /**
+ * Webhook payload which contains /warn command for message media group in a supergroup chat
+ */
+export const warnMediaGroupWebhook = {
+  message: {
+    chat: supergroup,
+    date: Date.now(),
+    from: adminUser,
+    message_id: 4,
+    message_thread_id: 3,
+    reply_to_message: {
+      chat: supergroup,
+      date: Date.now(),
+      from: user,
+      media_group_id: "100",
+      message_id: 3,
+      text: "Bad photos",
+    },
+    text: "/warn",
+  },
+  update_id: 1,
+};
+
+/**
  * Webhook payload which contains /warn command in a supergroup chat
  */
 export const warnWebhook = {

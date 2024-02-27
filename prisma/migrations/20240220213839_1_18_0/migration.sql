@@ -1,4 +1,7 @@
 -- CreateIndex
+CREATE INDEX "messages_message_id_idx" ON "messages"("message_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "warnings_chat_id_message_id_key" ON "warnings"("chat_id", "message_id");
 
 -- DropForeignKey

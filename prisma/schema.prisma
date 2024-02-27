@@ -112,6 +112,7 @@ model Message {
   @@unique([chatId, messageId])
   @@index([createdAt])
   @@index([mediaGroupId])
+  @@index([messageId])
   @@map("messages")
 }
 

@@ -109,6 +109,7 @@ export const server = setupServer(
   ...(process.env.WEBHOOK_PATH ? [http.post(`**${process.env.WEBHOOK_PATH}`, passthrough)] : []),
   http.post(`${TELEGRAM_API_BASE_URL}/banChatSenderChat`, actionResolver),
   http.post(`${TELEGRAM_API_BASE_URL}/deleteMessage`, actionResolver),
+  http.post(`${TELEGRAM_API_BASE_URL}/deleteMessages`, actionResolver),
   http.post(`${TELEGRAM_API_BASE_URL}/getChat`, getChatResolver),
   http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, getChatAdministratorsResolver),
   http.post(`${TELEGRAM_API_BASE_URL}/getChatMember`, getChatMemberResolver),

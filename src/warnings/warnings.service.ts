@@ -108,10 +108,23 @@ export class WarningsService {
       return; // Candidate is an admin, return.
     }
 
+    const mediaGroup =
+      "media_group_id" in replyToMessage
+        ? await this.prismaService.message.findMany({
+            select: { messageId: true },
+            where: {
+              chatId: chat.id,
+              mediaGroupId: replyToMessage.media_group_id,
+              messageId: { not: replyToMessage.message_id },
+            },
+          })
+        : [];
+    const deleteMessageIds = [replyToMessage.message_id, ...mediaGroup.map((g) => g.messageId)];
+
     // Delete the message with a delay to let users know the reason
     setTimeout(() => {
       // An expected error may happen when bot has no enough permissions
-      ctx.deleteMessage(replyToMessage.message_id).catch(() => false);
+      ctx.deleteMessages(deleteMessageIds).catch(() => false);
     }, DELETE_MESSAGE_DELAY);
 
     await Promise.all([
