@@ -3,6 +3,7 @@
 ## 1.18.0 (2024-xx-xx)
 
 - Improvement: if a message consists of several photos, now they will all be deleted using the /warn command
+- Fix: displaying the name of the chat with the bot in the settings
 - Other: internal improvements
 
 ## 1.17.0 (2024-02-19)

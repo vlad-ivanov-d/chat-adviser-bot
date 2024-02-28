@@ -292,8 +292,9 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
 
     return {
       ...dbChat,
-      // Patch display title for the chat with the bot
-      displayTitle: botInfo && chat.id === editor.id ? getUserDisplayName(botInfo, "full") : dbChat.displayTitle,
+      // Patch display title and username for the chat with the bot
+      ...(botInfo &&
+        chat.id === editor.id && { displayTitle: getUserDisplayName(botInfo, "full"), username: botInfo.username }),
     };
   }
 }

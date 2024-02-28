@@ -8,6 +8,17 @@ import { adminUser, bot, user } from "./users";
 
 /**
  * Webhook response which contains answer callback query method.
+ * It should be sent as a result of callback vote processing when the bot is not an admin.
+ */
+export const answerCbVoteBotNotAdminWebhookResponse = {
+  callback_query_id: "1",
+  method: "answerCallbackQuery",
+  show_alert: true,
+  text: "I need administrator permissions for this feature to work.",
+};
+
+/**
+ * Webhook response which contains answer callback query method.
  * It should be sent as a result of callback vote processing if the vote is duplicated.
  */
 export const answerCbVoteDuplicatedWebhookResponse = {

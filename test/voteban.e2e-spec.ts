@@ -123,6 +123,38 @@ describe("VotebanModule (e2e)", () => {
     expect(sendMessagePayload).toEqual({ chat_id: 12, reply_parameters: { message_id: 3 }, text: "Voting completed" });
   });
 
+  it("should cancel the voting if the bot is not an admin", async () => {
+    await createDbSupergroupChat();
+    await prisma.$transaction([
+      createDbUser(user),
+      prisma.voteban.create({
+        data: {
+          authorId: adminUser.id,
+          candidateId: user.id,
+          chatId: supergroup.id,
+          editorId: adminUser.id,
+          messageId: 3,
+        },
+        select: { id: true },
+      }),
+    ]);
+    let editMessageTextPayload;
+    server.use(
+      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+        editMessageTextPayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+      http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => new HttpResponse(null, { status: 400 })),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbNoBanWebhook);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(fixtures.answerCbVoteBotNotAdminWebhookResponse);
+    await sleep(ASYNC_REQUEST_DELAY);
+    expect(editMessageTextPayload).toEqual(fixtures.cbCancelledEditMessageTextPayload);
+  });
+
   it("should cancel the voting if the feature is disabled", async () => {
     await createDbSupergroupChat();
     await prisma.$transaction([
@@ -281,7 +313,7 @@ describe("VotebanModule (e2e)", () => {
     expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayload());
   });
 
-  it("should say if there is no admin permissions", async () => {
+  it("should say if the bot is not an admin", async () => {
     await createDbSupergroupChat({ votebanLimit: 2 });
     let sendMessagePayload;
     server.use(
