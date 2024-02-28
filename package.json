@@ -49,7 +49,7 @@
     "@types/jest": "29.5.12",
     "@types/k6": "0.49.0",
     "@types/lodash.escaperegexp": "4.1.9",
-    "@types/node": "20.11.21",
+    "@types/node": "20.11.22",
     "@types/supertest": "6.0.2",
     "@typescript-eslint/eslint-plugin": "7.1.0",
     "@typescript-eslint/parser": "7.1.0",
