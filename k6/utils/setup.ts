@@ -28,7 +28,15 @@ const runTest = async (fileName: string): Promise<void> => {
       // It's handled securely
       // eslint-disable-next-line security/detect-non-literal-fs-filename
       const scriptContent = readFileSync(path.resolve("k6/dist", distFileName), "utf-8");
-      const testProcess = spawn("docker", ["run", "--rm", "-i", "grafana/k6", "run", "-"]);
+      const testProcess = spawn("docker", [
+        "run",
+        "--add-host=host.docker.internal:host-gateway", // To fix issues in GitHub Actions
+        "--rm",
+        "-i",
+        "grafana/k6",
+        "run",
+        "-",
+      ]);
       testProcess.stderr.on("data", (data: Buffer) => {
         // Show k6 error
         // eslint-disable-next-line no-console
