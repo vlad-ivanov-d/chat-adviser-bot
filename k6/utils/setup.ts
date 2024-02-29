@@ -102,7 +102,7 @@ const setup = async (): Promise<void> => {
 
   // Stop the env
   await app.close();
-  execSync("docker compose -f compose.test.yml down");
+  execSync("docker compose -f compose.test.yml down -v");
 
   process.exit();
 };
