@@ -1,5 +1,5 @@
-import { exec, execSync } from "node:child_process";
-import { readdirSync, rmSync } from "node:fs";
+import { execSync, spawn } from "node:child_process";
+import { readdirSync, readFileSync, rmSync } from "node:fs";
 import path from "node:path";
 
 import { Test } from "@nestjs/testing";
@@ -15,37 +15,47 @@ import { server } from "./server";
 
 /**
  * Runs the test file
- * @param filePath File path for the test
+ * @param fileName File name of the test, which is located in dist folder.
  * @returns Promise
  */
-const runTest = (filePath: string): Promise<void> => {
+const runTest = async (fileName: string): Promise<void> => {
   // Show test file name
   // eslint-disable-next-line no-console
-  console.log(path.parse(filePath).base);
+  console.log(fileName);
 
-  // Should be handled on a higher level
-  // eslint-disable-next-line security/detect-child-process
-  const testProcess = exec(
-    // --add-host to fix issues in GitHub Actions
-    `docker run --add-host=host.docker.internal:host-gateway --rm -i grafana/k6 run - <${filePath}`,
-  );
-  // Show k6 errors
-  // eslint-disable-next-line no-console
-  testProcess.stderr?.on("data", console.error);
-  // Show k6 logs
-  // eslint-disable-next-line no-console
-  testProcess.stdout?.on("data", console.log);
+  for (const distFileName of readdirSync("k6/dist")) {
+    if (distFileName === fileName) {
+      // It's handled securely
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      const scriptContent = readFileSync(path.resolve("k6/dist", distFileName), "utf-8");
+      const testProcess = spawn("docker", ["run", "--rm", "-i", "grafana/k6", "run", "-"]);
+      testProcess.stderr.on("data", (data: Buffer) => {
+        // Show k6 error
+        // eslint-disable-next-line no-console
+        console.error(data.toString());
+      });
+      testProcess.stdout.on("data", (data: Buffer) => {
+        // Show k6 log
+        // eslint-disable-next-line no-console
+        console.log(data.toString());
+      });
 
-  // Wait for test completion
-  return new Promise((resolve, reject) =>
-    testProcess.on("exit", (code) => {
-      if (code === 0) {
-        resolve();
-        return;
-      }
-      reject(new Error());
-    }),
-  );
+      // Run test script
+      testProcess.stdin.write(scriptContent);
+      testProcess.stdin.end();
+
+      // Wait for test completion
+      return new Promise((resolve, reject) =>
+        testProcess.on("exit", (code) => {
+          if (code === 0) {
+            resolve();
+            return;
+          }
+          reject(new Error());
+        }),
+      );
+    }
+  }
 };
 
 /**
@@ -76,9 +86,10 @@ const setup = async (): Promise<void> => {
   const cache = await store();
 
   // Run tests
-  const files = process.argv[2] ? [`${path.parse(process.argv[2]).name}.js`] : readdirSync("k6/dist");
-  for (const file of files) {
-    await runTest(path.resolve("k6/dist", file));
+  const argFileName = process.argv[2] ? `${path.parse(process.argv[2]).name}.js` : undefined;
+  const fileNames = readdirSync("k6/dist").filter((n) => (argFileName ? n === argFileName : true));
+  for (const fileName of fileNames) {
+    await runTest(fileName);
     await Promise.all([cache.reset(), cleanupDb()]);
   }
 
