@@ -25,9 +25,6 @@ const runTest = async (fileName: string): Promise<void> => {
 
   for (const distFileName of readdirSync("k6/dist")) {
     if (distFileName === fileName) {
-      // It's handled securely
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
-      const scriptContent = readFileSync(path.resolve("k6/dist", distFileName), "utf-8");
       const testProcess = spawn("docker", [
         "run",
         "--add-host=host.docker.internal:host-gateway", // To fix issues in GitHub Actions
@@ -48,8 +45,9 @@ const runTest = async (fileName: string): Promise<void> => {
         console.log(data.toString());
       });
 
-      // Run test script
-      testProcess.stdin.write(scriptContent);
+      // Run test script. File name is handled securely.
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      testProcess.stdin.write(readFileSync(path.resolve("k6/dist", distFileName), "utf-8"));
       testProcess.stdin.end();
 
       // Wait for test completion
