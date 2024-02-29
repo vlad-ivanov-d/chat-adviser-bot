@@ -8,7 +8,7 @@ import { TextMessageCtx } from "src/types/telegraf-context";
 @Injectable()
 export class HelpService {
   /**
-   * Creates help service
+   * Creates service
    * @param prismaService Database service
    */
   public constructor(private readonly prismaService: PrismaService) {}
@@ -19,11 +19,11 @@ export class HelpService {
    */
   @Hears(["/help", "/start"])
   public async helpCommand(@Ctx() ctx: TextMessageCtx): Promise<void> {
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.message.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.message.from);
     await changeLanguage(language);
     await ctx.reply(t("common:help", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}` }), {
       parse_mode: "HTML",
-      reply_to_message_id: ctx.chat.type === "private" ? undefined : ctx.message.message_id,
+      ...(ctx.chat.type !== "private" && { reply_parameters: { message_id: ctx.message.message_id } }),
     });
   }
 }

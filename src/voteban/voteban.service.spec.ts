@@ -1,10 +1,9 @@
 import { CacheModule } from "@nestjs/cache-manager";
 import { Test } from "@nestjs/testing";
 import { TelegrafModule } from "nestjs-telegraf";
-import { BOT_TOKEN } from "src/app.constants";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { SettingsModule } from "src/settings/settings.module";
-import { cache } from "src/utils/cache";
+import { store } from "src/utils/redis";
 
 import { VotebanService } from "./voteban.service";
 
@@ -14,8 +13,15 @@ describe("VotebanService", () => {
   beforeEach(async () => {
     const testingModule = await Test.createTestingModule({
       imports: [
-        CacheModule.register({ isGlobal: true, store: cache }),
-        TelegrafModule.forRoot({ launchOptions: false, token: BOT_TOKEN }),
+        CacheModule.registerAsync({
+          isGlobal: true,
+          /**
+           * Initiates Redis store
+           * @returns Cache manager with Redis store
+           */
+          useFactory: () => ({ store }),
+        }),
+        TelegrafModule.forRoot({ launchOptions: false, token: process.env.BOT_TOKEN ?? "" }),
         PrismaModule,
         SettingsModule,
       ],

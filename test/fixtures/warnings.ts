@@ -4,8 +4,19 @@ import { SettingsAction } from "src/settings/interfaces/action.interface";
 import { WarningsAction } from "src/warnings/interfaces/action.interface";
 import { WARNINGS_LIMIT } from "src/warnings/warnings.constants";
 
-import { privateChat, supergroup } from "./chats";
-import { adminUser, bot, user } from "./users";
+import { channel, privateChat, supergroup } from "./chats";
+import { adminUser, bot, systemChannelBot, user } from "./users";
+
+/**
+ * Webhook response which contains answer callback query method.
+ * It should be sent as a result of callback settings or save settings processing if the user is not an admin.
+ */
+export const answerCbSettingsNotAdminWebhookResponse = {
+  callback_query_id: "1",
+  method: "answerCallbackQuery",
+  show_alert: true,
+  text: "Unfortunately, this action is no longer available to you.",
+};
 
 /**
  * Payload for send message request. It should be sent as a result of /warn command processing.
@@ -13,12 +24,26 @@ import { adminUser, bot, user } from "./users";
 export const banSendMessagePayload = {
   chat_id: supergroup.id,
   parse_mode: "HTML",
-  reply_to_message_id: 5,
+  reply_parameters: { message_id: 5 },
   text: `User <a href="tg:user?id=${user.id}">@${user.username}</a> is banned`,
 };
 
 /**
- * Webhook payload which contains voteban save settings callback with incorrect chat id
+ * Webhook payload which contains save settings callback with incorrect value
+ */
+export const cbSaveIncorrectValueSettingsWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: `${WarningsAction.SAVE}?cId=${supergroup.id}&v=incorrect`,
+    from: adminUser,
+    id: "1",
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
+  },
+  update_id: 1,
+};
+
+/**
+ * Webhook payload which contains save settings callback with incorrect chat id
  */
 export const cbSaveSettingsErrorWebhook = {
   callback_query: {
@@ -26,14 +51,7 @@ export const cbSaveSettingsErrorWebhook = {
     data: `${WarningsAction.SAVE}?cId=error_id&v=true`,
     from: adminUser,
     id: "1",
-    message: {
-      chat: privateChat,
-      date: Date.now(),
-      edit_date: Date.now(),
-      from: bot,
-      message_id: 1,
-      text: "Warnings",
-    },
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
 };
@@ -53,15 +71,15 @@ export const cbSettingsEditMessageTextPayload = {
     ],
   },
   text:
-    "<b>Warnings</b>\nI can issue warnings to users by admin command. To do this, respond to the user's message " +
-    "with the appropriate command. In this case, the user's message will be deleted. Each warning is valid for " +
+    "<b>Warnings</b>\nI can issue warnings to users by admin command. To do this, respond to the user's message with " +
+    "the appropriate command. In this case, the user's message will be deleted. Each warning is valid for " +
     `90 days, then it is automatically removed. If ${WARNINGS_LIMIT} warnings are received, the user will ` +
     `be banned.\n/warn - issue a warning\n\nEnable warnings in @${supergroup.username} chat?\n\nCurrent value: ` +
     "<b>disabled</b>",
 };
 
 /**
- * Webhook payload which contains voteban settings callback with incorrect chat id
+ * Webhook payload which contains settings callback with incorrect chat id
  */
 export const cbSettingsErrorWebhook = {
   callback_query: {
@@ -69,20 +87,34 @@ export const cbSettingsErrorWebhook = {
     data: `${WarningsAction.SETTINGS}?cId=error_id`,
     from: adminUser,
     id: "1",
-    message: {
-      chat: privateChat,
-      date: Date.now(),
-      edit_date: Date.now(),
-      from: bot,
-      message_id: 1,
-      text: "Warnings",
-    },
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
 };
 
 /**
- * Webhook payload which contains warnings settings callback
+ * Payload for edit message text request. It should be sent as a result of settings or save settings callback
+ * if the user is not an admin.
+ */
+export const cbSettingsNotAdminEditMessageTextPayload = {
+  chat_id: privateChat.id,
+  message_id: 1,
+  parse_mode: "HTML",
+  reply_markup: {
+    inline_keyboard: [
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${privateChat.id}`, text: `@${bot.username}` }],
+      [],
+      [{ callback_data: SettingsAction.REFRESH, text: "↻ Refresh the list" }],
+    ],
+  },
+  text:
+    "Below is a list of chats that are available to me, and where you are an administrator. Select the chat " +
+    "for which you want to change the settings.\n\nIf the list doesn't contain the chat you need, try " +
+    "writing any message in it and clicking the <b>↻ Refresh the list</b> button (the last button in this message).",
+};
+
+/**
+ * Webhook payload which contains settings callback
  */
 export const cbSettingsWebhook = {
   callback_query: {
@@ -96,11 +128,27 @@ export const cbSettingsWebhook = {
 };
 
 /**
+ * Payload for edit message text request. It should be sent as a result of save settings callback with incorrect value.
+ * This fixture should be implemented via function to prevent issues related to dates.
+ * @returns Payload
+ */
+export const cbSaveIncorrectValueSettingsEditMessageTextPayload = (): unknown => ({
+  ...cbSettingsEditMessageTextPayload,
+  text:
+    "<b>Warnings</b>\nI can issue warnings to users by admin command. To do this, respond to the user's message " +
+    "with the appropriate command. In this case, the user's message will be deleted. Each warning is valid for " +
+    "90 days, then it is automatically removed. If 3 warnings are received, the user will be banned.\n" +
+    `/warn - issue a warning\n\nEnable warnings in @${supergroup.username} chat?\n\nCurrent value: <b>disabled</b>\n` +
+    `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
+    `by <a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>`,
+});
+
+/**
  * Payload for edit message text request. It should be sent as a result of save settings callback.
  * This fixture should be implemented via function to prevent issues related to dates.
  * @returns Payload
  */
-export const cbSaveSettingsEditMessageTextPayloadFunc = (): unknown => ({
+export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
   ...cbSettingsEditMessageTextPayload,
   text:
     "<b>Warnings</b>\nI can issue warnings to users by admin command. To do this, respond to the user's message " +
@@ -112,7 +160,7 @@ export const cbSaveSettingsEditMessageTextPayloadFunc = (): unknown => ({
 });
 
 /**
- * Webhook payload which contains warnings save settings callback
+ * Webhook payload which contains save settings callback
  */
 export const cbSaveSettingsWebhook = {
   callback_query: {
@@ -126,11 +174,25 @@ export const cbSaveSettingsWebhook = {
 };
 
 /**
- * Payload for send message request. It should be sent as a result of /warn command against the bot itself.
+ * Webhook payload which contains unknown callback
+ */
+export const cbUnknownWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: "unknown",
+    from: adminUser,
+    id: "1",
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
+  },
+  update_id: 1,
+};
+
+/**
+ * Payload for send message request. It should be sent as a result of /warn command against the admin.
  */
 export const warnAgainstAdminSendMessagePayload = {
   chat_id: supergroup.id,
-  reply_to_message_id: 4,
+  reply_parameters: { message_id: 4 },
   text: "I can't issue a warning to the administrator. It would be incorrect.",
 };
 
@@ -139,7 +201,7 @@ export const warnAgainstAdminSendMessagePayload = {
  */
 export const warnAgainstBotSendMessagePayload = {
   chat_id: supergroup.id,
-  reply_to_message_id: 2,
+  reply_parameters: { message_id: 2 },
   text: "I can't issue a warning to myself. This would be weird.",
 };
 
@@ -165,7 +227,7 @@ export const warnAgainstBotWebhook = {
  */
 export const warnBotHasNoAdminPermsSendMessagePayload = {
   chat_id: supergroup.id,
-  reply_to_message_id: 4,
+  reply_parameters: { message_id: 4 },
   text: "I need administrator permissions for this feature to work.",
 };
 
@@ -183,9 +245,23 @@ export const warnInPrivateChatWebhook = {
 export const warnSendMessagePayload = {
   chat_id: supergroup.id,
   parse_mode: "HTML",
-  reply_to_message_id: 3,
+  reply_parameters: { allow_sending_without_reply: true, message_id: 3 },
   text:
     `<a href="tg:user?id=${user.id}">@${user.username}</a>, you are receiving a warning for violating the rules. ` +
+    `The warning is valid for 90 days. If you receive ${WARNINGS_LIMIT} warnings, you will be banned.\n\n` +
+    `Number of warnings: <b>${WARNINGS_LIMIT} of ${WARNINGS_LIMIT}</b>`,
+};
+
+/**
+ * Payload for send message request. It should be sent as a result of /warn command
+ * for a sender chat in a supergroup chat.
+ */
+export const warnSenderChatSendMessagePayload = {
+  chat_id: supergroup.id,
+  parse_mode: "HTML",
+  reply_parameters: { allow_sending_without_reply: true, message_id: 3 },
+  text:
+    `@${channel.username}, you are receiving a warning for violating the rules. ` +
     `The warning is valid for 90 days. If you receive ${WARNINGS_LIMIT} warnings, you will be banned.\n\n` +
     `Number of warnings: <b>${WARNINGS_LIMIT} of ${WARNINGS_LIMIT}</b>`,
 };
@@ -196,8 +272,54 @@ export const warnSendMessagePayload = {
  */
 export const warnUserHasNoAdminPermsSendMessagePayload = {
   chat_id: supergroup.id,
-  reply_to_message_id: 4,
+  reply_parameters: { message_id: 4 },
   text: "This command is only available to administrators.",
+};
+
+/**
+ * Webhook payload which contains /warn command for message media group in a supergroup chat
+ */
+export const warnMediaGroupWebhook = {
+  message: {
+    chat: supergroup,
+    date: Date.now(),
+    from: adminUser,
+    message_id: 4,
+    message_thread_id: 3,
+    reply_to_message: {
+      chat: supergroup,
+      date: Date.now(),
+      from: user,
+      media_group_id: "100",
+      message_id: 3,
+      text: "Bad photos",
+    },
+    text: "/warn",
+  },
+  update_id: 1,
+};
+
+/**
+ * Webhook payload which contains /warn command for sender chat in a supergroup chat
+ */
+export const warnSenderChatWebhook = {
+  message: {
+    chat: supergroup,
+    date: Date.now(),
+    from: adminUser,
+    message_id: 4,
+    message_thread_id: 3,
+    reply_to_message: {
+      chat: supergroup,
+      date: Date.now(),
+      from: systemChannelBot,
+      message_id: 3,
+      sender_chat: channel,
+      text: "Sender chat message",
+    },
+    text: "/warn",
+  },
+  update_id: 1,
 };
 
 /**
@@ -222,7 +344,7 @@ export const warnWebhook = {
  */
 export const warnWithoutReplySendMessagePayload = {
   chat_id: supergroup.id,
-  reply_to_message_id: 1,
+  reply_parameters: { message_id: 1 },
   text:
     "You should respond with this command to a message that you consider incorrect in order " +
     "to issue a warning to the user.",

@@ -27,14 +27,7 @@ export const privateHelpSendMessagePayload = {
  * Webhook payload which contains /start command in a private chat
  */
 export const privateHelpWebhook = {
-  message: {
-    chat: privateChat,
-    date: Date.now(),
-    entities: [{ length: 5, offset: 0, type: "bot_command" }],
-    from: adminUser,
-    message_id: 1,
-    text: "/start",
-  },
+  message: { chat: privateChat, date: Date.now(), from: adminUser, message_id: 1, text: "/start" },
   update_id: 1,
 };
 
@@ -44,7 +37,7 @@ export const privateHelpWebhook = {
 export const supergroupSendMessagePayload = {
   chat_id: supergroup.id,
   parse_mode: "HTML",
-  reply_to_message_id: 1,
+  reply_parameters: { message_id: 1 },
   text: privateHelpSendMessagePayload.text,
 };
 
@@ -52,13 +45,6 @@ export const supergroupSendMessagePayload = {
  * Webhook payload which contains /help command in a supergroup chat
  */
 export const supergroupHelpWebhook = {
-  message: {
-    chat: supergroup,
-    date: Date.now(),
-    entities: [{ length: 5, offset: 0, type: "bot_command" }],
-    from: adminUser,
-    message_id: 1,
-    text: "/help",
-  },
+  message: { chat: supergroup, date: Date.now(), from: adminUser, message_id: 1, text: "/help" },
   update_id: 1,
 };

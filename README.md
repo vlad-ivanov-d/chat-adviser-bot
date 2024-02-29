@@ -36,7 +36,7 @@ The bot can work in different time zones and display dates in the appropriate fo
 
 ### Warnings
 
-The bot can issue warnings to users upon admin command. To give a warning to a user, respond to their message with the appropriate command. In this case, the user's message will be deleted. Each warning is valid for 90 days, then it is automatically removed. If 3 warnings are received, the user will be banned. A warning cannot be issued to an administrator.
+The bot can issue warnings to users by admin command. To do this, respond to the user's message with the appropriate command. In this case, the user's message will be deleted. Each warning is valid for 90 days, then it is automatically removed. If 3 warnings are received, the user will be banned.
 
 `/warn` - issue a warning
 
@@ -96,7 +96,7 @@ Get more details in [Contributing](./CONTRIBUTING.md)
 
 | Statements                  | Branches                | Functions                 | Lines             |
 | --------------------------- | ----------------------- | ------------------------- | ----------------- |
-| ![Statements](https://img.shields.io/badge/statements-68.75%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-52.57%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-64.97%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-67.38%25-red.svg?style=flat) |
+| ![Statements](https://img.shields.io/badge/statements-78.02%25-red.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-64.13%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-75.39%25-red.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-77.01%25-red.svg?style=flat) |
 
 ## License
 

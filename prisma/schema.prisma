@@ -79,7 +79,7 @@ model Chat {
 }
 
 model ChatSettingsHistory {
-  id          BigInt          @id @default(autoincrement())
+  id          String          @id @default(uuid())
   authorId    Float           @map("author_id")
   chatId      Float           @map("chat_id")
   createdAt   DateTime        @default(now()) @map("created_at")
@@ -96,7 +96,7 @@ model ChatSettingsHistory {
 }
 
 model Message {
-  id           BigInt   @id @default(autoincrement())
+  id           String   @id @default(uuid())
   authorId     Float    @map("author_id")
   chatId       Float    @map("chat_id")
   createdAt    DateTime @default(now()) @map("created_at")
@@ -112,6 +112,7 @@ model Message {
   @@unique([chatId, messageId])
   @@index([createdAt])
   @@index([mediaGroupId])
+  @@index([messageId])
   @@map("messages")
 }
 
@@ -137,7 +138,7 @@ model SenderChat {
 }
 
 model ProfaneWord {
-  id        BigInt       @id @default(autoincrement())
+  id        String       @id @default(uuid())
   authorId  Float        @map("author_id")
   comment   String?
   createdAt DateTime     @default(now()) @map("created_at")
@@ -194,7 +195,7 @@ model User {
 }
 
 model Voteban {
-  id                    BigInt              @id @default(autoincrement())
+  id                    String              @id @default(uuid())
   authorId              Float               @map("author_id")
   authorSenderChatId    Float?              @map("author_sender_chat_id")
   banVoters             VotebanBanVoter[]
@@ -223,12 +224,12 @@ model Voteban {
 }
 
 model VotebanBanVoter {
-  id        BigInt   @id @default(autoincrement())
+  id        String   @id @default(uuid())
   authorId  Float    @map("author_id")
   createdAt DateTime @default(now()) @map("created_at")
   editorId  Float    @map("editor_id")
   updatedAt DateTime @updatedAt @map("updated_at")
-  votebanId BigInt   @map("voteban_id")
+  votebanId String   @map("voteban_id")
 
   author  User    @relation("VotebanBanVoterAuthor", fields: [authorId], references: [id])
   editor  User    @relation("VotebanBanVoterEditor", fields: [editorId], references: [id])
@@ -239,12 +240,12 @@ model VotebanBanVoter {
 }
 
 model VotebanNoBanVoter {
-  id        BigInt   @id @default(autoincrement())
+  id        String   @id @default(uuid())
   authorId  Float    @map("author_id")
   createdAt DateTime @default(now()) @map("created_at")
   editorId  Float    @map("editor_id")
   updatedAt DateTime @updatedAt @map("updated_at")
-  votebanId BigInt   @map("voteban_id")
+  votebanId String   @map("voteban_id")
 
   author  User    @relation("VotebanNoBanVoterAuthor", fields: [authorId], references: [id])
   editor  User    @relation("VotebanNoBanVoterEditor", fields: [editorId], references: [id])
@@ -255,7 +256,7 @@ model VotebanNoBanVoter {
 }
 
 model Warning {
-  id           BigInt   @id @default(autoincrement())
+  id           String   @id @default(uuid())
   authorId     Float    @map("author_id")
   chatId       Float    @map("chat_id")
   createdAt    DateTime @default(now()) @map("created_at")
@@ -271,6 +272,7 @@ model Warning {
   senderChat SenderChat? @relation("WarningSenderChat", fields: [senderChatId], references: [id])
   user       User        @relation("WarningUser", fields: [userId], references: [id])
 
+  @@unique([chatId, messageId])
   @@index([createdAt])
   @@map("warnings")
 }

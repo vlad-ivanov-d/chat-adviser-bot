@@ -27,7 +27,7 @@ import { EXPIRED_VOTEBAN_TIMEOUT } from "./voteban.constants";
 @Injectable()
 export class VotebanService {
   /**
-   * Creates voteban service
+   * Creates service
    * @param prismaService Database service
    * @param settingsService Settings service
    */
@@ -88,7 +88,7 @@ export class VotebanService {
     }
 
     const [chat, isCandidateAdmin] = await Promise.all([
-      this.prismaService.upsertChat(ctx.chat, from),
+      this.prismaService.upsertChatWithCache(ctx.chat, from),
       typeof candidate?.id === "number" && !candidateSenderChat
         ? // Check seperately, because other bots are not included in admin list.
           isChatAdmin(ctx.telegram, ctx.chat.id, candidate.id)
@@ -100,19 +100,19 @@ export class VotebanService {
       return; // The feature is disabled, return.
     }
     if (!this.prismaService.isChatAdmin(chat, ctx.botInfo.id)) {
-      await ctx.reply(t("common:needAdminPermissions"), { reply_to_message_id: messageId });
+      await ctx.reply(t("common:needAdminPermissions"), { reply_parameters: { message_id: messageId } });
       return; // Bot is not an admin, return.
     }
     if (!candidate) {
-      await ctx.reply(t("voteban:replyToSomeonesMessage"), { reply_to_message_id: messageId });
+      await ctx.reply(t("voteban:replyToSomeonesMessage"), { reply_parameters: { message_id: messageId } });
       return; // No candidate, return.
     }
     if (candidate.id === ctx.botInfo.id) {
-      await ctx.reply(t("voteban:cannotVoteAgainstMyself"), { reply_to_message_id: messageId });
+      await ctx.reply(t("voteban:cannotVoteAgainstMyself"), { reply_parameters: { message_id: messageId } });
       return; // Candidate is the bot itself, return.
     }
     if (isCandidateAutomaticForward || isCandidateAdmin) {
-      await ctx.reply(t("voteban:cannotVoteAgainstAdmin"), { reply_to_message_id: messageId });
+      await ctx.reply(t("voteban:cannotVoteAgainstAdmin"), { reply_parameters: { message_id: messageId } });
       return; // Candidate is an admin, return.
     }
 
@@ -132,7 +132,7 @@ export class VotebanService {
             [{ callback_data: VotebanAction.NO_BAN, text: noBanButtonText }],
           ],
         },
-        reply_to_message_id: replyToMessage.message_id,
+        reply_parameters: { allow_sending_without_reply: true, message_id: replyToMessage.message_id },
       }),
       candidateSenderChat && this.prismaService.upsertSenderChat(candidateSenderChat, from),
       fromSenderChat && this.prismaService.upsertSenderChat(fromSenderChat, from),
@@ -171,18 +171,12 @@ export class VotebanService {
           where: { chatId: ctx.chat?.id, mediaGroupId, messageId: { not: messageId } },
         })
       : [];
-    const toDeleteIds = [messageId, ...mediaGroupMessages.map((m) => m.messageId)].filter(
+    const deleteIds = [messageId, ...mediaGroupMessages.map((m) => m.messageId)].filter(
       (id): id is number => typeof id === "number",
     );
-    const deletionResult = await Promise.all(
-      toDeleteIds.map(async (id) => {
-        const isDeleted = await ctx.deleteMessage(id).catch(() => false);
-        return isDeleted ? id : undefined;
-      }),
-    );
-    const deletedIds = deletionResult.filter((id): id is number => typeof id === "number");
-    if (deletedIds.length > 0) {
-      await this.prismaService.message.deleteMany({ where: { messageId: { in: deletedIds } } });
+    const isDeleted = deleteIds.length > 0 ? await ctx.deleteMessages(deleteIds).catch(() => false) : false;
+    if (isDeleted) {
+      await this.prismaService.message.deleteMany({ where: { messageId: { in: deleteIds } } });
     }
   }
 
@@ -219,7 +213,7 @@ export class VotebanService {
       return; // Chat is not defined to render voteban settings
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
@@ -296,7 +290,7 @@ export class VotebanService {
       return; // Chat is not defined to save voteban settings
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
@@ -323,7 +317,7 @@ export class VotebanService {
     }
 
     const [chat, voting] = await Promise.all([
-      this.prismaService.upsertChat(message.chat, from),
+      this.prismaService.upsertChatWithCache(message.chat, from),
       this.prismaService.voteban.findUniqueOrThrow({
         select: {
           author: true,
@@ -376,7 +370,7 @@ export class VotebanService {
           where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
         }),
         ctx.editMessageText([questionMsg, resultsMsg].join("\n\n"), { parse_mode: "HTML" }),
-        ctx.reply(t("voteban:completed"), { reply_to_message_id: message.message_id }),
+        ctx.reply(t("voteban:completed"), { reply_parameters: { message_id: message.message_id } }),
         isBan && this.deleteMessages(ctx, candidateMessageId, candidateMediaGroupId),
         // An expected error may happen if there are no enough permissions
         isBan && candidateSenderChat && ctx.banChatSenderChat(candidateSenderChat.id).catch(() => undefined),
@@ -428,7 +422,7 @@ export class VotebanService {
     ]);
 
     // Do not upsert chat if it's not found. It means that bot was removed from the chat.
-    const chat = existedChat ? await this.prismaService.upsertChat(message.chat, from) : undefined;
+    const chat = existedChat ? await this.prismaService.upsertChatWithCache(message.chat, from) : undefined;
     const lng = chat?.language ?? this.prismaService.resolveLanguage(from.language_code);
     await changeLanguage(lng);
     if (!chat || !voting) {

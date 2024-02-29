@@ -12,13 +12,14 @@ import { Profanity } from "src/utils/profanity";
 import { buildCbData, getChatHtmlLink, getUserFullName, parseCbData } from "src/utils/telegraf";
 
 import { ProfanityFilterAction } from "./interfaces/action.interface";
+import type { FilterStrings, ForwardFilterStrings } from "./interfaces/filter-strings.interface";
 import { WORDS_CACHE_KEY, WORDS_CACHE_TIMEOUT } from "./profanity-filter.constants";
 
 @Update()
 @Injectable()
 export class ProfanityFilterService {
   /**
-   * Creates profanity filter service
+   * Creates service
    * @param cacheManager Cache manager
    * @param prismaService Database service
    * @param settingsService Settings service
@@ -71,7 +72,7 @@ export class ProfanityFilterService {
       return;
     }
 
-    const dbChat = await this.prismaService.upsertChat(chat, from);
+    const dbChat = await this.prismaService.upsertChatWithCache(chat, from);
     if (
       !dbChat.profanityFilter || // Filter is disabled
       this.prismaService.isChatAdmin(dbChat, from.id, senderChat?.id) || // Current user is an admin
@@ -110,6 +111,25 @@ export class ProfanityFilterService {
   }
 
   /**
+   * Gets strings from the forwarded message which should be checked by profanity filter
+   * @param ctx Message context
+   * @returns Object with strings which should be checked by profanity filter
+   */
+  private getForwardRelatedStringsToFilter(ctx: MessageCtx): ForwardFilterStrings {
+    const forwardOrigin = "forward_origin" in ctx.update.message ? ctx.update.message.forward_origin : undefined;
+    const forwardOriginChat = forwardOrigin && "chat" in forwardOrigin ? forwardOrigin.chat : undefined;
+    const forwardOriginSenderChat =
+      forwardOrigin && "sender_chat" in forwardOrigin ? forwardOrigin.sender_chat : undefined;
+    const forwardChat = forwardOriginChat ?? forwardOriginSenderChat;
+    return {
+      forwardChatTitle: forwardChat && "title" in forwardChat ? forwardChat.title : "",
+      forwardSenderName: forwardOrigin && "sender_user_name" in forwardOrigin ? forwardOrigin.sender_user_name : "",
+      forwardUserFullName:
+        forwardOrigin && "sender_user" in forwardOrigin ? getUserFullName(forwardOrigin.sender_user) : "",
+    };
+  }
+
+  /**
    * Gets available profanity filter options
    * @returns Profanity filter options
    */
@@ -126,21 +146,20 @@ export class ProfanityFilterService {
    * @returns Message text
    */
   private getMessageText(ctx: MessageCtx): string {
-    const srcMessage = "pinned_message" in ctx.update.message ? ctx.update.message.pinned_message : ctx.update.message;
-    if ("caption" in srcMessage) {
-      return srcMessage.caption ?? "";
+    if ("caption" in ctx.update.message) {
+      return ctx.update.message.caption ?? "";
     }
-    if ("left_chat_member" in srcMessage) {
-      return getUserFullName(srcMessage.left_chat_member);
+    if ("left_chat_member" in ctx.update.message) {
+      return getUserFullName(ctx.update.message.left_chat_member);
     }
-    if ("new_chat_members" in srcMessage) {
-      return srcMessage.new_chat_members.map(getUserFullName).join(", ");
+    if ("new_chat_members" in ctx.update.message) {
+      return ctx.update.message.new_chat_members.map(getUserFullName).join(", ");
     }
-    if ("poll" in srcMessage) {
-      return [srcMessage.poll.question, ...srcMessage.poll.options.map((o) => o.text)].join("\n");
+    if ("poll" in ctx.update.message) {
+      return [ctx.update.message.poll.question, ...ctx.update.message.poll.options.map((o) => o.text)].join("\n");
     }
-    if ("text" in srcMessage) {
-      return srcMessage.text;
+    if ("text" in ctx.update.message) {
+      return ctx.update.message.text;
     }
     return "";
   }
@@ -150,25 +169,10 @@ export class ProfanityFilterService {
    * @param ctx Message context
    * @returns Object with strings which should be checked by profanity filter
    */
-  private getStringsToFilter(ctx: MessageCtx): {
-    forwardChatTitle: string;
-    forwardSenderName: string;
-    forwardUserFullName: string;
-    senderChatTitle: string;
-    senderChatUserName: string;
-    text: string;
-    userFullName: string;
-    username: string;
-  } {
-    const { message: msg } = ctx.update;
-    const { from, sender_chat: senderChat } = msg;
+  private getStringsToFilter(ctx: MessageCtx): FilterStrings {
+    const { from, sender_chat: senderChat } = ctx.update.message;
     return {
-      forwardChatTitle:
-        "forward_from_chat" in msg && msg.forward_from_chat && "title" in msg.forward_from_chat
-          ? msg.forward_from_chat.title
-          : "",
-      forwardSenderName: "forward_sender_name" in msg ? msg.forward_sender_name ?? "" : "",
-      forwardUserFullName: "forward_from" in msg && msg.forward_from ? getUserFullName(msg.forward_from) : "",
+      ...this.getForwardRelatedStringsToFilter(ctx),
       senderChatTitle: senderChat && "title" in senderChat ? senderChat.title : "",
       senderChatUserName: senderChat && "username" in senderChat ? senderChat.username ?? "" : "",
       text: this.getMessageText(ctx),
@@ -187,7 +191,7 @@ export class ProfanityFilterService {
       throw new Error("Chat is not defined to render profanity filter settings.");
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
@@ -236,7 +240,7 @@ export class ProfanityFilterService {
       throw new Error("Chat is not defined to save profanity filter settings.");
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {

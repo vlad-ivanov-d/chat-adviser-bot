@@ -1,9 +1,17 @@
 import { delay, http, HttpResponse, type HttpResponseResolver, passthrough, type PathParams } from "msw";
 import { setupServer } from "msw/node";
-import { WEBHOOK_PATH } from "src/app.constants";
 import { group, privateChat, supergroup } from "test/fixtures/chats";
 import { adminUser, bot, user } from "test/fixtures/users";
 import { TELEGRAM_API_BASE_URL } from "test/utils/constants";
+
+/**
+ * Resolves response for /banChatSenderChat and /deleteMessage endpoint.
+ * @returns HTTP response
+ */
+const actionResolver: HttpResponseResolver = async () => {
+  await delay();
+  return HttpResponse.json({ ok: true });
+};
 
 /**
  * Resolves response for /getChatAdministrators endpoint.
@@ -82,7 +90,7 @@ const getMeResolver: HttpResponseResolver = async () => {
  */
 const sendMessageResolver: HttpResponseResolver = async () => {
   await delay();
-  return HttpResponse.json({ ok: true });
+  return HttpResponse.json({ ok: true, result: { message_id: 5 } });
 };
 
 /**
@@ -98,7 +106,10 @@ const setWebhookResolver: HttpResponseResolver = async () => {
  * MSW server
  */
 export const server = setupServer(
-  ...(WEBHOOK_PATH ? [http.post(`**${WEBHOOK_PATH}`, passthrough)] : []),
+  ...(process.env.WEBHOOK_PATH ? [http.post(`**${process.env.WEBHOOK_PATH}`, passthrough)] : []),
+  http.post(`${TELEGRAM_API_BASE_URL}/banChatSenderChat`, actionResolver),
+  http.post(`${TELEGRAM_API_BASE_URL}/deleteMessage`, actionResolver),
+  http.post(`${TELEGRAM_API_BASE_URL}/deleteMessages`, actionResolver),
   http.post(`${TELEGRAM_API_BASE_URL}/getChat`, getChatResolver),
   http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, getChatAdministratorsResolver),
   http.post(`${TELEGRAM_API_BASE_URL}/getChatMember`, getChatMemberResolver),

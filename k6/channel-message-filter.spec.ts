@@ -1,6 +1,6 @@
 import { check, sleep } from "k6";
 import http from "k6/http";
-import * as fixtures from "test/fixtures/help";
+import * as fixtures from "test/fixtures/channel-message-filter";
 
 import { K6_WEBHOOK_URL } from "./utils/constants";
 import { options } from "./utils/options";
@@ -11,7 +11,7 @@ export { options };
  * Virtual user code
  */
 export default (): void => {
-  const res = http.post(K6_WEBHOOK_URL, JSON.stringify(fixtures.supergroupHelpWebhook));
+  const res = http.post(K6_WEBHOOK_URL, JSON.stringify(fixtures.channelMessageWebhook));
   check(res, {
     /**
      * Checks status code

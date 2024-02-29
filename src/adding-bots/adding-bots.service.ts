@@ -15,7 +15,7 @@ import { AddingBotsAction } from "./interfaces/action.interface";
 @Injectable()
 export class AddingBotsService {
   /**
-   * Creates adding bots service
+   * Creates service
    * @param bot Telegram bot instance
    * @param prismaService Database service
    * @param settingsService Settings service
@@ -60,7 +60,7 @@ export class AddingBotsService {
       return; // No bots were added, return.
     }
 
-    const dbChat = await this.prismaService.upsertChat(chat, from);
+    const dbChat = await this.prismaService.upsertChatWithCache(chat, from);
     await changeLanguage(dbChat.language);
 
     if (
@@ -114,7 +114,7 @@ export class AddingBotsService {
       throw new Error("Chat is not defined to render adding bots settings.");
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
@@ -156,7 +156,7 @@ export class AddingBotsService {
       throw new Error("Chat is not defined to save adding bots settings.");
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {

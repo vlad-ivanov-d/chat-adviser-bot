@@ -5,12 +5,12 @@ const config: Config = {
   coverageDirectory: "./coverage-e2e",
   coveragePathIgnorePatterns: [".spec.ts"],
   coverageReporters: [["json", { file: "../.nyc_output/coverage-e2e-final.json" }], "html", "text-summary"],
-  coverageThreshold: { global: { branches: 52, functions: 64, lines: 67, statements: 68 } },
+  coverageThreshold: { global: { branches: 64, functions: 75, lines: 77, statements: 78 } },
   detectOpenHandles: true,
   forceExit: true,
   globalSetup: "<rootDir>/test/utils/global-setup.ts",
   globalTeardown: "<rootDir>/test/utils/global-teardown.ts",
-  maxWorkers: 1, // Use sequential tests to prevent conflicts in database
+  maxWorkers: 1, // Use sequential tests to prevent conflicts in cache and database
   modulePaths: ["<rootDir>"],
   preset: "ts-jest",
   restoreMocks: true,

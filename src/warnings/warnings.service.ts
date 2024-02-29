@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
-import { ChatSettingName } from "@prisma/client";
+import { ChatSettingName, type Prisma } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
 import { Ctx, Hears, On, Update } from "nestjs-telegraf";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -16,7 +16,7 @@ import { DELETE_MESSAGE_DELAY, OUTDATED_WARNING_TIMEOUT, WARNINGS_LIMIT } from "
 @Injectable()
 export class WarningsService {
   /**
-   * Creates warnings service
+   * Creates service
    * @param prismaService Database service
    * @param settingsService Settings service
    */
@@ -75,7 +75,7 @@ export class WarningsService {
         ? // An expected error may happen if the bot have no permissions to see the member list.
           ctx.telegram.getChatMember(ctx.chat.id, candidate.id).catch(() => undefined)
         : undefined,
-      this.prismaService.upsertChat(ctx.chat, from),
+      this.prismaService.upsertChatWithCache(ctx.chat, from),
     ]);
     await changeLanguage(chat.language);
 
@@ -83,19 +83,19 @@ export class WarningsService {
       return; // The feature is disabled, return.
     }
     if (!this.prismaService.isChatAdmin(chat, ctx.botInfo.id)) {
-      await ctx.reply(t("common:needAdminPermissions"), { reply_to_message_id: messageId });
+      await ctx.reply(t("common:needAdminPermissions"), { reply_parameters: { message_id: messageId } });
       return; // Bot is not an admin, return.
     }
     if (!this.prismaService.isChatAdmin(chat, from.id, senderChat?.id)) {
-      await ctx.reply(t("common:commandForAdmins"), { reply_to_message_id: messageId });
+      await ctx.reply(t("common:commandForAdmins"), { reply_parameters: { message_id: messageId } });
       return; // The user is not an admin, return.
     }
     if (!candidate) {
-      await ctx.reply(t("warnings:replyToSomeonesMessage"), { reply_to_message_id: messageId });
+      await ctx.reply(t("warnings:replyToSomeonesMessage"), { reply_parameters: { message_id: messageId } });
       return; // No candidate, return.
     }
     if (candidate.id === ctx.botInfo.id) {
-      await ctx.reply(t("warnings:cannotWarnMyself"), { reply_to_message_id: messageId });
+      await ctx.reply(t("warnings:cannotWarnMyself"), { reply_parameters: { message_id: messageId } });
       return; // Candidate is the bot itself, return.
     }
     if (
@@ -104,40 +104,39 @@ export class WarningsService {
       candidateMember?.status === "creator" ||
       candidateSenderChat?.id === ctx.chat.id
     ) {
-      await ctx.reply(t("warnings:cannotWarnAdmin"), { reply_to_message_id: messageId });
+      await ctx.reply(t("warnings:cannotWarnAdmin"), { reply_parameters: { message_id: messageId } });
       return; // Candidate is an admin, return.
     }
 
-    await Promise.all([
-      this.deleteOutdatedWarnings(),
-      // An expected error may happen when bot has no enough permissions
-      ctx.deleteMessage(messageId).catch(() => false),
-    ]);
+    const mediaGroup =
+      "media_group_id" in replyToMessage
+        ? await this.prismaService.message.findMany({
+            select: { messageId: true },
+            where: {
+              chatId: chat.id,
+              mediaGroupId: replyToMessage.media_group_id,
+              messageId: { not: replyToMessage.message_id },
+            },
+          })
+        : [];
+    const deleteMessageIds = [replyToMessage.message_id, ...mediaGroup.map((g) => g.messageId)];
 
     // Delete the message with a delay to let users know the reason
     setTimeout(() => {
       // An expected error may happen when bot has no enough permissions
-      ctx.deleteMessage(replyToMessage.message_id).catch(() => false);
+      ctx.deleteMessages(deleteMessageIds).catch(() => false);
     }, DELETE_MESSAGE_DELAY);
 
-    const existedWarning = await this.prismaService.warning.findFirst({
-      select: { id: true },
-      where: {
-        chatId: chat.id,
-        messageId: replyToMessage.message_id,
-        senderChatId: candidateSenderChat?.id ?? null,
-        userId: candidate.id,
-      },
-    });
-    if (candidateMember?.status === "kicked" || existedWarning) {
-      return;
-    }
-
-    await this.warn(ctx, { candidate, candidateMessageId: replyToMessage.message_id, candidateSenderChat });
+    await Promise.all([
+      // An expected error may happen when bot has no enough permissions
+      ctx.deleteMessage(messageId).catch(() => false),
+      candidateMember?.status !== "kicked" &&
+        this.warn(ctx, { candidate, candidateMessageId: replyToMessage.message_id, candidateSenderChat }),
+    ]);
   }
 
   /**
-   * Issues the warning without additional checks
+   * Issues the warning without additional checks (except warn duplication)
    * @param ctx Text message context
    * @param options Options to warn
    */
@@ -146,18 +145,24 @@ export class WarningsService {
     if (candidateSenderChat) {
       await this.prismaService.upsertSenderChat(candidateSenderChat, ctx.from);
     }
-    const [, , warnings] = await this.prismaService.$transaction([
+    const createdAt = new Date();
+    const [, , warning, warnings] = await this.prismaService.$transaction([
+      this.deleteOutdatedWarnings(),
       this.prismaService.upsertUser(candidate, ctx.from),
-      this.prismaService.warning.create({
-        data: {
+      this.prismaService.warning.upsert({
+        create: {
           authorId: ctx.from.id,
           chatId: ctx.chat.id,
+          createdAt,
           editorId: ctx.from.id,
           messageId: candidateMessageId,
           senderChatId: candidateSenderChat?.id ?? null,
+          updatedAt: createdAt,
           userId: candidate.id,
         },
-        select: { id: true },
+        select: { createdAt: true, id: true },
+        update: { editorId: ctx.from.id, updatedAt: createdAt },
+        where: { chatId_messageId: { chatId: ctx.chat.id, messageId: candidateMessageId } },
       }),
       this.prismaService.warning.findMany({
         select: { id: true },
@@ -165,12 +170,16 @@ export class WarningsService {
       }),
     ]);
 
+    if (warning.createdAt.getTime() !== createdAt.getTime()) {
+      return; // Warning issued previously. There is no need to issue the warning again.
+    }
+
     const candidateLink = getUserOrChatHtmlLink(candidate, candidateSenderChat);
     const { message_id: replyMessageId } = await ctx.reply(
       t("warnings:text", { USER: candidateLink, WARNINGS_COUNT: warnings.length, WARNINGS_LIMIT }),
       {
         parse_mode: "HTML",
-        reply_to_message_id: candidateMessageId,
+        reply_parameters: { allow_sending_without_reply: true, message_id: candidateMessageId },
       },
     );
 
@@ -185,28 +194,18 @@ export class WarningsService {
       ]);
       if (isChatMemberBanned || isSenderChatBanned) {
         const msg = t("warnings:banned", { USER: candidateLink });
-        await ctx.reply(msg, { parse_mode: "HTML", reply_to_message_id: replyMessageId });
+        await ctx.reply(msg, { parse_mode: "HTML", reply_parameters: { message_id: replyMessageId } });
       }
     }
   }
 
   /**
    * Deletes outdated warnings
+   * @returns Prisma promise
    */
-  private async deleteOutdatedWarnings(): Promise<void> {
+  private deleteOutdatedWarnings(): Prisma.PrismaPromise<Prisma.BatchPayload> {
     const date = new Date(Date.now() - OUTDATED_WARNING_TIMEOUT);
-    await this.prismaService.warning.deleteMany({ where: { createdAt: { lt: date } } });
-  }
-
-  /**
-   * Gets available warnings options
-   * @returns Warnings options
-   */
-  private getOptions(): { id: true | null; title: string }[] {
-    return [
-      { id: true, title: t("warnings:enabled") },
-      { id: null, title: t("warnings:disabled") },
-    ];
+    return this.prismaService.warning.deleteMany({ where: { createdAt: { lt: date } } });
   }
 
   /**
@@ -220,7 +219,7 @@ export class WarningsService {
       return; // Chat is not defined to render warnings settings
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
@@ -229,7 +228,7 @@ export class WarningsService {
 
     const chatLink = getChatHtmlLink(dbChat);
     const hasWarnings = this.sanitizeValue(dbChat.hasWarnings);
-    const value = this.getOptions().find((o) => o.id === hasWarnings)?.title ?? "";
+    const value = hasWarnings ? t("warnings:enabled") : t("warnings:disabled");
     const msg = t("warnings:set", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
@@ -275,7 +274,7 @@ export class WarningsService {
       return; // Chat is not defined to save warnings settings
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {

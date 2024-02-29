@@ -1,5 +1,5 @@
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
-import { Inject, Injectable, type OnModuleDestroy, type OnModuleInit } from "@nestjs/common";
+import { Inject, Injectable, type OnModuleDestroy } from "@nestjs/common";
 import {
   AddingBotsRule,
   ChannelMessageFilterRule,
@@ -25,9 +25,9 @@ import type { UpsertedChat } from "./interfaces/upserted-chat.interface";
 import { CHAT_CACHE_TIMEOUT } from "./prisma.constants";
 
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleDestroy, OnModuleInit {
+export class PrismaService extends PrismaClient implements OnModuleDestroy {
   /**
-   * Creates app service
+   * Creates service
    * @param bot Telegram bot instance
    * @param cacheManager Cache manager
    */
@@ -53,13 +53,6 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
    */
   public async onModuleDestroy(): Promise<void> {
     await this.$disconnect();
-  }
-
-  /**
-   * Lifecycle event called once the host module's dependencies have been resolved
-   */
-  public async onModuleInit(): Promise<void> {
-    await this.$connect();
   }
 
   /**
@@ -123,9 +116,9 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
    * @param editor Telegram user who makes upsert
    * @returns Chat
    */
-  public async upsertChat(chat: Chat, editor: TelegramUser): Promise<UpsertedChat> {
+  public async upsertChatWithCache(chat: Chat, editor: TelegramUser): Promise<UpsertedChat> {
     const cacheKey = this.getChatCacheKey(chat.id, editor.id);
-    return this.cacheManager.wrap(cacheKey, () => this.upsertChatWithoutCache(chat, editor), CHAT_CACHE_TIMEOUT);
+    return this.cacheManager.wrap(cacheKey, () => this.upsertChat(chat, editor), CHAT_CACHE_TIMEOUT);
   }
 
   /**
@@ -139,7 +132,7 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
     chatId: number,
     editorId: number,
     settingName: ChatSettingName,
-  ): Prisma.Prisma__ChatSettingsHistoryClient<{ id: bigint }> {
+  ): Prisma.Prisma__ChatSettingsHistoryClient<{ id: string }> {
     return this.chatSettingsHistory.upsert({
       create: { authorId: editorId, chatId, editorId, settingName },
       select: { id: true },
@@ -247,7 +240,7 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
    * @param editor Telegram user who makes upsert
    * @returns Chat
    */
-  private async upsertChatWithoutCache(chat: Chat, editor: TelegramUser): Promise<UpsertedChat> {
+  private async upsertChat(chat: Chat, editor: TelegramUser): Promise<UpsertedChat> {
     const { botInfo, telegram } = this.bot;
     const [admins, membersCount] = await Promise.all([
       // An expected error may happen if administrators are hidden
@@ -299,8 +292,9 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy, OnMo
 
     return {
       ...dbChat,
-      // Patch display title for the chat with the bot
-      displayTitle: botInfo && chat.id === editor.id ? getUserDisplayName(botInfo, "full") : dbChat.displayTitle,
+      // Patch display title and username for the chat with the bot
+      ...(botInfo &&
+        chat.id === editor.id && { displayTitle: getUserDisplayName(botInfo, "full"), username: botInfo.username }),
     };
   }
 }

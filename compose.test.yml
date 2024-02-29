@@ -1,14 +1,18 @@
 name: "chat-adviser-bot-test"
 
 services:
+  cache:
+    command: --requirepass ${REDIS_PASSWORD}
+    image: redis:7.2.4-alpine
+    ports:
+      - ${REDIS_PORT:-}:6379
+
   db:
     environment:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_USER: ${DATABASE_USER}
     healthcheck:
-      interval: 1m
-      start_interval: 1s
-      start_period: 15s
+      interval: 5s
       test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER}"]
     image: postgres:16.2-alpine
     ports:

@@ -5,7 +5,6 @@ import { ScheduleModule } from "@nestjs/schedule";
 import { TelegrafModule } from "nestjs-telegraf";
 
 import { AddingBotsModule } from "./adding-bots/adding-bots.module";
-import { BOT_TOKEN, WEBHOOK_DOMAIN, WEBHOOK_PATH, WEBHOOK_PORT } from "./app.constants";
 import { ChannelMessageFilterModule } from "./channel-message-filter/channel-message-filter.module";
 import { CleanupModule } from "./cleanup/cleanup.module";
 import { HelpModule } from "./help/help.module";
@@ -15,20 +14,34 @@ import { PrismaModule } from "./prisma/prisma.module";
 import { ProfanityFilterModule } from "./profanity-filter/profanity-filter.module";
 import { SettingsModule } from "./settings/settings.module";
 import { TimeZoneModule } from "./time-zone/time-zone.module";
-import { cache } from "./utils/cache";
+import { store } from "./utils/redis";
 import { VotebanModule } from "./voteban/voteban.module";
 import { WarningsModule } from "./warnings/warnings.module";
 
 @Module({
   imports: [
-    CacheModule.register({ isGlobal: true, store: cache }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      /**
+       * Initiates Redis store
+       * @returns Cache manager with Redis store
+       */
+      useFactory: () => ({ store }),
+    }),
     ConfigModule.forRoot(),
     ScheduleModule.forRoot(),
     TelegrafModule.forRoot({
       launchOptions: {
-        webhook: WEBHOOK_DOMAIN ? { domain: WEBHOOK_DOMAIN, path: WEBHOOK_PATH, port: WEBHOOK_PORT } : undefined,
+        webhook: process.env.WEBHOOK_DOMAIN
+          ? {
+              domain: process.env.WEBHOOK_DOMAIN,
+              path: process.env.WEBHOOK_PATH,
+              port: process.env.WEBHOOK_PORT ? Number(process.env.WEBHOOK_PORT) : undefined,
+              secretToken: process.env.WEBHOOK_SECRET_TOKEN,
+            }
+          : undefined,
       },
-      token: BOT_TOKEN,
+      token: process.env.BOT_TOKEN ?? "",
     }),
     ProfanityFilterModule,
     AddingBotsModule,

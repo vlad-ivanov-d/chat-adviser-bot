@@ -1,4 +1,3 @@
-import { ChannelMessageFilterRule } from "@prisma/client";
 import { formatInTimeZone } from "date-fns-tz";
 import { DATE_FORMAT } from "src/app.constants";
 import { ChannelMessageFilterAction } from "src/channel-message-filter/interfaces/action.interface";
@@ -8,28 +7,32 @@ import { channel, privateChat, supergroup } from "./chats";
 import { adminUser, bot, systemChannelBot } from "./users";
 
 /**
+ * Webhook response which contains answer callback query method.
+ * It should be sent as a result of callback settings or save settings processing if the user is not an admin.
+ */
+export const answerCbSettingsNotAdminWebhookResponse = {
+  callback_query_id: "1",
+  method: "answerCallbackQuery",
+  show_alert: true,
+  text: "Unfortunately, this action is no longer available to you.",
+};
+
+/**
  * Payload for ban sender chat request. It should be sent as a result of channel message
  * processing in a supergroup chat.
  */
 export const banSenderChatPayload = { chat_id: supergroup.id, sender_chat_id: channel.id };
 
 /**
- * Webhook payload which contains channel message filter save settings callback with incorrect chat id
+ * Webhook payload which contains save settings callback with incorrect chat id
  */
 export const cbSaveSettingsErrorWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${ChannelMessageFilterAction.SAVE}?cId=error_id&v=${ChannelMessageFilterRule.FILTER}`,
+    data: `${ChannelMessageFilterAction.SAVE}?cId=error_id&v=FILTER`,
     from: adminUser,
     id: "1",
-    message: {
-      chat: privateChat,
-      date: Date.now(),
-      edit_date: Date.now(),
-      from: bot,
-      message_id: 1,
-      text: "Messages On Behalf Of Channels",
-    },
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
 };
@@ -45,7 +48,7 @@ export const cbSettingsEditMessageTextPayload = {
     inline_keyboard: [
       [
         {
-          callback_data: `${ChannelMessageFilterAction.SAVE}?cId=${supergroup.id}&v=${ChannelMessageFilterRule.FILTER}`,
+          callback_data: `${ChannelMessageFilterAction.SAVE}?cId=${supergroup.id}&v=FILTER`,
           text: "Enable filter",
         },
       ],
@@ -63,7 +66,7 @@ export const cbSettingsEditMessageTextPayload = {
 };
 
 /**
- * Webhook payload which contains channel message filter settings callback with incorrect chat id
+ * Webhook payload which contains settings callback with incorrect chat id
  */
 export const cbSettingsErrorWebhook = {
   callback_query: {
@@ -71,20 +74,34 @@ export const cbSettingsErrorWebhook = {
     data: `${ChannelMessageFilterAction.SETTINGS}?cId=error_id`,
     from: adminUser,
     id: "1",
-    message: {
-      chat: privateChat,
-      date: Date.now(),
-      edit_date: Date.now(),
-      from: bot,
-      message_id: 1,
-      text: "Select the feature",
-    },
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
 };
 
 /**
- * Webhook payload which contains channel message filter settings callback
+ * Payload for edit message text request. It should be sent as a result of settings or save settings callback
+ * if the user is not an admin.
+ */
+export const cbSettingsNotAdminEditMessageTextPayload = {
+  chat_id: privateChat.id,
+  message_id: 1,
+  parse_mode: "HTML",
+  reply_markup: {
+    inline_keyboard: [
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${privateChat.id}`, text: `@${bot.username}` }],
+      [],
+      [{ callback_data: SettingsAction.REFRESH, text: "↻ Refresh the list" }],
+    ],
+  },
+  text:
+    "Below is a list of chats that are available to me, and where you are an administrator. Select the chat " +
+    "for which you want to change the settings.\n\nIf the list doesn't contain the chat you need, try " +
+    "writing any message in it and clicking the <b>↻ Refresh the list</b> button (the last button in this message).",
+};
+
+/**
+ * Webhook payload which contains settings callback
  */
 export const cbSettingsWebhook = {
   callback_query: {
@@ -92,24 +109,17 @@ export const cbSettingsWebhook = {
     data: `${ChannelMessageFilterAction.SETTINGS}?cId=${supergroup.id}`,
     from: adminUser,
     id: "1",
-    message: {
-      chat: privateChat,
-      date: Date.now(),
-      edit_date: Date.now(),
-      from: bot,
-      message_id: 1,
-      text: "Select the feature",
-    },
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
 };
 
 /**
- * Webhook payload which contains channel message filter save settings edit message payload.
+ * Webhook payload which contains save settings edit message payload.
  * This fixture should be implemented via function to prevent issues related to dates.
  * @returns Payload
  */
-export const cbSaveSettingsEditMessageTextPayloadFunc = (): unknown => ({
+export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
   ...cbSettingsEditMessageTextPayload,
   text:
     "<b>Messages On Behalf Of Channels</b>\nI can filter messages on behalf of channels (not to be confused with " +
@@ -123,22 +133,15 @@ export const cbSaveSettingsEditMessageTextPayloadFunc = (): unknown => ({
 });
 
 /**
- * Webhook payload which contains channel message filter save settings callback
+ * Webhook payload which contains save settings callback
  */
 export const cbSaveSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${ChannelMessageFilterAction.SAVE}?cId=${supergroup.id}&v=${ChannelMessageFilterRule.FILTER}`,
+    data: `${ChannelMessageFilterAction.SAVE}?cId=${supergroup.id}&v=FILTER`,
     from: adminUser,
     id: "1",
-    message: {
-      chat: privateChat,
-      date: Date.now(),
-      edit_date: Date.now(),
-      from: bot,
-      message_id: 1,
-      text: "Messages On Behalf Of Channels",
-    },
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
 };
@@ -153,7 +156,7 @@ export const channelMessageWebhook = {
     from: systemChannelBot,
     message_id: 1,
     sender_chat: channel,
-    text: "Test message",
+    text: "Test",
   },
   update_id: 1,
 };

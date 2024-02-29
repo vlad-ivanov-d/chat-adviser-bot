@@ -33,7 +33,7 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     server.use(
       http.post(`${TELEGRAM_API_BASE_URL}/banChatSenderChat`, async (info) => {
         banChatSenderChatPayload = await info.request.json();
-        return HttpResponse.json({ ok: true });
+        return new HttpResponse(null, { status: 400 });
       }),
     );
 
@@ -73,13 +73,50 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     expect(banChatSenderChatPayload).toBeUndefined();
   });
 
-  it("should render settings", async () => {
+  it("should not render settings if the user is not an admin", async () => {
+    let editMessageTextPayload;
+    server.use(
+      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+        editMessageTextPayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+      http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsWebhook);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(fixtures.answerCbSettingsNotAdminWebhookResponse);
+    await sleep(ASYNC_REQUEST_DELAY);
+    expect(editMessageTextPayload).toEqual(fixtures.cbSettingsNotAdminEditMessageTextPayload);
+  });
+
+  it("should not save settings if the user is not an admin", async () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
       http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
+      }),
+      http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSaveSettingsWebhook);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(fixtures.answerCbSettingsNotAdminWebhookResponse);
+    await sleep(ASYNC_REQUEST_DELAY);
+    expect(editMessageTextPayload).toEqual(fixtures.cbSettingsNotAdminEditMessageTextPayload);
+  });
+
+  it("should render settings", async () => {
+    await createDbSupergroupChat();
+    let editMessageTextPayload;
+    server.use(
+      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+        editMessageTextPayload = await info.request.json();
+        return new HttpResponse(null, { status: 400 });
       }),
     );
 
@@ -105,6 +142,6 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
     await sleep(ASYNC_REQUEST_DELAY);
-    expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayloadFunc());
+    expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayload());
   });
 });

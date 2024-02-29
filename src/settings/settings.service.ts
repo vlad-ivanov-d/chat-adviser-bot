@@ -23,7 +23,7 @@ import { SettingsAction } from "./interfaces/action.interface";
 @Injectable()
 export class SettingsService {
   /**
-   * Creates settings service
+   * Creates service
    * @param prismaService Database service
    */
   public constructor(private readonly prismaService: PrismaService) {}
@@ -39,7 +39,7 @@ export class SettingsService {
     switch (action) {
       case SettingsAction.CHATS:
       case SettingsAction.REFRESH:
-        await this.renderChats(ctx, skip);
+        await this.renderChats(ctx, skip, true);
         break;
       case SettingsAction.FEATURES:
         await this.renderFeatures(ctx, chatId, skip);
@@ -56,10 +56,10 @@ export class SettingsService {
   @Hears("/mychats")
   public async myChatsCommand(@Ctx() ctx: TextMessageCtx): Promise<void> {
     if (ctx.chat.type !== "private") {
-      const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.message.from);
+      const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.message.from);
       await changeLanguage(language);
       const msg = t("common:commandForPrivateChat", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}` });
-      await ctx.reply(msg, { parse_mode: "HTML", reply_to_message_id: ctx.message.message_id });
+      await ctx.reply(msg, { parse_mode: "HTML", reply_parameters: { message_id: ctx.message.message_id } });
       return;
     }
     await this.renderChats(ctx, 0);
@@ -76,7 +76,7 @@ export class SettingsService {
     const { message: msg } = ctx.update;
 
     const [chat, userChat] = await Promise.all([
-      this.prismaService.upsertChat(ctx.chat, msg.from),
+      this.prismaService.upsertChatWithCache(ctx.chat, msg.from),
       this.prismaService.chat.findUnique({ select: { id: true, language: true }, where: { id: msg.from.id } }),
     ]);
 
@@ -126,7 +126,7 @@ export class SettingsService {
     const { from } = typeof ctx.callbackQuery === "undefined" ? ctx.update.message : ctx.callbackQuery;
     try {
       const chat = await ctx.telegram.getChat(chatId);
-      const dbChat = await this.prismaService.upsertChat(chat, from);
+      const dbChat = await this.prismaService.upsertChatWithCache(chat, from);
       if (this.prismaService.isChatAdmin(dbChat, from.id)) {
         return dbChat;
       }
@@ -150,8 +150,9 @@ export class SettingsService {
    * Renders chats
    * @param ctx Callback or message context
    * @param skip Skip count
+   * @param shouldAnswerCallback Answer callback query will be sent if true
    */
-  private async renderChats(ctx: CallbackCtx | MessageCtx, skip = 0): Promise<void> {
+  private async renderChats(ctx: CallbackCtx | MessageCtx, skip = 0, shouldAnswerCallback?: boolean): Promise<void> {
     const { from } = typeof ctx.callbackQuery === "undefined" ? ctx.update.message : ctx.callbackQuery;
     const take = skip === 0 ? PAGE_SIZE - 1 : PAGE_SIZE;
     if (!ctx.chat || isNaN(skip)) {
@@ -169,7 +170,7 @@ export class SettingsService {
         }),
         this.prismaService.chat.count({ where: { admins: { some: { id: from.id } } } }),
       ]),
-      this.prismaService.upsertChat(ctx.chat, from),
+      this.prismaService.upsertChatWithCache(ctx.chat, from),
     ]);
     await changeLanguage(dbChat.language);
 
@@ -189,7 +190,7 @@ export class SettingsService {
     await (typeof ctx.callbackQuery === "undefined"
       ? ctx.reply(msg, { parse_mode: "HTML", reply_markup: replyMarkup })
       : Promise.all([
-          ctx.answerCbQuery(),
+          shouldAnswerCallback && ctx.answerCbQuery(),
           // An expected error may happen if the message won't change during edit
           ctx.editMessageText(msg, { parse_mode: "HTML", reply_markup: replyMarkup }).catch(() => undefined),
         ]));
@@ -208,7 +209,9 @@ export class SettingsService {
       return; // Incorrect parameters to render features
     }
 
-    const destDbChat = await (cbQuery ? this.prismaService.upsertChat(chat, from) : this.resolveChat(ctx, from.id));
+    const destDbChat = cbQuery
+      ? await this.prismaService.upsertChatWithCache(chat, from)
+      : await this.resolveChat(ctx, from.id);
     if (!destDbChat) {
       throw new Error("Target chat is not defined to render features.");
     }

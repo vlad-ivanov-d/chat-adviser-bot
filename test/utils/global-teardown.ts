@@ -6,9 +6,11 @@ let isEventAdded = false;
 
 /**
  * Allows the use of a custom global teardown module. The function will be triggered once after all test suites.
+ * Jest global teardown use default export.
  * @param config Jest config
  */
-const globalTeardown = (config: Config): void => {
+// eslint-disable-next-line import/no-default-export
+export default (config: Config): void => {
   const command = "docker compose -f compose.test.yml down";
   if (isEventAdded) {
     return;
@@ -20,7 +22,3 @@ const globalTeardown = (config: Config): void => {
   }
   execSync(command);
 };
-
-// Jest global teardown should have default export
-// eslint-disable-next-line import/no-default-export
-export default globalTeardown;

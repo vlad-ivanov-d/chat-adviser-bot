@@ -14,7 +14,7 @@ import { ChannelMessageFilterAction } from "./interfaces/action.interface";
 @Injectable()
 export class ChannelMessageFilterService {
   /**
-   * Creates channel message filter service
+   * Creates service
    * @param prismaService Database service
    * @param settingsService Settings service
    */
@@ -63,7 +63,7 @@ export class ChannelMessageFilterService {
       return;
     }
 
-    const { channelMessageFilter } = await this.prismaService.upsertChat(chat, from);
+    const { channelMessageFilter } = await this.prismaService.upsertChatWithCache(chat, from);
     if (channelMessageFilter === ChannelMessageFilterRule.FILTER) {
       // An expected error may happen when bot has no enough permissions
       await Promise.all([ctx.deleteMessage(messageId), ctx.banChatSenderChat(senderChat.id)]).catch(() => undefined);
@@ -71,17 +71,6 @@ export class ChannelMessageFilterService {
     }
 
     await next();
-  }
-
-  /**
-   * Gets available channel message filter options
-   * @returns Channel message filter options
-   */
-  private getOptions(): { id: ChannelMessageFilterRule | null; title: string }[] {
-    return [
-      { id: ChannelMessageFilterRule.FILTER, title: t("channelMessageFilter:filterEnabled") },
-      { id: null, title: t("channelMessageFilter:filterDisabled") },
-    ];
   }
 
   /**
@@ -95,7 +84,7 @@ export class ChannelMessageFilterService {
       return; // Chat is not defined to render channel message filter settings
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
@@ -110,7 +99,10 @@ export class ChannelMessageFilterService {
       value: ChannelMessageFilterRule.FILTER,
     });
     const sanitizedValue = this.sanitizeValue(dbChat.channelMessageFilter);
-    const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";
+    const value =
+      sanitizedValue === ChannelMessageFilterRule.FILTER
+        ? t("channelMessageFilter:filterEnabled")
+        : t("channelMessageFilter:filterDisabled");
     const msg = t("channelMessageFilter:set", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
@@ -148,7 +140,7 @@ export class ChannelMessageFilterService {
       return; // Chat is not defined to save channel message filter settings
     }
 
-    const { language } = await this.prismaService.upsertChat(ctx.chat, ctx.callbackQuery.from);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
