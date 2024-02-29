@@ -47,7 +47,8 @@ const runTest = async (fileName: string): Promise<void> => {
 
       // Run test script. File name is handled securely.
       // eslint-disable-next-line security/detect-non-literal-fs-filename
-      testProcess.stdin.write(readFileSync(path.resolve("k6/dist", distFileName), "utf-8"));
+      const scriptContent = readFileSync(path.resolve("k6/dist", distFileName), "utf-8");
+      testProcess.stdin.write(scriptContent);
       testProcess.stdin.end();
 
       // Wait for test completion
