@@ -8,8 +8,7 @@ services:
       - ${REDIS_PORT:-}:6379
     restart: unless-stopped
     volumes:
-      - redis:/var/lib/redis
-      - redis-config:/usr/local/etc/redis/redis.conf
+      - redisdata:/data
 
   db:
     environment:
@@ -27,5 +26,4 @@ services:
 
 volumes:
   pgdata:
-  redis:
-  redis-config:
+  redisdata:
