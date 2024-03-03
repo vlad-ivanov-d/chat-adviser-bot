@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.19.0 (2024-xx-xx)
+
+- Other: internal improvements
+
 ## 1.18.0 (2024-02-29)
 
 - Improvement: if a message consists of several photos, now they will all be deleted using the /warn command

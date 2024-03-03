@@ -432,7 +432,7 @@ export class VotebanService {
 
     const { banVoters, id, noBanVoters } = voting;
     const { editorId } = chat;
-    if ((action === VotebanAction.BAN ? banVoters : noBanVoters).map((v) => v.authorId).includes(from.id)) {
+    if ((action === VotebanAction.BAN ? banVoters : noBanVoters).some((v) => v.authorId === from.id)) {
       await ctx.answerCbQuery(t("voteban:alreadyVoted"), { show_alert: true });
       return; // User has already voted, return.
     }
