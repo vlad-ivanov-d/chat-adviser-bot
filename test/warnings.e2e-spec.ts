@@ -214,6 +214,23 @@ describe("WarningsModule (e2e)", () => {
     expect(sendMessagePayload).toEqual(fixtures.warnAgainstBotSendMessagePayload);
   });
 
+  it("should not issue a warning against the linked channel", async () => {
+    let sendMessagePayload;
+    server.use(
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+        sendMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL)
+      .post(TEST_WEBHOOK_PATH)
+      .send(fixtures.warnAgainstLinkedChannelWebhook);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload).toEqual(fixtures.warnAgainstAdminSendMessagePayload);
+  });
+
   it("should not issue duplicate warnings", async () => {
     await createDbSupergroupChat({ hasWarnings: true });
     await prisma.$transaction([
@@ -302,9 +319,9 @@ describe("WarningsModule (e2e)", () => {
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsWebhook);
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual(fixtures.answerCbSettingsNotAdminWebhookResponse);
+    expect(response.body).toEqual(settingsFixtures.answerCbSettingsNotAdminWebhookResponse);
     await sleep(ASYNC_REQUEST_DELAY);
-    expect(editMessageTextPayload).toEqual(fixtures.cbSettingsNotAdminEditMessageTextPayload);
+    expect(editMessageTextPayload).toEqual(settingsFixtures.cbSettingsNotAdminEditMessageTextPayload);
   });
 
   it("should not save settings if the user is not an admin", async () => {
@@ -321,9 +338,9 @@ describe("WarningsModule (e2e)", () => {
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSaveSettingsWebhook);
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual(fixtures.answerCbSettingsNotAdminWebhookResponse);
+    expect(response.body).toEqual(settingsFixtures.answerCbSettingsNotAdminWebhookResponse);
     await sleep(ASYNC_REQUEST_DELAY);
-    expect(editMessageTextPayload).toEqual(fixtures.cbSettingsNotAdminEditMessageTextPayload);
+    expect(editMessageTextPayload).toEqual(settingsFixtures.cbSettingsNotAdminEditMessageTextPayload);
   });
 
   it("should render settings", async () => {

@@ -5,18 +5,7 @@ import { WarningsAction } from "src/warnings/interfaces/action.interface";
 import { WARNINGS_LIMIT } from "src/warnings/warnings.constants";
 
 import { channel, privateChat, supergroup } from "./chats";
-import { adminUser, bot, systemChannelBot, user } from "./users";
-
-/**
- * Webhook response which contains answer callback query method.
- * It should be sent as a result of callback settings or save settings processing if the user is not an admin.
- */
-export const answerCbSettingsNotAdminWebhookResponse = {
-  callback_query_id: "1",
-  method: "answerCallbackQuery",
-  show_alert: true,
-  text: "Unfortunately, this action is no longer available to you.",
-};
+import { adminUser, bot, systemChannelBot, telegram, user } from "./users";
 
 /**
  * Payload for send message request. It should be sent as a result of /warn command processing.
@@ -25,7 +14,7 @@ export const banSendMessagePayload = {
   chat_id: supergroup.id,
   parse_mode: "HTML",
   reply_parameters: { message_id: 5 },
-  text: `User <a href="tg:user?id=${user.id}">@${user.username}</a> is banned`,
+  text: "User is banned",
 };
 
 /**
@@ -90,27 +79,6 @@ export const cbSettingsErrorWebhook = {
     message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
-};
-
-/**
- * Payload for edit message text request. It should be sent as a result of settings or save settings callback
- * if the user is not an admin.
- */
-export const cbSettingsNotAdminEditMessageTextPayload = {
-  chat_id: privateChat.id,
-  message_id: 1,
-  parse_mode: "HTML",
-  reply_markup: {
-    inline_keyboard: [
-      [{ callback_data: `${SettingsAction.FEATURES}?cId=${privateChat.id}`, text: `@${bot.username}` }],
-      [],
-      [{ callback_data: SettingsAction.REFRESH, text: "↻ Refresh the list" }],
-    ],
-  },
-  text:
-    "Below is a list of chats that are available to me, and where you are an administrator. Select the chat " +
-    "for which you want to change the settings.\n\nIf the list doesn't contain the chat you need, try " +
-    "writing any message in it and clicking the <b>↻ Refresh the list</b> button (the last button in this message).",
 };
 
 /**
@@ -216,6 +184,34 @@ export const warnAgainstBotWebhook = {
     message_id: 2,
     message_thread_id: 1,
     reply_to_message: { chat: supergroup, date: Date.now(), from: bot, message_id: 1, text: "Bad message" },
+    text: "/warn",
+  },
+  update_id: 1,
+};
+
+/**
+ * Webhook payload which contains /warn command against the linked channel
+ */
+export const warnAgainstLinkedChannelWebhook = {
+  message: {
+    chat: supergroup,
+    date: Date.now(),
+    from: adminUser,
+    message_id: 4,
+    message_thread_id: 1,
+    reply_to_message: {
+      chat: supergroup,
+      date: Date.now(),
+      forward_date: Date.now(),
+      forward_from_chat: channel,
+      forward_from_message_id: 1,
+      forward_origin: { chat: channel, date: Date.now(), message_id: 1, type: "channel" },
+      from: telegram,
+      is_automatic_forward: true,
+      message_id: 1,
+      sender_chat: channel,
+      text: "Hello",
+    },
     text: "/warn",
   },
   update_id: 1,

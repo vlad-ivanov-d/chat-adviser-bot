@@ -12,6 +12,7 @@ import { buildCbData, getChatHtmlLink, getPagination, parseCbData } from "src/ut
 import type { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 
 import { TimeZoneAction } from "./interfaces/action.interface";
+import type { TimeZoneRenderSettingsOptions } from "./interfaces/settings-options.interface";
 
 @Update()
 @Injectable()
@@ -39,7 +40,7 @@ export class TimeZoneService {
         await this.saveSettings(ctx, chatId, value);
         break;
       case TimeZoneAction.SETTINGS:
-        await this.renderSettings(ctx, chatId, skip);
+        await this.renderSettings(ctx, { chatId, shouldAnswerCallback: true, skip });
         break;
       default:
         await next();
@@ -47,37 +48,29 @@ export class TimeZoneService {
   }
 
   /**
-   * Gets all available time zone identifiers
+   * Gets all available time zone identifiers sorted by offset
    * @returns Time zone identifier
    */
   private getAllTimeZones(): string[] {
     return Intl.supportedValuesOf("timeZone").sort((a, b) => {
       const aOffset = getTimezoneOffset(a);
       const bOffset = getTimezoneOffset(b);
-      // Sort by offset
       if (aOffset < bOffset) {
         return -1;
       }
-      if (aOffset > bOffset) {
-        return 1;
-      }
-      // Then sort by name
-      if (a < b) {
-        return -1;
-      }
-      return a > b ? 1 : 0;
+      return aOffset > bOffset ? 1 : 0;
     });
   }
 
   /**
    * Renders settings
    * @param ctx Callback context
-   * @param chatId Id of the chat which is edited
-   * @param skip Skip count
+   * @param options Render options
    */
-  private async renderSettings(ctx: CallbackCtx, chatId: number, skip?: number): Promise<void> {
+  private async renderSettings(ctx: CallbackCtx, options: TimeZoneRenderSettingsOptions): Promise<void> {
+    const { chatId, shouldAnswerCallback, skip } = options;
     if (!ctx.chat || isNaN(chatId)) {
-      throw new Error("Chat is not defined to render time zone settings.");
+      return; // Chat is not defined to render settings
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
@@ -96,7 +89,7 @@ export class TimeZoneService {
     const msg = t("timeZone:select", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
-      ctx.answerCbQuery(),
+      shouldAnswerCallback && ctx.answerCbQuery(),
       ctx.editMessageText(this.prismaService.joinModifiedInfo(msg, ChatSettingName.TIME_ZONE, dbChat), {
         parse_mode: "HTML",
         reply_markup: {
@@ -121,15 +114,6 @@ export class TimeZoneService {
   }
 
   /**
-   * Sanitizes adding bots rule
-   * @param value Value
-   * @returns Sanitized value
-   */
-  private sanitizeValue(value: string | null): string {
-    return value && Intl.supportedValuesOf("timeZone").includes(value) ? value : "Etc/UTC";
-  }
-
-  /**
    * Saves settings
    * @param ctx Callback context
    * @param chatId Id of the chat which is edited
@@ -137,7 +121,7 @@ export class TimeZoneService {
    */
   private async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      throw new Error("Chat is not defined to save time zone settings.");
+      return; // Chat is not defined to save settings
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
@@ -147,7 +131,7 @@ export class TimeZoneService {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
-    const timeZone = this.sanitizeValue(value);
+    const timeZone = value && Intl.supportedValuesOf("timeZone").includes(value) ? value : "Etc/UTC";
     const skip = Math.max(0, Math.floor(this.getAllTimeZones().indexOf(timeZone) / PAGE_SIZE) * PAGE_SIZE);
 
     await this.prismaService.$transaction([
@@ -155,6 +139,6 @@ export class TimeZoneService {
       this.prismaService.upsertChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.TIME_ZONE),
     ]);
     await this.prismaService.deleteChatCache(chatId);
-    await Promise.all([this.settingsService.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId, skip)]);
+    await Promise.all([this.settingsService.notifyChangesSaved(ctx), this.renderSettings(ctx, { chatId, skip })]);
   }
 }

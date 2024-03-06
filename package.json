@@ -47,7 +47,7 @@
     "@nestjs/schematics": "10.1.1",
     "@nestjs/testing": "10.3.3",
     "@types/jest": "29.5.12",
-    "@types/k6": "0.49.0",
+    "@types/k6": "0.49.1",
     "@types/lodash.escaperegexp": "4.1.9",
     "@types/node": "20.11.24",
     "@types/supertest": "6.0.2",

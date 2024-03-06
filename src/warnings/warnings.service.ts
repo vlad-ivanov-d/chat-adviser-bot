@@ -193,8 +193,7 @@ export class WarningsService {
         }),
       ]);
       if (isChatMemberBanned || isSenderChatBanned) {
-        const msg = t("warnings:banned", { USER: candidateLink });
-        await ctx.reply(msg, { parse_mode: "HTML", reply_parameters: { message_id: replyMessageId } });
+        await ctx.reply(t("warnings:banned"), { parse_mode: "HTML", reply_parameters: { message_id: replyMessageId } });
       }
     }
   }
@@ -216,7 +215,7 @@ export class WarningsService {
    */
   private async renderSettings(ctx: CallbackCtx, chatId: number, shouldAnswerCallback?: boolean): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Chat is not defined to render warnings settings
+      return; // Chat is not defined to render settings
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
@@ -271,7 +270,7 @@ export class WarningsService {
    */
   private async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Chat is not defined to save warnings settings
+      return; // Chat is not defined to save settings
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);

@@ -210,7 +210,7 @@ export class VotebanService {
   private async renderSettings(ctx: CallbackCtx, options: VotebanRenderSettingsOptions): Promise<void> {
     const { chatId, shouldAnswerCallback, value } = options;
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Chat is not defined to render voteban settings
+      return; // Chat is not defined to render settings
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
@@ -287,7 +287,7 @@ export class VotebanService {
    */
   private async saveSettings(ctx: CallbackCtx, chatId: number, value: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Chat is not defined to save voteban settings
+      return; // Chat is not defined to save settings
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);

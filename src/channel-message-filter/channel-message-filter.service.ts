@@ -56,7 +56,6 @@ export class ChannelMessageFilterService {
     if (
       !senderChat?.id || // Message from the user
       chat.id === senderChat.id || // Message from the admin
-      ("left_chat_member" in msg && msg.left_chat_member.id === ctx.botInfo.id) || // The bot is kicked
       ("is_automatic_forward" in msg && msg.is_automatic_forward) // Message from the linked chat
     ) {
       await next();
@@ -81,7 +80,7 @@ export class ChannelMessageFilterService {
    */
   private async renderSettings(ctx: CallbackCtx, chatId: number, shouldAnswerCallback?: boolean): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Chat is not defined to render channel message filter settings
+      return; // Chat is not defined to render settings
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
@@ -137,7 +136,7 @@ export class ChannelMessageFilterService {
    */
   private async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Chat is not defined to save channel message filter settings
+      return; // Chat is not defined to save settings
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
