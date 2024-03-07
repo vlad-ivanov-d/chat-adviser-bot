@@ -30,7 +30,7 @@ describe("VotebanModule (e2e)", () => {
     await app.init();
   });
 
-  it("should accept the vote", async () => {
+  it("accepts the vote", async () => {
     await createDbSupergroupChat({ votebanLimit: 2 });
     await prisma.$transaction([
       createDbUser(user),
@@ -61,7 +61,7 @@ describe("VotebanModule (e2e)", () => {
     expect(editMessageTextPayload).toEqual(fixtures.cbNoBanEditMessageTextPayload);
   });
 
-  it("should answer if the voting has expired", async () => {
+  it("answers if the voting has expired", async () => {
     await createDbSupergroupChat({ votebanLimit: 2 });
 
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbNoBanWebhook);
@@ -70,7 +70,7 @@ describe("VotebanModule (e2e)", () => {
     expect(response.body).toEqual(fixtures.answerCbVoteExpiredWebhookResponse);
   });
 
-  it("should ban by voting results", async () => {
+  it("bans by voting results", async () => {
     await createDbSupergroupChat({ votebanLimit: 2 });
     const [, voteban] = await prisma.$transaction([
       createDbUser(user),
@@ -123,7 +123,7 @@ describe("VotebanModule (e2e)", () => {
     expect(sendMessagePayload).toEqual({ chat_id: 12, reply_parameters: { message_id: 3 }, text: "Voting completed" });
   });
 
-  it("should cancel the voting if the bot is not an admin", async () => {
+  it("cancels the voting if the bot is not an admin", async () => {
     await createDbSupergroupChat();
     await prisma.$transaction([
       createDbUser(user),
@@ -155,7 +155,7 @@ describe("VotebanModule (e2e)", () => {
     expect(editMessageTextPayload).toEqual(fixtures.cbCancelledEditMessageTextPayload);
   });
 
-  it("should cancel the voting if the feature is disabled", async () => {
+  it("cancels the voting if the feature is disabled", async () => {
     await createDbSupergroupChat();
     await prisma.$transaction([
       createDbUser(user),
@@ -186,19 +186,19 @@ describe("VotebanModule (e2e)", () => {
     expect(editMessageTextPayload).toEqual(fixtures.cbCancelledEditMessageTextPayload);
   });
 
-  it("should handle an error if chat id is incorrect during settings rendering", async () => {
+  it("handles an error if chat id is incorrect during settings rendering", async () => {
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsErrorWebhook);
     expect(response.status).toBe(200);
   });
 
-  it("should handle an error if chat id is incorrect during settings saving", async () => {
+  it("handles an error if chat id is incorrect during settings saving", async () => {
     const response = await request(TEST_WEBHOOK_BASE_URL)
       .post(TEST_WEBHOOK_PATH)
       .send(fixtures.cbSaveSettingsErrorWebhook);
     expect(response.status).toBe(200);
   });
 
-  it("should ignore voteban command if the feature is disabled", async () => {
+  it("ignores voteban command if the feature is disabled", async () => {
     let sendMessagePayload;
     server.use(
       http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
@@ -213,6 +213,101 @@ describe("VotebanModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(sendMessagePayload).toBeUndefined();
+  });
+
+  it("rejects duplicate votes", async () => {
+    await createDbSupergroupChat({ votebanLimit: 2 });
+    const [, voteban] = await prisma.$transaction([
+      createDbUser(user),
+      prisma.voteban.create({
+        data: {
+          authorId: adminUser.id,
+          candidateId: user.id,
+          chatId: supergroup.id,
+          editorId: adminUser.id,
+          messageId: 3,
+        },
+        select: { id: true },
+      }),
+    ]);
+    await prisma.votebanNoBanVoter.create({
+      data: { authorId: adminUser.id, editorId: adminUser.id, votebanId: voteban.id },
+      select: { id: true },
+    });
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbNoBanWebhook);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(fixtures.answerCbVoteDuplicatedWebhookResponse);
+  });
+
+  it("renders settings", async () => {
+    await createDbSupergroupChat();
+    let editMessageTextPayload;
+    server.use(
+      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+        editMessageTextPayload = await info.request.json();
+        return new HttpResponse(null, { status: 400 });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsWebhook);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ callback_query_id: "1", method: "answerCallbackQuery" });
+    expect(editMessageTextPayload).toEqual(fixtures.cbSettingsEditMessageTextPayload);
+  });
+
+  it("saves settings", async () => {
+    await createDbSupergroupChat();
+    let editMessageTextPayload;
+    server.use(
+      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+        editMessageTextPayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSaveSettingsWebhook);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
+    await sleep(ASYNC_REQUEST_DELAY);
+    expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayload());
+  });
+
+  it("says if the bot is not an admin", async () => {
+    await createDbSupergroupChat({ votebanLimit: 2 });
+    let sendMessagePayload;
+    server.use(
+      http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+        sendMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.votebanWebhook);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload).toEqual(fixtures.votebanNoAdminPermsSendMessagePayload);
+  });
+
+  it("says voteban command is not for a private chat", async () => {
+    let sendMessagePayload;
+    server.use(
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+        sendMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL)
+      .post(TEST_WEBHOOK_PATH)
+      .send(fixtures.votebanInPrivateChatWebhook);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload).toEqual({ chat_id: privateChat.id, text: "This command is not for private chats." });
   });
 
   it("should not start voteban against itself", async () => {
@@ -252,102 +347,7 @@ describe("VotebanModule (e2e)", () => {
     expect(sendMessagePayload).toEqual(fixtures.votebanAgainstAdminSendMessagePayload);
   });
 
-  it("should reject duplicate votes", async () => {
-    await createDbSupergroupChat({ votebanLimit: 2 });
-    const [, voteban] = await prisma.$transaction([
-      createDbUser(user),
-      prisma.voteban.create({
-        data: {
-          authorId: adminUser.id,
-          candidateId: user.id,
-          chatId: supergroup.id,
-          editorId: adminUser.id,
-          messageId: 3,
-        },
-        select: { id: true },
-      }),
-    ]);
-    await prisma.votebanNoBanVoter.create({
-      data: { authorId: adminUser.id, editorId: adminUser.id, votebanId: voteban.id },
-      select: { id: true },
-    });
-
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbNoBanWebhook);
-
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual(fixtures.answerCbVoteDuplicatedWebhookResponse);
-  });
-
-  it("should render settings", async () => {
-    await createDbSupergroupChat();
-    let editMessageTextPayload;
-    server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
-        editMessageTextPayload = await info.request.json();
-        return new HttpResponse(null, { status: 400 });
-      }),
-    );
-
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsWebhook);
-
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({ callback_query_id: "1", method: "answerCallbackQuery" });
-    expect(editMessageTextPayload).toEqual(fixtures.cbSettingsEditMessageTextPayload);
-  });
-
-  it("should save settings", async () => {
-    await createDbSupergroupChat();
-    let editMessageTextPayload;
-    server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
-        editMessageTextPayload = await info.request.json();
-        return HttpResponse.json({ ok: true });
-      }),
-    );
-
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSaveSettingsWebhook);
-
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
-    await sleep(ASYNC_REQUEST_DELAY);
-    expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayload());
-  });
-
-  it("should say if the bot is not an admin", async () => {
-    await createDbSupergroupChat({ votebanLimit: 2 });
-    let sendMessagePayload;
-    server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
-      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
-        sendMessagePayload = await info.request.json();
-        return HttpResponse.json({ ok: true });
-      }),
-    );
-
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.votebanWebhook);
-
-    expect(response.status).toBe(200);
-    expect(sendMessagePayload).toEqual(fixtures.votebanNoAdminPermsSendMessagePayload);
-  });
-
-  it("should say voteban command is not for a private chat", async () => {
-    let sendMessagePayload;
-    server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
-        sendMessagePayload = await info.request.json();
-        return HttpResponse.json({ ok: true });
-      }),
-    );
-
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
-      .send(fixtures.votebanInPrivateChatWebhook);
-
-    expect(response.status).toBe(200);
-    expect(sendMessagePayload).toEqual({ chat_id: privateChat.id, text: "This command is not for private chats." });
-  });
-
-  it("should start voteban", async () => {
+  it("starts voteban", async () => {
     await createDbSupergroupChat({ votebanLimit: 2 });
     let sendMessagePayload;
     server.use(
@@ -363,7 +363,7 @@ describe("VotebanModule (e2e)", () => {
     expect(sendMessagePayload).toEqual(fixtures.votebanSendMessagePayload);
   });
 
-  it("should tell how to use the voteban command correctly", async () => {
+  it("tells how to use the voteban command correctly", async () => {
     await createDbSupergroupChat({ votebanLimit: 2 });
     let sendMessagePayload;
     server.use(
