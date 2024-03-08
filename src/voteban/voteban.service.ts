@@ -193,7 +193,7 @@ export class VotebanService {
         result += link;
         continue;
       }
-      if (`${result}, ${link}`.length <= 2500) {
+      if (`${result}, ${link}`.length <= 2000) {
         result += `, ${link}`;
         continue;
       }
@@ -369,7 +369,7 @@ export class VotebanService {
           select: { id: true },
           where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
         }),
-        ctx.editMessageText([questionMsg, resultsMsg].join("\n\n"), { parse_mode: "HTML" }),
+        ctx.editMessageText([questionMsg, resultsMsg].join("\n\n———\n\n"), { parse_mode: "HTML" }),
         ctx.reply(t("voteban:completed"), { reply_parameters: { message_id: message.message_id } }),
         isBan && this.deleteMessages(ctx, candidateMessageId, candidateMediaGroupId),
         // An expected error may happen if there are no enough permissions
