@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { ChatType } from "@prisma/client";
 import { On, Update } from "nestjs-telegraf";
@@ -9,6 +9,8 @@ import { MyChatMemberCtx } from "src/types/telegraf-context";
 @Update()
 @Injectable()
 export class CleanupService {
+  private readonly logger = new Logger(CleanupService.name);
+
   /**
    * Creates service
    * @param prismaService Database service
@@ -28,6 +30,7 @@ export class CleanupService {
         this.prismaService.deleteChatCache(ctx.chat.id),
         this.prismaService.chat.deleteMany({ where: { id: ctx.chat.id } }),
       ]);
+      this.logger.warn("The bot was kicked from a chat");
     }
     await next();
   }
@@ -38,7 +41,7 @@ export class CleanupService {
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   public async cleanup(): Promise<void> {
     await this.checkUnusedPrivateChats();
-    await this.prismaService.$transaction([
+    const [deletedSenderChats, deletedUsers] = await this.prismaService.$transaction([
       this.prismaService.senderChat.deleteMany({
         where: {
           AND: [
@@ -78,6 +81,8 @@ export class CleanupService {
         },
       }),
     ]);
+    this.logger.log(`Number of deleted unused sender chats: ${deletedSenderChats.count}`);
+    this.logger.log(`Number of deleted unused users: ${deletedUsers.count}`);
     await this.checkUnusedUsers();
   }
 
@@ -95,6 +100,7 @@ export class CleanupService {
     });
     if (unusedChats.length > 0) {
       await this.prismaService.chat.deleteMany({ where: { id: { in: unusedChats.map((c) => c.id) } } });
+      this.logger.log(`Number of deleted unused chats: ${unusedChats.length}`);
     }
   }
 
@@ -138,6 +144,7 @@ export class CleanupService {
     );
     if (unusedUsers.length > 0) {
       await this.prismaService.user.deleteMany({ where: { id: { in: unusedUsers.map((u) => u.id) } } });
+      this.logger.log(`Number of deleted unused users (with additional check): ${unusedUsers.length}`);
     }
   }
 }

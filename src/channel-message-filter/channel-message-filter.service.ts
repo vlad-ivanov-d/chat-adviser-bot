@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ChannelMessageFilterRule, ChatSettingName } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
 import { Ctx, Next, On, Update } from "nestjs-telegraf";
@@ -13,6 +13,8 @@ import { ChannelMessageFilterAction } from "./interfaces/action.interface";
 @Update()
 @Injectable()
 export class ChannelMessageFilterService {
+  private readonly logger = new Logger(ChannelMessageFilterService.name);
+
   /**
    * Creates service
    * @param prismaService Database service
@@ -80,7 +82,8 @@ export class ChannelMessageFilterService {
    */
   private async renderSettings(ctx: CallbackCtx, chatId: number, shouldAnswerCallback?: boolean): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Chat is not defined to render settings
+      this.logger.error("Chat is not defined to render channel message filter settings");
+      return;
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
@@ -136,7 +139,8 @@ export class ChannelMessageFilterService {
    */
   private async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Chat is not defined to save settings
+      this.logger.error("Chat is not defined to save channel message filter settings");
+      return;
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);

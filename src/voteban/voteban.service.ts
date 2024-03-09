@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { ChatSettingName, type User } from "@prisma/client";
 import { changeLanguage, t, type TOptions } from "i18next";
@@ -26,6 +26,8 @@ import { EXPIRED_VOTEBAN_TIMEOUT } from "./voteban.constants";
 @Update()
 @Injectable()
 export class VotebanService {
+  private readonly logger = new Logger(VotebanService.name);
+
   /**
    * Creates service
    * @param prismaService Database service
@@ -210,7 +212,8 @@ export class VotebanService {
   private async renderSettings(ctx: CallbackCtx, options: VotebanRenderSettingsOptions): Promise<void> {
     const { chatId, shouldAnswerCallback, value } = options;
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Chat is not defined to render settings
+      this.logger.error("Chat is not defined to render voteban settings");
+      return;
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
@@ -287,7 +290,8 @@ export class VotebanService {
    */
   private async saveSettings(ctx: CallbackCtx, chatId: number, value: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Chat is not defined to save settings
+      this.logger.error("Chat is not defined to save voteban settings");
+      return;
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);

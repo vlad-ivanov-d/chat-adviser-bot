@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ChatSettingName } from "@prisma/client";
 import { format, getTimezoneOffset } from "date-fns-tz";
 import { changeLanguage, t } from "i18next";
@@ -17,6 +17,8 @@ import type { TimeZoneRenderSettingsOptions } from "./interfaces/settings-option
 @Update()
 @Injectable()
 export class TimeZoneService {
+  private readonly logger = new Logger(TimeZoneService.name);
+
   /**
    * Creates service
    * @param prismaService Database service
@@ -70,7 +72,8 @@ export class TimeZoneService {
   private async renderSettings(ctx: CallbackCtx, options: TimeZoneRenderSettingsOptions): Promise<void> {
     const { chatId, shouldAnswerCallback, skip } = options;
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Chat is not defined to render settings
+      this.logger.error("Chat is not defined to render time zone settings");
+      return;
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
@@ -121,7 +124,8 @@ export class TimeZoneService {
    */
   private async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Chat is not defined to save settings
+      this.logger.error("Chat is not defined to save time zone settings");
+      return;
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
