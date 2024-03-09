@@ -84,7 +84,7 @@ export class TimeZoneService {
     const timeZones = this.getAllTimeZones();
     const valueIndex = timeZones.indexOf(dbChat.timeZone);
     // Use provided skip or the index of the current value. Use 0 as the last fallback.
-    const patchedSkip = skip ?? (valueIndex > -1 ? valueIndex : 0);
+    const patchedSkip = skip ?? (valueIndex > -1 ? Math.floor(valueIndex / PAGE_SIZE) * PAGE_SIZE : 0);
     const value = `${format(Date.now(), "O", { timeZone: dbChat.timeZone })} ${dbChat.timeZone}`;
     const msg = t("timeZone:select", { CHAT: chatLink, VALUE: value });
 
@@ -132,13 +132,12 @@ export class TimeZoneService {
     }
 
     const timeZone = value && Intl.supportedValuesOf("timeZone").includes(value) ? value : "Etc/UTC";
-    const skip = Math.max(0, Math.floor(this.getAllTimeZones().indexOf(timeZone) / PAGE_SIZE) * PAGE_SIZE);
 
     await this.prismaService.$transaction([
       this.prismaService.chat.update({ data: { timeZone }, select: { id: true }, where: { id: chatId } }),
       this.prismaService.upsertChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.TIME_ZONE),
     ]);
     await this.prismaService.deleteChatCache(chatId);
-    await Promise.all([this.settingsService.notifyChangesSaved(ctx), this.renderSettings(ctx, { chatId, skip })]);
+    await Promise.all([this.settingsService.notifyChangesSaved(ctx), this.renderSettings(ctx, { chatId })]);
   }
 }

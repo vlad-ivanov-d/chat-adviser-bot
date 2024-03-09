@@ -176,39 +176,20 @@ export const cbSettingsWithValueEditMessageTextPayload = {
   parse_mode: "HTML",
   reply_markup: {
     inline_keyboard: [
-      [
-        {
-          callback_data: `${TimeZoneAction.SAVE}?cId=${supergroup.id}&v=Europe%2FLondon`,
-          text: "GMT+0 Europe/London",
-        },
-      ],
+      [{ callback_data: `${TimeZoneAction.SAVE}?cId=${supergroup.id}&v=Europe%2FJersey`, text: "GMT+0 Europe/Jersey" }],
+      [{ callback_data: `${TimeZoneAction.SAVE}?cId=${supergroup.id}&v=Europe%2FLisbon`, text: "GMT+0 Europe/Lisbon" }],
+
+      [{ callback_data: `${TimeZoneAction.SAVE}?cId=${supergroup.id}&v=Europe%2FLondon`, text: "GMT+0 Europe/London" }],
       [
         {
           callback_data: `${TimeZoneAction.SAVE}?cId=${supergroup.id}&v=Africa%2FAlgiers`,
           text: "GMT+1 Africa/Algiers",
         },
       ],
+      [{ callback_data: `${TimeZoneAction.SAVE}?cId=${supergroup.id}&v=Africa%2FBangui`, text: "GMT+1 Africa/Bangui" }],
       [
-        {
-          callback_data: `${TimeZoneAction.SAVE}?cId=${supergroup.id}&v=Africa%2FBangui`,
-          text: "GMT+1 Africa/Bangui",
-        },
-      ],
-      [
-        {
-          callback_data: `${TimeZoneAction.SAVE}?cId=${supergroup.id}&v=Africa%2FBrazzaville`,
-          text: "GMT+1 Africa/Brazzaville",
-        },
-      ],
-      [
-        {
-          callback_data: `${TimeZoneAction.SAVE}?cId=${supergroup.id}&v=Africa%2FCasablanca`,
-          text: "GMT+1 Africa/Casablanca",
-        },
-      ],
-      [
-        { callback_data: `${TimeZoneAction.SETTINGS}?cId=${supergroup.id}&s=187`, text: "«" },
-        { callback_data: `${TimeZoneAction.SETTINGS}?cId=${supergroup.id}&s=197`, text: "»" },
+        { callback_data: `${TimeZoneAction.SETTINGS}?cId=${supergroup.id}&s=185`, text: "«" },
+        { callback_data: `${TimeZoneAction.SETTINGS}?cId=${supergroup.id}&s=195`, text: "»" },
       ],
       [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}`, text: backToFeaturesText }],
     ],

@@ -3,6 +3,7 @@
 ## 1.19.0 (2024-xx-xx)
 
 - Improvement: better formatting for voteban results
+- Fix: pagination in time zone settings
 - Other: internal improvements
 
 ## 1.18.0 (2024-02-29)
