@@ -143,7 +143,7 @@ export const cbNoBanWebhook = {
 
 /**
  * Payload for edit message text request. It should be sent as a result of save settings callback.
- * This fixture should be implemented via function to prevent issues related to dates.
+ * This should be implemented via function to prevent issues related to dates.
  * @returns Payload
  */
 export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({

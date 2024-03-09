@@ -104,7 +104,7 @@ export const cbSettingsWebhook = {
 
 /**
  * Webhook payload which contains save settings edit message payload.
- * This fixture should be implemented via function to prevent issues related to dates.
+ * This should be implemented via function to prevent issues related to dates.
  * @returns Payload
  */
 export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
