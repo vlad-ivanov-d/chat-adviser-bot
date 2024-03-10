@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.19.0 (2024-xx-xx)
+## 1.19.0 (2024-03-10)
 
 - Improvement: profanity filter now checks edited messages
 - Improvement: better formatting for voteban results
