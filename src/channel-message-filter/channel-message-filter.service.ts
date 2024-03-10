@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ChannelMessageFilterRule, ChatSettingName } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
 import { Ctx, Next, On, Update } from "nestjs-telegraf";
@@ -13,6 +13,8 @@ import { ChannelMessageFilterAction } from "./interfaces/action.interface";
 @Update()
 @Injectable()
 export class ChannelMessageFilterService {
+  private readonly logger = new Logger(ChannelMessageFilterService.name);
+
   /**
    * Creates service
    * @param prismaService Database service
@@ -50,14 +52,13 @@ export class ChannelMessageFilterService {
    */
   @On("message")
   public async filterMessage(@Ctx() ctx: MessageCtx, @Next() next: NextFunction): Promise<void> {
-    const { message: msg } = ctx.update;
-    const { chat, from, message_id: messageId, sender_chat: senderChat } = msg;
+    const { message } = ctx.update;
+    const { chat, from, message_id: messageId, sender_chat: senderChat } = message;
 
     if (
       !senderChat?.id || // Message from the user
       chat.id === senderChat.id || // Message from the admin
-      ("left_chat_member" in msg && msg.left_chat_member.id === ctx.botInfo.id) || // The bot is kicked
-      ("is_automatic_forward" in msg && msg.is_automatic_forward) // Message from the linked chat
+      "is_automatic_forward" in message // Message from the linked chat
     ) {
       await next();
       return;
@@ -81,7 +82,8 @@ export class ChannelMessageFilterService {
    */
   private async renderSettings(ctx: CallbackCtx, chatId: number, shouldAnswerCallback?: boolean): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Chat is not defined to render channel message filter settings
+      this.logger.error("Chat is not defined to render channel message filter settings");
+      return;
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
@@ -137,7 +139,8 @@ export class ChannelMessageFilterService {
    */
   private async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Chat is not defined to save channel message filter settings
+      this.logger.error("Chat is not defined to save channel message filter settings");
+      return;
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);

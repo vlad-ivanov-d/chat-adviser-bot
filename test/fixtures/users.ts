@@ -36,6 +36,11 @@ export const systemChannelBot: User = {
 };
 
 /**
+ * Telegram system user
+ */
+export const telegram: User = { first_name: "Telegram", id: 777000, is_bot: false };
+
+/**
  * Telegram user
  */
 export const user: User = {

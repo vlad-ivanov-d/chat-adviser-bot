@@ -22,7 +22,17 @@ describe("MessagesModule (e2e)", () => {
     await app.init();
   });
 
-  it("should save messages with media group id", async () => {
+  it("cleanups old saved messages at midnight", async () => {
+    await createDbSupergroupChat();
+    await prisma.message.create({ data: fixtures.oldSavedMessage, select: { id: true } });
+    await jest.advanceTimersByTimeAsync(24 * 60 * 60 * 1000); // 24h to run the daily cron job
+    await sleep(ASYNC_REQUEST_DELAY);
+
+    const savedMessages = await prisma.message.findMany();
+    expect(savedMessages.length).toBe(0);
+  });
+
+  it("saves messages with media group id", async () => {
     const response1 = await request(TEST_WEBHOOK_BASE_URL)
       .post(TEST_WEBHOOK_PATH)
       .send(fixtures.supergroupMessage1Webhook);
@@ -40,15 +50,5 @@ describe("MessagesModule (e2e)", () => {
         expect.objectContaining(fixtures.savedMessage2),
       ]),
     );
-  });
-
-  it("should cleanup old saved messages at midnight", async () => {
-    await createDbSupergroupChat();
-    await prisma.message.create({ data: fixtures.oldSavedMessage, select: { id: true } });
-    await jest.advanceTimersByTimeAsync(24 * 60 * 60 * 1000); // 24h to run the daily cron job
-    await sleep(ASYNC_REQUEST_DELAY);
-
-    const savedMessages = await prisma.message.findMany();
-    expect(savedMessages.length).toBe(0);
   });
 });

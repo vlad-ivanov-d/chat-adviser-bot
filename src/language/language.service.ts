@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ChatSettingName, LanguageCode } from "@prisma/client";
 import { changeLanguage, init, t } from "i18next";
 import { On, Update } from "nestjs-telegraf";
@@ -7,6 +7,7 @@ import { SettingsService } from "src/settings/settings.service";
 import { NextFunction } from "src/types/next-function";
 import { CallbackCtx } from "src/types/telegraf-context";
 import { buildCbData, getChatHtmlLink, parseCbData } from "src/utils/telegraf";
+import type { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 
 import { LanguageAction } from "./interfaces/action.interface";
 import { DEFAULT_NS } from "./language.constants";
@@ -16,6 +17,8 @@ import ru from "./translations/ru.json";
 @Update()
 @Injectable()
 export class LanguageService {
+  private readonly logger = new Logger(LanguageService.name);
+
   /**
    * Creates service
    * @param prismaService Database service
@@ -39,7 +42,7 @@ export class LanguageService {
         await this.saveSettings(ctx, chatId, value);
         break;
       case LanguageAction.SETTINGS:
-        await this.renderSettings(ctx, chatId);
+        await this.renderSettings(ctx, chatId, true);
         break;
       default:
         await next();
@@ -73,10 +76,12 @@ export class LanguageService {
    * Renders settings
    * @param ctx Callback context
    * @param chatId Id of the chat which is edited
+   * @param shouldAnswerCallback Answer callback query will be sent if true
    */
-  private async renderSettings(ctx: CallbackCtx, chatId: number): Promise<void> {
+  private async renderSettings(ctx: CallbackCtx, chatId: number, shouldAnswerCallback?: boolean): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      throw new Error("Chat is not defined to render language settings.");
+      this.logger.error("Chat is not defined to render language settings");
+      return;
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
@@ -87,41 +92,23 @@ export class LanguageService {
     }
 
     const chatLink = getChatHtmlLink(dbChat);
-    const value = this.getOptions().find((l) => l.code === dbChat.language)?.title ?? "";
+    const value = this.getOptions().find((l) => l.code === dbChat.language)?.title;
     const msg = t("language:select", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
-      ctx.answerCbQuery(),
+      shouldAnswerCallback && ctx.answerCbQuery(),
       ctx.editMessageText(this.prismaService.joinModifiedInfo(msg, ChatSettingName.LANGUAGE, dbChat), {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
-            [
-              {
-                callback_data: buildCbData({ action: LanguageAction.SAVE, chatId, value: LanguageCode.EN }),
-                text: this.getOptions().find((l) => l.code === LanguageCode.EN)?.title ?? "",
-              },
-            ],
-            [
-              {
-                callback_data: buildCbData({ action: LanguageAction.SAVE, chatId, value: LanguageCode.RU }),
-                text: this.getOptions().find((l) => l.code === LanguageCode.RU)?.title ?? "",
-              },
-            ],
+            ...this.getOptions().map((o): InlineKeyboardButton[] => [
+              { callback_data: buildCbData({ action: LanguageAction.SAVE, chatId, value: o.code }), text: o.title },
+            ]),
             this.settingsService.getBackToFeaturesButton(chatId),
           ],
         },
       }),
     ]).catch(() => undefined); // An expected error may happen if the message won't change during edit
-  }
-
-  /**
-   * Sanitizes language code
-   * @param value Value
-   * @returns Sanitized value
-   */
-  private sanitizeValue(value: string | null | undefined): LanguageCode {
-    return this.getOptions().find((l) => l.code === value)?.code ?? LanguageCode.EN;
   }
 
   /**
@@ -132,7 +119,8 @@ export class LanguageService {
    */
   private async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      throw new Error("Chat is not defined to save language settings.");
+      this.logger.error("Chat is not defined to save language settings");
+      return;
     }
 
     const { language: lng } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
@@ -142,7 +130,7 @@ export class LanguageService {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
-    const language = this.sanitizeValue(value);
+    const language = this.getOptions().find((l) => l.code === value)?.code ?? LanguageCode.EN;
 
     await this.prismaService.$transaction([
       this.prismaService.chat.update({ data: { language }, select: { id: true }, where: { id: chatId } }),

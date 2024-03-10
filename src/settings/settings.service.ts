@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ChatType } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
 import { Ctx, Hears, Next, On, Update } from "nestjs-telegraf";
@@ -22,6 +22,8 @@ import { SettingsAction } from "./interfaces/action.interface";
 @Update()
 @Injectable()
 export class SettingsService {
+  private readonly logger = new Logger(SettingsService.name);
+
   /**
    * Creates service
    * @param prismaService Database service
@@ -79,6 +81,7 @@ export class SettingsService {
       this.prismaService.upsertChatWithCache(ctx.chat, msg.from),
       this.prismaService.chat.findUnique({ select: { id: true, language: true }, where: { id: msg.from.id } }),
     ]);
+    this.logger.warn("The bot was added to a chat");
 
     const isBotAdded = "new_chat_members" in msg && msg.new_chat_members.some((m) => m.id === botId);
     const isChatCreated = "group_chat_created" in msg || "supergroup_chat_created" in msg;

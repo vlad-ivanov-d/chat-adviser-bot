@@ -20,7 +20,7 @@ describe("HelpModule (e2e)", () => {
     await app.init();
   });
 
-  it("should answer to /help command in a supergroup chat", async () => {
+  it("answers to /help command in a supergroup chat", async () => {
     let sendMessagePayload;
     server.use(
       http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
@@ -35,7 +35,7 @@ describe("HelpModule (e2e)", () => {
     expect(sendMessagePayload).toEqual(fixtures.supergroupSendMessagePayload);
   });
 
-  it("should answer to /start command in a private chat", async () => {
+  it("answers to /start command in a private chat", async () => {
     let sendMessagePayload;
     server.use(
       http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {

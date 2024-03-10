@@ -4,17 +4,26 @@ import { ChannelMessageFilterAction } from "src/channel-message-filter/interface
 import { SettingsAction } from "src/settings/interfaces/action.interface";
 
 import { channel, privateChat, supergroup } from "./chats";
-import { adminUser, bot, systemChannelBot } from "./users";
+import { adminUser, bot, systemChannelBot, telegram } from "./users";
 
 /**
- * Webhook response which contains answer callback query method.
- * It should be sent as a result of callback settings or save settings processing if the user is not an admin.
+ * Webhook payload contains channel message which is automatic forward in a supergroup chat
  */
-export const answerCbSettingsNotAdminWebhookResponse = {
-  callback_query_id: "1",
-  method: "answerCallbackQuery",
-  show_alert: true,
-  text: "Unfortunately, this action is no longer available to you.",
+export const autoForwardChannelMessageWebhook = {
+  message: {
+    chat: supergroup,
+    date: Date.now(),
+    forward_date: Date.now(),
+    forward_from_chat: channel,
+    forward_from_message_id: 1,
+    forward_origin: { chat: channel, date: Date.now(), message_id: 1, type: "channel" },
+    from: telegram,
+    is_automatic_forward: true,
+    message_id: 1,
+    sender_chat: channel,
+    text: "Hello",
+  },
+  update_id: 1,
 };
 
 /**
@@ -80,27 +89,6 @@ export const cbSettingsErrorWebhook = {
 };
 
 /**
- * Payload for edit message text request. It should be sent as a result of settings or save settings callback
- * if the user is not an admin.
- */
-export const cbSettingsNotAdminEditMessageTextPayload = {
-  chat_id: privateChat.id,
-  message_id: 1,
-  parse_mode: "HTML",
-  reply_markup: {
-    inline_keyboard: [
-      [{ callback_data: `${SettingsAction.FEATURES}?cId=${privateChat.id}`, text: `@${bot.username}` }],
-      [],
-      [{ callback_data: SettingsAction.REFRESH, text: "↻ Refresh the list" }],
-    ],
-  },
-  text:
-    "Below is a list of chats that are available to me, and where you are an administrator. Select the chat " +
-    "for which you want to change the settings.\n\nIf the list doesn't contain the chat you need, try " +
-    "writing any message in it and clicking the <b>↻ Refresh the list</b> button (the last button in this message).",
-};
-
-/**
  * Webhook payload which contains settings callback
  */
 export const cbSettingsWebhook = {
@@ -116,7 +104,7 @@ export const cbSettingsWebhook = {
 
 /**
  * Webhook payload which contains save settings edit message payload.
- * This fixture should be implemented via function to prevent issues related to dates.
+ * This should be implemented via function to prevent issues related to dates.
  * @returns Payload
  */
 export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({

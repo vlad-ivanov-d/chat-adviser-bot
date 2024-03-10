@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { ChatSettingName, type User } from "@prisma/client";
 import { changeLanguage, t, type TOptions } from "i18next";
@@ -26,6 +26,8 @@ import { EXPIRED_VOTEBAN_TIMEOUT } from "./voteban.constants";
 @Update()
 @Injectable()
 export class VotebanService {
+  private readonly logger = new Logger(VotebanService.name);
+
   /**
    * Creates service
    * @param prismaService Database service
@@ -79,8 +81,7 @@ export class VotebanService {
     const { from, message_id: messageId, sender_chat: fromSenderChat, reply_to_message: replyToMessage } = ctx.message;
     const candidate = replyToMessage?.from;
     const candidateSenderChat = replyToMessage?.sender_chat;
-    const isCandidateAutomaticForward =
-      !!replyToMessage && "is_automatic_forward" in replyToMessage && !!replyToMessage.is_automatic_forward;
+    const isCandidateAutomaticForward = !!replyToMessage && "is_automatic_forward" in replyToMessage;
 
     if (ctx.message.chat.type === "private") {
       await ctx.reply(t("common:commandNotForPrivateChats"));
@@ -193,7 +194,7 @@ export class VotebanService {
         result += link;
         continue;
       }
-      if (`${result}, ${link}`.length <= 2500) {
+      if (`${result}, ${link}`.length <= 2000) {
         result += `, ${link}`;
         continue;
       }
@@ -210,7 +211,8 @@ export class VotebanService {
   private async renderSettings(ctx: CallbackCtx, options: VotebanRenderSettingsOptions): Promise<void> {
     const { chatId, shouldAnswerCallback, value } = options;
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Chat is not defined to render voteban settings
+      this.logger.error("Chat is not defined to render voteban settings");
+      return;
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
@@ -287,7 +289,8 @@ export class VotebanService {
    */
   private async saveSettings(ctx: CallbackCtx, chatId: number, value: number): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Chat is not defined to save voteban settings
+      this.logger.error("Chat is not defined to save voteban settings");
+      return;
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
@@ -369,7 +372,7 @@ export class VotebanService {
           select: { id: true },
           where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
         }),
-        ctx.editMessageText([questionMsg, resultsMsg].join("\n\n"), { parse_mode: "HTML" }),
+        ctx.editMessageText([questionMsg, resultsMsg].join("\n\n———\n\n"), { parse_mode: "HTML" }),
         ctx.reply(t("voteban:completed"), { reply_parameters: { message_id: message.message_id } }),
         isBan && this.deleteMessages(ctx, candidateMessageId, candidateMediaGroupId),
         // An expected error may happen if there are no enough permissions
@@ -432,7 +435,7 @@ export class VotebanService {
 
     const { banVoters, id, noBanVoters } = voting;
     const { editorId } = chat;
-    if ((action === VotebanAction.BAN ? banVoters : noBanVoters).map((v) => v.authorId).includes(from.id)) {
+    if ((action === VotebanAction.BAN ? banVoters : noBanVoters).some((v) => v.authorId === from.id)) {
       await ctx.answerCbQuery(t("voteban:alreadyVoted"), { show_alert: true });
       return; // User has already voted, return.
     }

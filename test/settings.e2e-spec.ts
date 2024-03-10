@@ -21,44 +21,7 @@ describe("SettingsModule (e2e)", () => {
     await app.init();
   });
 
-  it("should not render chats as an answer to /mychats command in a supergroup chat", async () => {
-    let sendMessagePayload;
-    server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
-        sendMessagePayload = await info.request.json();
-        return HttpResponse.json({ ok: true });
-      }),
-    );
-
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
-      .send(fixtures.myChatsInSupergroupWebhook);
-
-    expect(response.status).toBe(200);
-    expect(sendMessagePayload).toEqual(fixtures.myChatsInSupergroupSendMessagePayload);
-  });
-
-  it("should prompt admin to make settings when adding the bot to a new chat", async () => {
-    await createDbPrivateChat();
-    let sendMessagePayload1: unknown;
-    let sendMessagePayload2: unknown;
-    server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
-        const body = await info.request.json();
-        sendMessagePayload2 = sendMessagePayload1 ? body : undefined;
-        sendMessagePayload1 = sendMessagePayload1 ?? body;
-        return HttpResponse.json({ ok: true });
-      }),
-    );
-
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.addedToNewChatWebhook);
-
-    expect(response.status).toBe(200);
-    expect(sendMessagePayload1).toEqual(fixtures.addedToNewChatSendMessagePayload1);
-    expect(sendMessagePayload2).toEqual(fixtures.addedToNewChatSendMessagePayload2);
-  });
-
-  it("should prompt admin to make settings when a new group chat has been created", async () => {
+  it("prompts admin to make settings when a new group chat has been created", async () => {
     await createDbPrivateChat();
     let sendMessagePayload1: unknown;
     let sendMessagePayload2: unknown;
@@ -81,7 +44,27 @@ describe("SettingsModule (e2e)", () => {
     expect(sendMessagePayload2).toEqual(fixtures.groupCreatedSendMessagePayload);
   });
 
-  it("should refresh chats", async () => {
+  it("prompts admin to make settings when adding the bot to a new chat", async () => {
+    await createDbPrivateChat();
+    let sendMessagePayload1: unknown;
+    let sendMessagePayload2: unknown;
+    server.use(
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+        const body = await info.request.json();
+        sendMessagePayload2 = sendMessagePayload1 ? body : undefined;
+        sendMessagePayload1 = sendMessagePayload1 ?? body;
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.addedToNewChatWebhook);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload1).toEqual(fixtures.addedToNewChatSendMessagePayload1);
+    expect(sendMessagePayload2).toEqual(fixtures.addedToNewChatSendMessagePayload2);
+  });
+
+  it("refreshes chats", async () => {
     let editMessageTextPayload;
     server.use(
       http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
@@ -97,7 +80,7 @@ describe("SettingsModule (e2e)", () => {
     expect(editMessageTextPayload).toEqual(fixtures.cbRefreshEditMessageTextPayload);
   });
 
-  it("should render chats as an answer to /mychats command in a private chat", async () => {
+  it("renders chats as an answer to /mychats command in a private chat", async () => {
     let sendMessagePayload;
     server.use(
       http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
@@ -114,7 +97,7 @@ describe("SettingsModule (e2e)", () => {
     expect(sendMessagePayload).toEqual(fixtures.myChatsInPrivateChatSendMessagePayload);
   });
 
-  it("should render the second page of chats", async () => {
+  it("renders the second page of chats", async () => {
     let editMessageTextPayload;
     server.use(
       http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
@@ -128,5 +111,22 @@ describe("SettingsModule (e2e)", () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ callback_query_id: "1", method: "answerCallbackQuery" });
     expect(editMessageTextPayload).toEqual(fixtures.cbChatsEditMessageTextPayload);
+  });
+
+  it("should not render chats as an answer to /mychats command in a supergroup chat", async () => {
+    let sendMessagePayload;
+    server.use(
+      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+        sendMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL)
+      .post(TEST_WEBHOOK_PATH)
+      .send(fixtures.myChatsInSupergroupWebhook);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload).toEqual(fixtures.myChatsInSupergroupSendMessagePayload);
   });
 });

@@ -81,6 +81,17 @@ export const answerCbSaveSettingsWebhookResponse = {
 };
 
 /**
+ * Webhook response which contains answer callback query method.
+ * It should be sent as a result of callback settings or save settings processing if the user is not an admin.
+ */
+export const answerCbSettingsNotAdminWebhookResponse = {
+  callback_query_id: "1",
+  method: "answerCallbackQuery",
+  show_alert: true,
+  text: "Unfortunately, this action is no longer available to you.",
+};
+
+/**
  * Payload for edit message text request. It should be sent as a result of chats callback.
  */
 export const cbChatsEditMessageTextPayload = {
@@ -153,6 +164,24 @@ export const cbRefreshWebhook = {
     },
   },
   update_id: 1,
+};
+
+/**
+ * Payload for edit message text request. It should be sent as a result of settings or save settings callback
+ * if the user is not an admin.
+ */
+export const cbSettingsNotAdminEditMessageTextPayload = {
+  chat_id: privateChat.id,
+  message_id: 1,
+  parse_mode: "HTML",
+  reply_markup: {
+    inline_keyboard: [
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${privateChat.id}`, text: `@${bot.username}` }],
+      [],
+      [{ callback_data: SettingsAction.REFRESH, text: "↻ Refresh the list" }],
+    ],
+  },
+  text: chatsText,
 };
 
 /**

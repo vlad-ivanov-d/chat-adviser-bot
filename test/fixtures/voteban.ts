@@ -58,8 +58,8 @@ export const cbBanEditMessageTextPayload = {
   parse_mode: "HTML",
   text:
     `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a> offers to ban ` +
-    `<a href="tg:user?id=${user.id}">@${user.username}</a>. This requires 2 votes. ` +
-    `Do you want to ban <a href="tg:user?id=${user.id}">@${user.username}</a>?\n\nDecided: <b>ban</b>.\n\n` +
+    `<a href="tg:user?id=${user.id}">@${user.username}</a>. This requires 2 votes.\n\n` +
+    `Do you want to ban <a href="tg:user?id=${user.id}">@${user.username}</a>?\n\n———\n\nDecided: <b>ban</b>.\n\n` +
     `Voted for ban: <a href="tg:user?id=${user.id}">@${user.username}</a>, ` +
     `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>.`,
 };
@@ -95,7 +95,7 @@ export const cbCancelledEditMessageTextPayload = {
   parse_mode: "HTML",
   text:
     `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a> offers to ban ` +
-    `<a href="tg:user?id=${user.id}">@${user.username}</a>. Do you want to ban ` +
+    `<a href="tg:user?id=${user.id}">@${user.username}</a>.\n\nDo you want to ban ` +
     `<a href="tg:user?id=${user.id}">@${user.username}</a>?\n\n<b>Voting has been cancelled.</b> ` +
     "Ban Voting feature is disabled.",
 };
@@ -115,7 +115,7 @@ export const cbNoBanEditMessageTextPayload = {
   },
   text:
     `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a> offers to ban ` +
-    `<a href="tg:user?id=${user.id}">@${user.username}</a>. This requires 2 votes. ` +
+    `<a href="tg:user?id=${user.id}">@${user.username}</a>. This requires 2 votes.\n\n` +
     `Do you want to ban <a href="tg:user?id=${user.id}">@${user.username}</a>?`,
 };
 
@@ -143,7 +143,7 @@ export const cbNoBanWebhook = {
 
 /**
  * Payload for edit message text request. It should be sent as a result of save settings callback.
- * This fixture should be implemented via function to prevent issues related to dates.
+ * This should be implemented via function to prevent issues related to dates.
  * @returns Payload
  */
 export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
@@ -331,7 +331,7 @@ export const votebanSendMessagePayload = {
   reply_parameters: { allow_sending_without_reply: true, message_id: 1 },
   text:
     `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a> offers to ban ` +
-    `<a href="tg:user?id=${user.id}">@${user.username}</a>. This requires 2 votes. ` +
+    `<a href="tg:user?id=${user.id}">@${user.username}</a>. This requires 2 votes.\n\n` +
     `Do you want to ban <a href="tg:user?id=${user.id}">@${user.username}</a>?`,
 };
 

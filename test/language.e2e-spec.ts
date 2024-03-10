@@ -6,7 +6,7 @@ import type { App } from "supertest/types";
 import { server } from "test/utils/server";
 
 import { AppModule } from "../src/app.module";
-import * as fixtures from "./fixtures/channel-message-filter";
+import * as fixtures from "./fixtures/language";
 import * as settingsFixtures from "./fixtures/settings";
 import {
   ASYNC_REQUEST_DELAY,
@@ -17,7 +17,7 @@ import {
 import { createDbSupergroupChat } from "./utils/database";
 import { sleep } from "./utils/sleep";
 
-describe("ChannelMessageFilterModule (e2e)", () => {
+describe("LanguageModule (e2e)", () => {
   let app: INestApplication<App>;
 
   afterEach(() => app.close());
@@ -26,22 +26,6 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     const moduleFixture = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = moduleFixture.createNestApplication();
     await app.init();
-  });
-
-  it("filters channel messages in a new supergroup chat", async () => {
-    let banChatSenderChatPayload;
-    server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/banChatSenderChat`, async (info) => {
-        banChatSenderChatPayload = await info.request.json();
-        return new HttpResponse(null, { status: 400 });
-      }),
-    );
-
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.channelMessageWebhook);
-
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual(fixtures.deleteMessageWebhookResponse);
-    expect(banChatSenderChatPayload).toEqual(fixtures.banSenderChatPayload);
   });
 
   it("handles an error if chat id is incorrect during settings rendering", async () => {
@@ -91,40 +75,24 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayload());
   });
 
-  it("should not filter channel messages if it's from the linked channel", async () => {
+  it("saves settings with sanitized value", async () => {
     await createDbSupergroupChat();
-    let banChatSenderChatPayload;
+    let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/banChatSenderChat`, async (info) => {
-        banChatSenderChatPayload = await info.request.json();
+      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+        editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
     const response = await request(TEST_WEBHOOK_BASE_URL)
       .post(TEST_WEBHOOK_PATH)
-      .send(fixtures.autoForwardChannelMessageWebhook);
+      .send(fixtures.cbSaveIncorrectValueSettingsWebhook);
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({});
-    expect(banChatSenderChatPayload).toBeUndefined();
-  });
-
-  it("should not filter channel messages if the feature is disabled", async () => {
-    await createDbSupergroupChat();
-    let banChatSenderChatPayload;
-    server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/banChatSenderChat`, async (info) => {
-        banChatSenderChatPayload = await info.request.json();
-        return HttpResponse.json({ ok: true });
-      }),
-    );
-
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.channelMessageWebhook);
-
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({});
-    expect(banChatSenderChatPayload).toBeUndefined();
+    expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
+    await sleep(ASYNC_REQUEST_DELAY);
+    expect(editMessageTextPayload).toEqual(fixtures.cbSaveIncorrectValueSettingsEditMessageTextPayload());
   });
 
   it("should not render settings if the user is not an admin", async () => {

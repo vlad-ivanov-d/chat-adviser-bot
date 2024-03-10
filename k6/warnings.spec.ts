@@ -3,14 +3,25 @@ import http from "k6/http";
 import * as fixtures from "test/fixtures/warnings";
 
 import { K6_WEBHOOK_URL } from "./utils/constants";
-import { options } from "./utils/options";
-
-export { options };
 
 /**
- * Virtual user code
+ * Test options
  */
-export default (): void => {
+export const options = {
+  discardResponseBodies: true,
+  scenarios: {
+    warn: { duration: "10s", exec: "warn", executor: "constant-vus", vus: 50 },
+  },
+  thresholds: {
+    checks: ["rate===1"], // 100% of successful checks
+    http_req_duration: ["p(100)<300"], // 100% of requests should be below 300ms
+  },
+};
+
+/**
+ * It should issue a warning
+ */
+export const warn = (): void => {
   const res = http.post(K6_WEBHOOK_URL, JSON.stringify(fixtures.warnWebhook));
   check(res, {
     /**

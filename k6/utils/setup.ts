@@ -19,10 +19,6 @@ import { server } from "./server";
  * @returns Promise
  */
 const runTest = async (fileName: string): Promise<void> => {
-  // Show test file name
-  // eslint-disable-next-line no-console
-  console.log(fileName);
-
   for (const distFileName of readdirSync("k6/dist")) {
     if (distFileName === fileName) {
       const testProcess = spawn("docker", [

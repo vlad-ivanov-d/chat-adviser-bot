@@ -22,7 +22,7 @@ describe("CleanupModule (e2e)", () => {
     await app.init();
   });
 
-  it("should cleanup unused private chats and users at midnight", async () => {
+  it("cleanups unused private chats and users at midnight", async () => {
     await createDbPrivateChat();
     await jest.advanceTimersByTimeAsync(24 * 60 * 60 * 1000); // 24h to run the daily cron job
     await sleep(ASYNC_REQUEST_DELAY);
@@ -31,7 +31,7 @@ describe("CleanupModule (e2e)", () => {
     expect(chats.length).toBe(0);
   });
 
-  it("should delete the chat in database if the bot was kicked", async () => {
+  it("deletes the chat in database if the bot was kicked", async () => {
     await createDbSupergroupChat();
 
     // This event contains 2 separate updates

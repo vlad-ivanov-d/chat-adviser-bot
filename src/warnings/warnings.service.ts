@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { ChatSettingName, type Prisma } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
@@ -15,6 +15,8 @@ import { DELETE_MESSAGE_DELAY, OUTDATED_WARNING_TIMEOUT, WARNINGS_LIMIT } from "
 @Update()
 @Injectable()
 export class WarningsService {
+  private readonly logger = new Logger(WarningsService.name);
+
   /**
    * Creates service
    * @param prismaService Database service
@@ -62,8 +64,7 @@ export class WarningsService {
     const { from, message_id: messageId, reply_to_message: replyToMessage, sender_chat: senderChat } = ctx.message;
     const candidate = replyToMessage?.from;
     const candidateSenderChat = replyToMessage?.sender_chat;
-    const isCandidateAutomaticForward =
-      !!replyToMessage && "is_automatic_forward" in replyToMessage && !!replyToMessage.is_automatic_forward;
+    const isCandidateAutomaticForward = !!replyToMessage && "is_automatic_forward" in replyToMessage;
 
     if (ctx.message.chat.type === "private") {
       await ctx.reply(t("common:commandNotForPrivateChats"));
@@ -193,8 +194,7 @@ export class WarningsService {
         }),
       ]);
       if (isChatMemberBanned || isSenderChatBanned) {
-        const msg = t("warnings:banned", { USER: candidateLink });
-        await ctx.reply(msg, { parse_mode: "HTML", reply_parameters: { message_id: replyMessageId } });
+        await ctx.reply(t("warnings:banned"), { parse_mode: "HTML", reply_parameters: { message_id: replyMessageId } });
       }
     }
   }
@@ -216,7 +216,8 @@ export class WarningsService {
    */
   private async renderSettings(ctx: CallbackCtx, chatId: number, shouldAnswerCallback?: boolean): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Chat is not defined to render warnings settings
+      this.logger.error("Chat is not defined to render warnings settings");
+      return;
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
@@ -271,7 +272,8 @@ export class WarningsService {
    */
   private async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      return; // Chat is not defined to save warnings settings
+      this.logger.error("Chat is not defined to save warnings settings");
+      return;
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
