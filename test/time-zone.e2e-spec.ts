@@ -1,13 +1,19 @@
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
+import { formatInTimeZone } from "date-fns-tz";
 import { http, HttpResponse } from "msw";
+import { DATE_FORMAT } from "src/app.constants";
+import { SettingsAction } from "src/settings/interfaces/action.interface";
+import { TimeZoneAction } from "src/time-zone/interfaces/action.interface";
 import request from "supertest";
 import type { App } from "supertest/types";
 import { server } from "test/utils/server";
 
 import { AppModule } from "../src/app.module";
+import { privateChat, supergroup } from "./fixtures/chats";
 import * as settingsFixtures from "./fixtures/settings";
 import * as fixtures from "./fixtures/time-zone";
+import { adminUser } from "./fixtures/users";
 import {
   ASYNC_REQUEST_DELAY,
   TELEGRAM_API_BASE_URL,
@@ -54,7 +60,26 @@ describe("TimeZoneModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ callback_query_id: "1", method: "answerCallbackQuery" });
-    expect(editMessageTextPayload).toEqual(fixtures.cbSettingsEditMessageTextPayload);
+    expect(editMessageTextPayload).toEqual({
+      chat_id: privateChat.id,
+      message_id: 1,
+      parse_mode: "HTML",
+      reply_markup: {
+        inline_keyboard: [
+          expect.arrayContaining([]),
+          expect.arrayContaining([]),
+          expect.arrayContaining([]),
+          expect.arrayContaining([]),
+          expect.arrayContaining([]),
+          [{ callback_data: `${TimeZoneAction.SETTINGS}?cId=${supergroup.id}&s=5`, text: "»" }],
+          [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}`, text: fixtures.backToFeaturesText }],
+        ],
+      },
+      text:
+        "<b>Time Zone</b>\n" +
+        "I can work in different time zones and display dates in the appropriate format.\n\n" +
+        `Select a time zone for @${supergroup.username} chat.\n\nCurrent time zone: <b>GMT+0 UTC</b>`,
+    });
   });
 
   it("renders specific page of settings if the time zone has already been selected", async () => {
@@ -71,7 +96,23 @@ describe("TimeZoneModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ callback_query_id: "1", method: "answerCallbackQuery" });
-    expect(editMessageTextPayload).toEqual(fixtures.cbSettingsWithValueEditMessageTextPayload);
+    expect(editMessageTextPayload).toEqual({
+      chat_id: privateChat.id,
+      message_id: 1,
+      parse_mode: "HTML",
+      reply_markup: {
+        // Necessary for expectations
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        inline_keyboard: expect.arrayContaining([
+          [expect.objectContaining({ callback_data: `${TimeZoneAction.SAVE}?cId=${supergroup.id}&v=Europe%2FLondon` })],
+          [expect.objectContaining({ text: "«" }), expect.objectContaining({ text: "»" })],
+          [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}`, text: fixtures.backToFeaturesText }],
+        ]),
+      },
+      text:
+        "<b>Time Zone</b>\nI can work in different time zones and display dates in the appropriate format.\n\n" +
+        `Select a time zone for @${supergroup.username} chat.\n\nCurrent time zone: <b>GMT+0 Europe/London</b>`,
+    });
   });
 
   it("saves settings", async () => {
@@ -89,7 +130,26 @@ describe("TimeZoneModule (e2e)", () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
     await sleep(ASYNC_REQUEST_DELAY);
-    expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayload());
+    expect(editMessageTextPayload).toEqual({
+      chat_id: privateChat.id,
+      message_id: 1,
+      parse_mode: "HTML",
+      reply_markup: {
+        // Necessary for expectations
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        inline_keyboard: expect.arrayContaining([
+          [expect.objectContaining({ callback_data: `${TimeZoneAction.SAVE}?cId=${supergroup.id}&v=Europe%2FLondon` })],
+          [expect.objectContaining({ text: "«" }), expect.objectContaining({ text: "»" })],
+          [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}`, text: fixtures.backToFeaturesText }],
+        ]),
+      },
+      text:
+        "<b>Time Zone</b>\n" +
+        "I can work in different time zones and display dates in the appropriate format.\n\n" +
+        `Select a time zone for @${supergroup.username} chat.\n\nCurrent time zone: <b>GMT+0 Europe/London</b>\n` +
+        `Modified at ${formatInTimeZone(Date.now(), "Europe/London", DATE_FORMAT)} ` +
+        `by <a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>`,
+    });
   });
 
   it("saves settings with sanitized value", async () => {
@@ -109,7 +169,27 @@ describe("TimeZoneModule (e2e)", () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
     await sleep(ASYNC_REQUEST_DELAY);
-    expect(editMessageTextPayload).toEqual(fixtures.cbSaveIncorrectValueSettingsEditMessageTextPayload());
+    expect(editMessageTextPayload).toEqual({
+      chat_id: privateChat.id,
+      message_id: 1,
+      parse_mode: "HTML",
+      reply_markup: {
+        inline_keyboard: [
+          expect.arrayContaining([]),
+          expect.arrayContaining([]),
+          expect.arrayContaining([]),
+          expect.arrayContaining([]),
+          expect.arrayContaining([]),
+          [{ callback_data: `${TimeZoneAction.SETTINGS}?cId=${supergroup.id}&s=5`, text: "»" }],
+          [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}`, text: fixtures.backToFeaturesText }],
+        ],
+      },
+      text:
+        "<b>Time Zone</b>\nI can work in different time zones and display dates in the appropriate format.\n\n" +
+        `Select a time zone for @${supergroup.username} chat.\n\nCurrent time zone: <b>GMT+0 Etc/UTC</b>\n` +
+        `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
+        `by <a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>`,
+    });
   });
 
   it("should not render settings if the user is not an admin", async () => {
