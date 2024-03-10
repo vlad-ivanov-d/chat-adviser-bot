@@ -52,13 +52,13 @@ export class ChannelMessageFilterService {
    */
   @On("message")
   public async filterMessage(@Ctx() ctx: MessageCtx, @Next() next: NextFunction): Promise<void> {
-    const { message: msg } = ctx.update;
-    const { chat, from, message_id: messageId, sender_chat: senderChat } = msg;
+    const { message } = ctx.update;
+    const { chat, from, message_id: messageId, sender_chat: senderChat } = message;
 
     if (
       !senderChat?.id || // Message from the user
       chat.id === senderChat.id || // Message from the admin
-      ("is_automatic_forward" in msg && msg.is_automatic_forward) // Message from the linked chat
+      "is_automatic_forward" in message // Message from the linked chat
     ) {
       await next();
       return;

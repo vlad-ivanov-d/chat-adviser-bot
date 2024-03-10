@@ -7,7 +7,7 @@ import { Ctx, Next, On, Update } from "nestjs-telegraf";
 import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
 import { NextFunction } from "src/types/next-function";
-import { CallbackCtx, MessageCtx } from "src/types/telegraf-context";
+import { CallbackCtx, type EditedMessageCtx, type MessageCtx } from "src/types/telegraf-context";
 import { Profanity } from "src/utils/profanity";
 import { buildCbData, getChatHtmlLink, getUserFullName, parseCbData } from "src/utils/telegraf";
 
@@ -55,18 +55,18 @@ export class ProfanityFilterService {
    * @param ctx Message context
    * @param next Function to continue processing
    */
-  @On("message")
-  public async filterMessage(@Ctx() ctx: MessageCtx, @Next() next: NextFunction): Promise<void> {
-    const { message: msg } = ctx.update;
-    const { chat, from, message_id: messageId, sender_chat: senderChat } = msg;
+  @On(["edited_message", "message"])
+  public async filterMessage(@Ctx() ctx: EditedMessageCtx | MessageCtx, @Next() next: NextFunction): Promise<void> {
+    const message = "message" in ctx.update ? ctx.update.message : ctx.update.edited_message;
+    const { chat, from, message_id: messageId, sender_chat: senderChat } = message;
 
-    if ("is_automatic_forward" in msg && msg.is_automatic_forward) {
+    if ("is_automatic_forward" in message) {
       // Message from linked chat
       await next();
       return;
     }
 
-    if ("left_chat_member" in msg && msg.left_chat_member.id === ctx.botInfo.id) {
+    if ("left_chat_member" in message && message.left_chat_member.id === ctx.botInfo.id) {
       // The bot is kicked from the chat
       await next();
       return;
@@ -82,7 +82,7 @@ export class ProfanityFilterService {
       return;
     }
 
-    const stringsToFilter = this.getStringsToFilter(ctx);
+    const stringsToFilter = this.getStringsToFilter(message);
     const profaneWords = await this.cacheManager.wrap(
       WORDS_CACHE_KEY,
       () => this.prismaService.profaneWord.findMany({ select: { word: true } }),
@@ -102,7 +102,7 @@ export class ProfanityFilterService {
     ) {
       // An expected error may happen if there are no enough permissions
       const isDeleted = await ctx.deleteMessage(messageId).catch(() => false);
-      if (isDeleted && !("new_chat_members" in msg)) {
+      if (isDeleted && !("new_chat_members" in message)) {
         return; // Do not continue processing if the message is deleted and it's not the new_chat_member event.
       }
     }
@@ -112,11 +112,13 @@ export class ProfanityFilterService {
 
   /**
    * Gets strings from the forwarded message which should be checked by profanity filter
-   * @param ctx Message context
+   * @param message Message
    * @returns Object with strings which should be checked by profanity filter
    */
-  private getForwardRelatedStringsToFilter(ctx: MessageCtx): ForwardFilterStrings {
-    const forwardOrigin = "forward_origin" in ctx.update.message ? ctx.update.message.forward_origin : undefined;
+  private getForwardRelatedStringsToFilter(
+    message: EditedMessageCtx["update"]["edited_message"] | MessageCtx["update"]["message"],
+  ): ForwardFilterStrings {
+    const forwardOrigin = "forward_origin" in message ? message.forward_origin : undefined;
     const forwardOriginChat = forwardOrigin && "chat" in forwardOrigin ? forwardOrigin.chat : undefined;
     const forwardOriginSenderChat =
       forwardOrigin && "sender_chat" in forwardOrigin ? forwardOrigin.sender_chat : undefined;
@@ -142,40 +144,44 @@ export class ProfanityFilterService {
 
   /**
    * Gets message text from context
-   * @param ctx Message context
+   * @param message Message
    * @returns Message text
    */
-  private getMessageText(ctx: MessageCtx): string {
-    if ("caption" in ctx.update.message) {
-      return ctx.update.message.caption ?? "";
+  private getMessageText(
+    message: EditedMessageCtx["update"]["edited_message"] | MessageCtx["update"]["message"],
+  ): string {
+    if ("caption" in message) {
+      return message.caption ?? "";
     }
-    if ("left_chat_member" in ctx.update.message) {
-      return getUserFullName(ctx.update.message.left_chat_member);
+    if ("left_chat_member" in message) {
+      return getUserFullName(message.left_chat_member);
     }
-    if ("new_chat_members" in ctx.update.message) {
-      return ctx.update.message.new_chat_members.map(getUserFullName).join(", ");
+    if ("new_chat_members" in message) {
+      return message.new_chat_members.map(getUserFullName).join(", ");
     }
-    if ("poll" in ctx.update.message) {
-      return [ctx.update.message.poll.question, ...ctx.update.message.poll.options.map((o) => o.text)].join("\n");
+    if ("poll" in message) {
+      return [message.poll.question, ...message.poll.options.map((o) => o.text)].join("\n");
     }
-    if ("text" in ctx.update.message) {
-      return ctx.update.message.text;
+    if ("text" in message) {
+      return message.text;
     }
     return "";
   }
 
   /**
    * Gets strings which should be checked by profanity filter
-   * @param ctx Message context
+   * @param message Message
    * @returns Object with strings which should be checked by profanity filter
    */
-  private getStringsToFilter(ctx: MessageCtx): FilterStrings {
-    const { from, sender_chat: senderChat } = ctx.update.message;
+  private getStringsToFilter(
+    message: EditedMessageCtx["update"]["edited_message"] | MessageCtx["update"]["message"],
+  ): FilterStrings {
+    const { from, sender_chat: senderChat } = message;
     return {
-      ...this.getForwardRelatedStringsToFilter(ctx),
+      ...this.getForwardRelatedStringsToFilter(message),
       senderChatTitle: senderChat && "title" in senderChat ? senderChat.title : "",
       senderChatUserName: senderChat && "username" in senderChat ? senderChat.username ?? "" : "",
-      text: this.getMessageText(ctx),
+      text: this.getMessageText(message),
       userFullName: getUserFullName(from),
       username: from.username ?? "",
     };

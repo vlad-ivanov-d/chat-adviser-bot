@@ -81,8 +81,7 @@ export class VotebanService {
     const { from, message_id: messageId, sender_chat: fromSenderChat, reply_to_message: replyToMessage } = ctx.message;
     const candidate = replyToMessage?.from;
     const candidateSenderChat = replyToMessage?.sender_chat;
-    const isCandidateAutomaticForward =
-      !!replyToMessage && "is_automatic_forward" in replyToMessage && !!replyToMessage.is_automatic_forward;
+    const isCandidateAutomaticForward = !!replyToMessage && "is_automatic_forward" in replyToMessage;
 
     if (ctx.message.chat.type === "private") {
       await ctx.reply(t("common:commandNotForPrivateChats"));

@@ -2,6 +2,7 @@
 
 ## 1.19.0 (2024-xx-xx)
 
+- Improvement: profanity filter now checks edited messages
 - Improvement: better formatting for voteban results
 - Fix: pagination in time zone settings
 - Other: internal improvements
