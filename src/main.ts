@@ -15,12 +15,9 @@ const bootstrap = async (): Promise<void> => {
           format: format.combine(
             format((info) => ({ ...info, level: info.level.toUpperCase().padStart(7, " ") }))(),
             format.colorize({ all: true }),
-            format.ms(),
             format.timestamp({ format: "MM/DD/YYYY, hh:mm:ss A" }),
             format.printf(
-              (info) =>
-                `[Nest] - ${info.timestamp} ${info.level} ` +
-                `\u001b[33m[${info.context}]\x1b[0m ${info.message} \u001b[33m${info.ms}\x1b[0m`,
+              (info) => `[Nest] - ${info.timestamp} ${info.level} \u001b[33m[${info.context}]\x1b[0m ${info.message}`,
             ),
           ),
         }),
