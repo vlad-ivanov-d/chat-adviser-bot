@@ -1,4 +1,4 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, type OnModuleInit } from "@nestjs/common";
 import { ChatSettingName, LanguageCode } from "@prisma/client";
 import { changeLanguage, init, t } from "i18next";
 import { On, Update } from "nestjs-telegraf";
@@ -16,7 +16,7 @@ import ru from "./translations/ru.json";
 
 @Update()
 @Injectable()
-export class LanguageService {
+export class LanguageService implements OnModuleInit {
   private readonly logger = new Logger(LanguageService.name);
 
   /**

@@ -5,6 +5,7 @@ import { ScheduleModule } from "@nestjs/schedule";
 import { TelegrafModule } from "nestjs-telegraf";
 
 import { AddingBotsModule } from "./adding-bots/adding-bots.module";
+import { AppService } from "./app.service";
 import { ChannelMessageFilterModule } from "./channel-message-filter/channel-message-filter.module";
 import { CleanupModule } from "./cleanup/cleanup.module";
 import { HelpModule } from "./help/help.module";
@@ -56,5 +57,6 @@ import { WarningsModule } from "./warnings/warnings.module";
     VotebanModule,
     WarningsModule,
   ],
+  providers: [AppService],
 })
 export class AppModule {}
