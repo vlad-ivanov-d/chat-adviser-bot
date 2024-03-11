@@ -8,18 +8,15 @@ export const privateHelpSendMessagePayload = {
   chat_id: privateChat.id,
   parse_mode: "HTML",
   text:
-    "Hello! I'm a bot that helps to moderate chats.\n" +
-    "\n" +
+    "Hello! I'm a bot that helps to moderate chats.\n\n" +
     "<b>Getting started:</b>\n" +
     "1. add me to chat\n" +
     "2. give me administrator permissions\n" +
     `3. send a <a href="tg:user?id=${bot.id}">private message</a> command /mychats and I will help you set up ` +
-    "your chat\n" +
-    "\n" +
+    "your chat\n\n" +
     "<b>Feature list:</b> ban voting, profanity filter, restriction on adding bots, support for different " +
     "languages, etc.\n" +
-    "I'll tell about each feature in more detail during setup.\n" +
-    "\n" +
+    "I'll tell about each feature in more detail during setup.\n\n" +
     "You can call this message again at any time using the /help command.",
 };
 
