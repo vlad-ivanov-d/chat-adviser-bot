@@ -1,6 +1,5 @@
 {
   "rules": {
-    "import/no-default-export": "off", // k6 uses default export
     "@typescript-eslint/naming-convention": [
       "error",
       { "format": ["UPPER_CASE", "strictCamelCase"], "selector": "default" },

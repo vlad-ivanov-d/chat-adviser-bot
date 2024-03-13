@@ -2,7 +2,7 @@ import { check, sleep } from "k6";
 import http from "k6/http";
 import * as fixtures from "test/fixtures/channel-message-filter";
 
-import { K6_WEBHOOK_URL } from "./utils/constants";
+import { K6_SLEEP_DURATION, K6_WEBHOOK_URL } from "./utils/constants";
 
 /**
  * Test options
@@ -31,5 +31,5 @@ export const channelMessageFilter = (): void => {
      */
     "is status 200": (r) => r.status === 200,
   });
-  sleep(1);
+  sleep(K6_SLEEP_DURATION);
 };
