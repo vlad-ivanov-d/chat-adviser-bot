@@ -168,7 +168,7 @@ export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
     "<b>Ban Voting</b>\nI can run votes to ban a user in a chat. The user will be banned and their message deleted " +
     "if the appropriate number of votes is reached. This feature will help users ban the violator when " +
     "administrators are offline. Messages sent more than 48 hours ago won't be deleted according to Telegram rules.\n" +
-    "/voteban - start voting (can be used without the slash)\n\n<b>Tip:</b> Don't set your vote limit too low. " +
+    "\n/voteban - start voting (can be used without the slash)\n\n<b>Tip:</b> Don't set your vote limit too low. " +
     "Otherwise, a user who has several accounts will be able to single-handedly collect the required number of votes " +
     `and ban other chat members.\n\nSet the vote limit for making a decision in @${supergroup.username} chat. ` +
     "If set a value less than 2, the feature will be disabled.\n\nCurrent value: <b>3</b>\n" +
@@ -243,7 +243,7 @@ export const cbSettingsEditMessageTextPayload = {
     "<b>Ban Voting</b>\nI can run votes to ban a user in a chat. The user will be banned and their " +
     "message deleted if the appropriate number of votes is reached. This feature will help users ban the violator " +
     "when administrators are offline. Messages sent more than 48 hours ago won't be deleted according to " +
-    "Telegram rules.\n/voteban - start voting (can be used without the slash)\n\n<b>Tip:</b> " +
+    "Telegram rules.\n\n/voteban - start voting (can be used without the slash)\n\n<b>Tip:</b> " +
     "Don't set your vote limit too low. Otherwise, a user who has several accounts will be able to single-handedly " +
     "collect the required number of votes and ban other chat members.\n\nSet the vote limit for making a decision " +
     `in @${supergroup.username} chat. If set a value less than 2, the feature will be disabled.\n\n` +
