@@ -42,9 +42,9 @@ describe("HelpService", () => {
   });
 
   it("answers to /help command in a supergroup chat", async () => {
-    const replySpy = jest.fn();
-    const ctx = mockTextMessageCtx({ reply: replySpy });
     prismaService.upsertChatWithCache = jest.fn().mockReturnValueOnce({ language: LanguageCode.EN });
+    const ctx = mockTextMessageCtx();
+    const replySpy = jest.spyOn(ctx, "reply");
 
     await service.helpCommand(ctx);
 
