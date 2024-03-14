@@ -8,7 +8,6 @@ import { mockTextMessageCtx } from "__mocks__/telegraf-context";
 import { bot } from "fixtures/users";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { PrismaService } from "src/prisma/prisma.service";
-import type { TextMessageCtx } from "src/types/telegraf-context";
 import { store } from "src/utils/redis";
 
 import { HelpService } from "./help.service";
@@ -44,7 +43,7 @@ describe("HelpService", () => {
 
   it("answers to /help command in a supergroup chat", async () => {
     const replySpy = jest.fn();
-    const ctx: TextMessageCtx = mockTextMessageCtx({ reply: replySpy });
+    const ctx = mockTextMessageCtx({ reply: replySpy });
     prismaService.upsertChatWithCache = jest.fn().mockReturnValueOnce({ language: LanguageCode.EN });
 
     await service.helpCommand(ctx);
