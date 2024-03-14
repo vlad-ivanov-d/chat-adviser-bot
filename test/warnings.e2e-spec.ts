@@ -3,20 +3,21 @@ import { Test } from "@nestjs/testing";
 import { http, HttpResponse } from "msw";
 import request from "supertest";
 import type { App } from "supertest/types";
-import { server } from "test/utils/server";
 
-import { AppModule } from "../src/app.module";
-import { channel, privateChat, supergroup } from "./fixtures/chats";
-import * as settingsFixtures from "./fixtures/settings";
-import { adminUser, bot, systemChannelBot, user } from "./fixtures/users";
-import * as fixtures from "./fixtures/warnings";
+import { channel, privateChat, supergroup } from "fixtures/chats";
+import * as settingsFixtures from "fixtures/settings";
+import { adminUser, bot, systemChannelBot, user } from "fixtures/users";
+import * as fixtures from "fixtures/warnings";
+import { AppModule } from "src/app.module";
+
 import {
-  ASYNC_REQUEST_DELAY,
-  TELEGRAM_API_BASE_URL,
+  TEST_ASYNC_DELAY,
+  TEST_TELEGRAM_API_BASE_URL,
   TEST_WEBHOOK_BASE_URL,
   TEST_WEBHOOK_PATH,
 } from "./utils/constants";
 import { createDbSupergroupChat, createDbUser, prisma } from "./utils/database";
+import { server } from "./utils/server";
 import { sleep } from "./utils/sleep";
 
 describe("WarningsModule (e2e)", () => {
@@ -51,15 +52,15 @@ describe("WarningsModule (e2e)", () => {
     let sendMessagePayload1: unknown;
     let sendMessagePayload2: unknown;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/banChatMember`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/banChatMember`, async (info) => {
         banChatMemberPayload = await info.request.json();
         return HttpResponse.json({ ok: true, result: true });
       }),
-      http.post(`${TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
         deleteMessagesPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         const body = await info.request.json();
         sendMessagePayload2 = sendMessagePayload1 ? body : undefined;
         sendMessagePayload1 = sendMessagePayload1 ?? body;
@@ -71,13 +72,13 @@ describe("WarningsModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ chat_id: supergroup.id, message_id: 4, method: "deleteMessage" });
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(banChatMemberPayload).toEqual({ chat_id: supergroup.id, user_id: user.id });
     expect(sendMessagePayload1).toEqual(fixtures.warnSendMessagePayload);
     expect(sendMessagePayload2).toEqual(fixtures.banSendMessagePayload);
 
     jest.runOnlyPendingTimers();
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(deleteMessagesPayload).toEqual({ chat_id: supergroup.id, message_ids: [3, 2] });
   });
 
@@ -121,15 +122,15 @@ describe("WarningsModule (e2e)", () => {
     let sendMessagePayload1: unknown;
     let sendMessagePayload2: unknown;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/banChatSenderChat`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/banChatSenderChat`, async (info) => {
         banChatSenderChatPayload = await info.request.json();
         return new HttpResponse(null, { status: 400 });
       }),
-      http.post(`${TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
         deleteMessagesPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         const body = await info.request.json();
         sendMessagePayload2 = sendMessagePayload1 ? body : undefined;
         sendMessagePayload1 = sendMessagePayload1 ?? body;
@@ -141,13 +142,13 @@ describe("WarningsModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ chat_id: supergroup.id, message_id: 4, method: "deleteMessage" });
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(banChatSenderChatPayload).toEqual({ chat_id: supergroup.id, sender_chat_id: channel.id });
     expect(sendMessagePayload1).toEqual(fixtures.warnSenderChatSendMessagePayload);
     expect(sendMessagePayload2).toBeUndefined();
 
     jest.runOnlyPendingTimers();
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(deleteMessagesPayload).toEqual({ chat_id: supergroup.id, message_ids: [3] });
   });
 
@@ -185,7 +186,7 @@ describe("WarningsModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return new HttpResponse(null, { status: 400 });
       }),
@@ -202,7 +203,7 @@ describe("WarningsModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -212,7 +213,7 @@ describe("WarningsModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayload());
   });
 
@@ -220,7 +221,7 @@ describe("WarningsModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -232,14 +233,14 @@ describe("WarningsModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(editMessageTextPayload).toEqual(fixtures.cbSaveIncorrectValueSettingsEditMessageTextPayload());
   });
 
   it("says /warn command is not for a private chat", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -256,9 +257,11 @@ describe("WarningsModule (e2e)", () => {
   it("says if the bot has no admin permissions", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
-      http.post(`${TELEGRAM_API_BASE_URL}/getChatMember`, () => new HttpResponse(null, { status: 400 })),
-      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
+        HttpResponse.json({ ok: true, result: [] }),
+      ),
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatMember`, () => new HttpResponse(null, { status: 400 })),
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -273,10 +276,10 @@ describe("WarningsModule (e2e)", () => {
   it("says if the user has no admin permissions", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
         HttpResponse.json({ ok: true, result: [{ is_anonymous: false, status: "administrator", user: bot }] }),
       ),
-      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -302,15 +305,15 @@ describe("WarningsModule (e2e)", () => {
     let banChatMemberPayload;
     let deleteMessagesPayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/banChatMember`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/banChatMember`, async (info) => {
         banChatMemberPayload = await info.request.json();
         return new HttpResponse(null, { status: 400 });
       }),
-      http.post(`${TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
         deleteMessagesPayload = await info.request.json();
         return new HttpResponse(null, { status: 400 });
       }),
-      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, () =>
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, () =>
         HttpResponse.json({ ok: true, result: { message_id: 5 } }),
       ),
     );
@@ -319,21 +322,21 @@ describe("WarningsModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ chat_id: supergroup.id, message_id: 4, method: "deleteMessage" });
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(banChatMemberPayload).toEqual({ chat_id: supergroup.id, user_id: user.id });
 
     jest.runOnlyPendingTimers();
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(deleteMessagesPayload).toEqual({ chat_id: supergroup.id, message_ids: [3] });
   });
 
   it("should not issue a warning against the admin", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/getChatMember`, () =>
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatMember`, () =>
         HttpResponse.json({ ok: true, result: { is_anonymous: false, status: "administrator", user } }),
       ),
-      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -348,7 +351,7 @@ describe("WarningsModule (e2e)", () => {
   it("should not issue a warning against the bot itself", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -363,7 +366,7 @@ describe("WarningsModule (e2e)", () => {
   it("should not issue a warning against the linked channel", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -391,11 +394,11 @@ describe("WarningsModule (e2e)", () => {
     let deleteMessagesPayload;
     let sendMessagePayload: unknown;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
         deleteMessagesPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true, result: { message_id: 5 } });
       }),
@@ -405,29 +408,31 @@ describe("WarningsModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ chat_id: supergroup.id, message_id: 4, method: "deleteMessage" });
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(sendMessagePayload).toBeUndefined();
 
     jest.runOnlyPendingTimers();
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(deleteMessagesPayload).toEqual({ chat_id: supergroup.id, message_ids: [3] });
   });
 
   it("should not render settings if the user is not an admin", async () => {
     let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
+        HttpResponse.json({ ok: true, result: [] }),
+      ),
     );
 
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSettingsNotAdminWebhookResponse);
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(editMessageTextPayload).toEqual(settingsFixtures.cbSettingsNotAdminEditMessageTextPayload);
   });
 
@@ -435,25 +440,27 @@ describe("WarningsModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
+        HttpResponse.json({ ok: true, result: [] }),
+      ),
     );
 
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSaveSettingsWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSettingsNotAdminWebhookResponse);
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(editMessageTextPayload).toEqual(settingsFixtures.cbSettingsNotAdminEditMessageTextPayload);
   });
 
   it("tells how to use the /warn command correctly", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),

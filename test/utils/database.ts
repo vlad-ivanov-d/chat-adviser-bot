@@ -1,8 +1,9 @@
 import { type Chat, ChatType, LanguageCode, type Prisma, PrismaClient } from "@prisma/client";
-import { getChatDisplayTitle } from "src/utils/telegraf";
 import type { User } from "telegraf/typings/core/types/typegram";
-import { privateChat, supergroup } from "test/fixtures/chats";
-import * as userFixtures from "test/fixtures/users";
+
+import { privateChat, supergroup } from "fixtures/chats";
+import { adminUser } from "fixtures/users";
+import { getChatDisplayTitle } from "src/utils/telegraf";
 
 /**
  * Prisma client
@@ -27,17 +28,17 @@ export const cleanupDb = async (): Promise<void> => {
  */
 export const createDbPrivateChat = async (chat?: Partial<Chat>): Promise<void> => {
   await prisma.$transaction([
-    createDbUser(userFixtures.adminUser),
+    createDbUser(adminUser),
     prisma.chat.create({
       data: {
-        authorId: chat?.authorId ?? userFixtures.adminUser.id,
+        authorId: chat?.authorId ?? adminUser.id,
         displayTitle: getChatDisplayTitle({
           ...privateChat,
           first_name: chat?.firstName ?? privateChat.first_name,
           last_name: typeof chat?.lastName === "undefined" ? privateChat.last_name : chat.lastName ?? undefined,
           username: typeof chat?.username === "undefined" ? privateChat.username : chat.username ?? undefined,
         }),
-        editorId: chat?.editorId ?? userFixtures.adminUser.id,
+        editorId: chat?.editorId ?? adminUser.id,
         id: chat?.id ?? privateChat.id,
         language: LanguageCode.EN,
         membersCount: 2,
@@ -57,17 +58,17 @@ export const createDbPrivateChat = async (chat?: Partial<Chat>): Promise<void> =
  */
 export const createDbSupergroupChat = async (chat?: Partial<Chat>): Promise<void> => {
   await prisma.$transaction([
-    createDbUser(userFixtures.adminUser),
+    createDbUser(adminUser),
     prisma.chat.create({
       data: {
-        admins: { connect: { id: userFixtures.adminUser.id } },
-        authorId: userFixtures.adminUser.id,
+        admins: { connect: { id: adminUser.id } },
+        authorId: adminUser.id,
         displayTitle: getChatDisplayTitle({
           ...supergroup,
           title: chat?.title ?? supergroup.title,
           username: typeof chat?.username === "undefined" ? supergroup.username : chat.username ?? undefined,
         }),
-        editorId: userFixtures.adminUser.id,
+        editorId: adminUser.id,
         id: chat?.id ?? supergroup.id,
         language: LanguageCode.EN,
         membersCount: 2,

@@ -5,10 +5,10 @@
   "author": "Vlad Ivanov",
   "license": "MIT",
   "scripts": {
-    "build": "eslint \"{src,apps,k6,libs,test}/**/*.ts\" && nest build",
+    "build": "eslint \"{src,apps,fixtures,k6,libs,test}/**/*.ts\" && nest build",
     "dev:env:up": "docker compose -f compose.dev.yml up --force-recreate --remove-orphans --wait -d && prisma migrate dev",
     "k6": "ts-node k6/utils/setup",
-    "lint": "eslint \"{src,apps,k6,libs,test}/**/*.ts\" --fix",
+    "lint": "eslint \"{src,apps,fixtures,k6,libs,test}/**/*.ts\" --fix",
     "make:badges": "istanbul-badges-readme --coverageDir=\"./coverage-total\" --silent",
     "merge:cov": "nyc report --report-dir coverage-total --reporter=json-summary --reporter=html --reporter=text-summary",
     "start": "npm run dev:env:up && nest start",

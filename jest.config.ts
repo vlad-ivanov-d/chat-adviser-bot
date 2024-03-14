@@ -7,11 +7,10 @@ const config: Config = {
   coverageThreshold: { global: { branches: 3, functions: 3, lines: 3, statements: 3 } },
   globalSetup: "<rootDir>/test/utils/global-setup.ts",
   globalTeardown: "<rootDir>/test/utils/global-teardown.ts",
-  maxWorkers: 1, // Use sequential tests to prevent conflicts in cache and database
   modulePaths: ["<rootDir>"],
   preset: "ts-jest",
   restoreMocks: true,
-  setupFilesAfterEnv: ["<rootDir>/test/utils/setup-after-env.ts"],
+  setupFilesAfterEnv: ["<rootDir>/test/utils/setup.ts"],
   testMatch: ["<rootDir>/src/**/*.spec.ts"],
 };
 

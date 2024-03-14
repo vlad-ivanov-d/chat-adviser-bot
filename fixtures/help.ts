@@ -1,12 +1,13 @@
-import { privateChat, supergroup } from "./chats";
+import { supergroup } from "./chats";
 import { adminUser, bot } from "./users";
 
 /**
- * Payload for send message request. It should be sent as a result of /start command processing in a private chat.
+ * Payload for send message request. It should be sent as a result of /help command processing in a supergroup chat.
  */
-export const privateHelpSendMessagePayload = {
-  chat_id: privateChat.id,
+export const supergroupSendMessagePayload = {
+  chat_id: supergroup.id,
   parse_mode: "HTML",
+  reply_parameters: { message_id: 1 },
   text:
     "Hello! I'm a bot that helps to moderate chats.\n\n" +
     "<b>Getting started:</b>\n" +
@@ -18,24 +19,6 @@ export const privateHelpSendMessagePayload = {
     "languages, etc.\n" +
     "I'll tell about each feature in more detail during setup.\n\n" +
     "You can call this message again at any time using the /help command.",
-};
-
-/**
- * Webhook payload which contains /start command in a private chat
- */
-export const privateHelpWebhook = {
-  message: { chat: privateChat, date: Date.now(), from: adminUser, message_id: 1, text: "/start" },
-  update_id: 1,
-};
-
-/**
- * Payload for send message request. It should be sent as a result of /help command processing in a supergroup chat.
- */
-export const supergroupSendMessagePayload = {
-  chat_id: supergroup.id,
-  parse_mode: "HTML",
-  reply_parameters: { message_id: 1 },
-  text: privateHelpSendMessagePayload.text,
 };
 
 /**

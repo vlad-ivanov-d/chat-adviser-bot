@@ -1,12 +1,12 @@
 /**
  * The delay in milliseconds that is required to run asynchronous requests
  */
-export const ASYNC_REQUEST_DELAY = 150;
+export const TEST_ASYNC_DELAY = 150;
 
 /**
  * Telegram API base url for mocking API calls
  */
-export const TELEGRAM_API_BASE_URL = `https://api.telegram.org/bot${process.env.BOT_TOKEN}`;
+export const TEST_TELEGRAM_API_BASE_URL = `https://api.telegram.org/bot${process.env.BOT_TOKEN}`;
 
 /**
  * Telegram webhook base url for API calls

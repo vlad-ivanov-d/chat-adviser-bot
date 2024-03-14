@@ -1,6 +1,7 @@
 import { check, sleep } from "k6";
 import http from "k6/http";
-import * as fixtures from "test/fixtures/warnings";
+
+import * as fixtures from "fixtures/warnings";
 
 import { K6_SLEEP_DURATION, K6_WEBHOOK_URL } from "./utils/constants";
 

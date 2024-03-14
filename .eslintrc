@@ -113,7 +113,25 @@
     "one-var": ["error", "never"],
     "radix": "error",
     "simple-import-sort/exports": "error",
-    "simple-import-sort/imports": "error",
+    "simple-import-sort/imports": [
+      "error",
+      {
+        "groups": [
+          // Side effect imports
+          ["^\\u0000"],
+          // Node.js builtins prefixed with `node:`
+          ["^node:"],
+          // Packages. Things that start with a letter (or digit or underscore), or `@` followed by a letter.
+          ["^@?\\w"],
+          // Folders of this repo
+          ["^(__mocks__|fixtures|src|test)(/.*|$)"],
+          // Anything not matched in another group
+          ["^"],
+          // Relative imports
+          ["^\\."]
+        ]
+      }
+    ],
     "sort-keys": "error"
   }
 }

@@ -1,6 +1,7 @@
 import { check, sleep } from "k6";
 import http from "k6/http";
-import * as fixtures from "test/fixtures/channel-message-filter";
+
+import * as fixtures from "fixtures/channel-message-filter";
 
 import { K6_SLEEP_DURATION, K6_WEBHOOK_URL } from "./utils/constants";
 

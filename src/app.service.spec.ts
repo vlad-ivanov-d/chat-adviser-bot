@@ -1,8 +1,8 @@
 import { CacheModule } from "@nestjs/cache-manager";
 import { Test } from "@nestjs/testing";
-import { store } from "src/utils/redis";
 
 import { AppService } from "./app.service";
+import { store } from "./utils/redis";
 
 describe("AppService", () => {
   let service: AppService;

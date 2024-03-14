@@ -15,11 +15,12 @@ import { Cache as CacheManager } from "cache-manager";
 import { formatInTimeZone } from "date-fns-tz";
 import i18next, { t } from "i18next";
 import { InjectBot } from "nestjs-telegraf";
+import { Telegraf } from "telegraf";
+import type { Chat, User as TelegramUser } from "telegraf/typings/core/types/typegram";
+
 import { DATE_FORMAT } from "src/app.constants";
 import { getDateLocale } from "src/utils/dates";
 import { getChatDisplayTitle, getUserDisplayName, getUserHtmlLink } from "src/utils/telegraf";
-import { Telegraf } from "telegraf";
-import type { Chat, User as TelegramUser } from "telegraf/typings/core/types/typegram";
 
 import type { UpsertedChat } from "./interfaces/upserted-chat.interface";
 import { CHAT_CACHE_TIMEOUT } from "./prisma.constants";

@@ -1,4 +1,14 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "test", "dist", "**/*spec.ts", "jest.config.ts", "jest-e2e.config.ts", "k6"]
+  "exclude": [
+    "node_modules",
+    "test",
+    "dist",
+    "**/*spec.ts",
+    "__mocks__",
+    "fixtures",
+    "jest-e2e.config.ts",
+    "jest.config.ts",
+    "k6"
+  ]
 }

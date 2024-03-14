@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 dotenv.config({ path: ".env.test" });
 process.env.NODE_ENV = "test";
 import { build } from "esbuild";
+
 import { AppModule } from "src/app.module";
 import { store } from "src/utils/redis";
 import { cleanupDb } from "test/utils/database";

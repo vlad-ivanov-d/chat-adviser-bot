@@ -3,6 +3,8 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 import { ChatSettingName, type User } from "@prisma/client";
 import { changeLanguage, t, type TOptions } from "i18next";
 import { Ctx, Hears, On, Update } from "nestjs-telegraf";
+import type { User as TelegramUser } from "telegraf/typings/core/types/typegram";
+
 import { MAX_INT } from "src/prisma/prisma.constants";
 import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
@@ -17,7 +19,6 @@ import {
   isChatMember,
   parseCbData,
 } from "src/utils/telegraf";
-import type { User as TelegramUser } from "telegraf/typings/core/types/typegram";
 
 import { VotebanAction } from "./interfaces/action.interface";
 import type { VotebanRenderSettingsOptions } from "./interfaces/settings-options.interface";

@@ -3,18 +3,19 @@ import { Test } from "@nestjs/testing";
 import { http, HttpResponse } from "msw";
 import request from "supertest";
 import type { App } from "supertest/types";
-import { server } from "test/utils/server";
 
-import { AppModule } from "../src/app.module";
-import * as fixtures from "./fixtures/language";
-import * as settingsFixtures from "./fixtures/settings";
+import * as fixtures from "fixtures/language";
+import * as settingsFixtures from "fixtures/settings";
+import { AppModule } from "src/app.module";
+
 import {
-  ASYNC_REQUEST_DELAY,
-  TELEGRAM_API_BASE_URL,
+  TEST_ASYNC_DELAY,
+  TEST_TELEGRAM_API_BASE_URL,
   TEST_WEBHOOK_BASE_URL,
   TEST_WEBHOOK_PATH,
 } from "./utils/constants";
 import { createDbSupergroupChat } from "./utils/database";
+import { server } from "./utils/server";
 import { sleep } from "./utils/sleep";
 
 describe("LanguageModule (e2e)", () => {
@@ -44,7 +45,7 @@ describe("LanguageModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return new HttpResponse(null, { status: 400 });
       }),
@@ -61,7 +62,7 @@ describe("LanguageModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -71,7 +72,7 @@ describe("LanguageModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayload());
   });
 
@@ -79,7 +80,7 @@ describe("LanguageModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -91,25 +92,27 @@ describe("LanguageModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(editMessageTextPayload).toEqual(fixtures.cbSaveIncorrectValueSettingsEditMessageTextPayload());
   });
 
   it("should not render settings if the user is not an admin", async () => {
     let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
+        HttpResponse.json({ ok: true, result: [] }),
+      ),
     );
 
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSettingsNotAdminWebhookResponse);
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(editMessageTextPayload).toEqual(settingsFixtures.cbSettingsNotAdminEditMessageTextPayload);
   });
 
@@ -117,18 +120,20 @@ describe("LanguageModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
+        HttpResponse.json({ ok: true, result: [] }),
+      ),
     );
 
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSaveSettingsWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSettingsNotAdminWebhookResponse);
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(editMessageTextPayload).toEqual(settingsFixtures.cbSettingsNotAdminEditMessageTextPayload);
   });
 });
