@@ -21,14 +21,7 @@ import { WarningsModule } from "./warnings/warnings.module";
 
 @Module({
   imports: [
-    CacheModule.registerAsync({
-      isGlobal: true,
-      /**
-       * Initiates Redis store
-       * @returns Cache manager with Redis store
-       */
-      useFactory: () => ({ store }),
-    }),
+    CacheModule.register({ isGlobal: true, store }),
     ConfigModule.forRoot(),
     ScheduleModule.forRoot(),
     TelegrafModule.forRoot({
