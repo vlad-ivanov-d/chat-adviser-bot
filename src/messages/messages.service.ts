@@ -35,16 +35,19 @@ export class MessagesService {
   public async saveMessage(@Ctx() ctx: MessageCtx, @Next() next: NextFunction): Promise<void> {
     if ("media_group_id" in ctx.update.message) {
       await this.prismaService.upsertChatWithCache(ctx.update.message.chat, ctx.update.message.from);
-      await this.prismaService.message.create({
-        data: {
-          authorId: ctx.update.message.from.id,
-          chatId: ctx.update.message.chat.id,
-          editorId: ctx.update.message.from.id,
-          mediaGroupId: ctx.update.message.media_group_id,
-          messageId: ctx.update.message.message_id,
-        },
-        select: { messageId: true },
-      });
+      await this.prismaService.$transaction([
+        this.prismaService.upsertUser(ctx.update.message.from, ctx.update.message.from),
+        this.prismaService.message.create({
+          data: {
+            authorId: ctx.update.message.from.id,
+            chatId: ctx.update.message.chat.id,
+            editorId: ctx.update.message.from.id,
+            mediaGroupId: ctx.update.message.media_group_id,
+            messageId: ctx.update.message.message_id,
+          },
+          select: { messageId: true },
+        }),
+      ]);
     }
 
     await next();

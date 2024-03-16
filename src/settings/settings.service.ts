@@ -76,17 +76,17 @@ export class SettingsService {
   @On(["group_chat_created", "new_chat_members", "supergroup_chat_created"])
   public async promptSettings(@Ctx() ctx: MessageCtx, @Next() next: NextFunction): Promise<void> {
     const botId = ctx.botInfo.id;
-    const { message: msg } = ctx.update;
+    const { message } = ctx.update;
 
     const [chat, userChat] = await Promise.all([
-      this.prismaService.upsertChatWithCache(ctx.chat, msg.from),
-      this.prismaService.chat.findUnique({ select: { id: true, language: true }, where: { id: msg.from.id } }),
+      this.prismaService.upsertChatWithCache(ctx.chat, message.from),
+      this.prismaService.chat.findUnique({ select: { id: true, language: true }, where: { id: message.from.id } }),
     ]);
     this.logger.warn(`The bot was added to a ${ctx.chat.type} chat`);
 
-    const isBotAdded = "new_chat_members" in msg && msg.new_chat_members.some((m) => m.id === botId);
-    const isChatCreated = "group_chat_created" in msg || "supergroup_chat_created" in msg;
-    const isUserAdmin = this.prismaService.isChatAdmin(chat, msg.from.id, msg.sender_chat?.id);
+    const isBotAdded = "new_chat_members" in message && message.new_chat_members.some((m) => m.id === botId);
+    const isChatCreated = "group_chat_created" in message || "supergroup_chat_created" in message;
+    const isUserAdmin = this.prismaService.isChatAdmin(chat, message.from.id, message.sender_chat?.id);
 
     if (userChat && isUserAdmin && (isBotAdded || isChatCreated)) {
       await changeLanguage(userChat.language);

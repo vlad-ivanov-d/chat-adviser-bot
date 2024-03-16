@@ -136,6 +136,10 @@ export class VotebanService {
         },
         reply_parameters: { allow_sending_without_reply: true, message_id: replyToMessage.message_id },
       }),
+      this.prismaService.upsertUser(from, from),
+    ]);
+
+    await Promise.all([
       candidateSenderChat && this.prismaService.upsertSenderChat(candidateSenderChat, from),
       fromSenderChat && this.prismaService.upsertSenderChat(fromSenderChat, from),
     ]);
@@ -407,22 +411,19 @@ export class VotebanService {
       throw new Error("Message is not defined to save the vote for voteban.");
     }
 
-    const [[existedChat, voting], isVoterChatMember] = await Promise.all([
-      this.prismaService.$transaction([
-        this.prismaService.chat.findUnique({ select: { id: true }, where: { id: message.chat.id } }),
-        this.prismaService.voteban.findUnique({
-          select: {
-            banVoters: { select: { authorId: true }, where: { authorId: from.id } },
-            id: true,
-            noBanVoters: { select: { authorId: true }, where: { authorId: from.id } },
-          },
-          where: {
-            OR: [{ isCompleted: false }, { isCompleted: null }],
-            chatId_messageId: { chatId: message.chat.id, messageId: message.message_id },
-          },
-        }),
-      ]),
-      isChatMember(ctx.telegram, message.chat.id, from.id),
+    const [existedChat, voting] = await this.prismaService.$transaction([
+      this.prismaService.chat.findUnique({ select: { id: true }, where: { id: message.chat.id } }),
+      this.prismaService.voteban.findUnique({
+        select: {
+          banVoters: { select: { authorId: true }, where: { authorId: from.id } },
+          id: true,
+          noBanVoters: { select: { authorId: true }, where: { authorId: from.id } },
+        },
+        where: {
+          OR: [{ isCompleted: false }, { isCompleted: null }],
+          chatId_messageId: { chatId: message.chat.id, messageId: message.message_id },
+        },
+      }),
     ]);
 
     // Do not upsert chat if it's not found. It means that bot was removed from the chat.
@@ -435,7 +436,6 @@ export class VotebanService {
     }
 
     const { banVoters, id, noBanVoters } = voting;
-    const { editorId } = chat;
     if ((action === VotebanAction.BAN ? banVoters : noBanVoters).some((v) => v.authorId === from.id)) {
       await ctx.answerCbQuery(t("voteban:alreadyVoted"), { show_alert: true });
       return; // User has already voted, return.
@@ -446,26 +446,29 @@ export class VotebanService {
       await Promise.all([ctx.answerCbQuery(msg, { show_alert: true }), this.updateResults(ctx).catch(() => undefined)]);
       return; // Bot is not an admin, return.
     }
+    const isVoterChatMember = await isChatMember(ctx.telegram, message.chat.id, from.id);
     if (!isVoterChatMember) {
       await ctx.answerCbQuery(t("voteban:mustBeChatMember"), { show_alert: true });
       return; // Voter is not a chat member, return.
     }
     if (action === VotebanAction.BAN) {
       await this.prismaService.$transaction([
+        this.prismaService.upsertUser(from, from),
         this.prismaService.votebanBanVoter.create({
-          data: { authorId: editorId, editorId, votebanId: id },
+          data: { authorId: from.id, editorId: from.id, votebanId: id },
           select: { id: true },
         }),
-        this.prismaService.votebanNoBanVoter.deleteMany({ where: { authorId: editorId, votebanId: id } }),
+        this.prismaService.votebanNoBanVoter.deleteMany({ where: { authorId: from.id, votebanId: id } }),
       ]);
     }
     if (action === VotebanAction.NO_BAN) {
       await this.prismaService.$transaction([
+        this.prismaService.upsertUser(from, from),
         this.prismaService.votebanNoBanVoter.create({
-          data: { authorId: editorId, editorId, votebanId: id },
+          data: { authorId: from.id, editorId: from.id, votebanId: id },
           select: { id: true },
         }),
-        this.prismaService.votebanBanVoter.deleteMany({ where: { authorId: editorId, votebanId: id } }),
+        this.prismaService.votebanBanVoter.deleteMany({ where: { authorId: from.id, votebanId: id } }),
       ]);
     }
     // An expected error may happen when bot was removed from the chat or there are no enough permissions

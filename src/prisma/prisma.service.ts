@@ -45,8 +45,7 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
    */
   public async deleteChatCache(chatId: number): Promise<void> {
     const cacheKey = this.getChatCacheKey(chatId);
-    const keys = await this.cacheManager.store.keys();
-    await Promise.all(keys.filter((k) => k.startsWith(cacheKey)).map((k) => this.cacheManager.del(k)));
+    await this.cacheManager.del(cacheKey);
   }
 
   /**
@@ -118,7 +117,7 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
    * @returns Chat
    */
   public async upsertChatWithCache(chat: Chat, editor: TelegramUser): Promise<UpsertedChat> {
-    const cacheKey = this.getChatCacheKey(chat.id, editor.id);
+    const cacheKey = this.getChatCacheKey(chat.id);
     return this.cacheManager.wrap(cacheKey, () => this.upsertChat(chat, editor), CHAT_CACHE_TIMEOUT);
   }
 
@@ -193,11 +192,10 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
   /**
    * Gets cache key for the chat
    * @param chatId Chat id
-   * @param editorId Editor id
    * @returns Cache key
    */
-  private getChatCacheKey(chatId: number, editorId?: number): string {
-    return `database-upsert-chat-${chatId}` + (typeof editorId === "undefined" ? "" : `-${editorId}`);
+  private getChatCacheKey(chatId: number): string {
+    return `database-upsert-chat-${chatId}`;
   }
 
   /**
