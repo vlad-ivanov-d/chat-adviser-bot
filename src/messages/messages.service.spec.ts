@@ -13,14 +13,7 @@ describe("MessagesService", () => {
   beforeEach(async () => {
     const testingModule = await Test.createTestingModule({
       imports: [
-        CacheModule.registerAsync({
-          isGlobal: true,
-          /**
-           * Initiates Redis store
-           * @returns Cache manager with Redis store
-           */
-          useFactory: () => ({ store }),
-        }),
+        CacheModule.register({ isGlobal: true, store }),
         TelegrafModule.forRoot({ launchOptions: false, token: process.env.BOT_TOKEN ?? "" }),
         PrismaModule,
       ],

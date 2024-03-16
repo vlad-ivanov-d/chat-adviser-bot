@@ -11,16 +11,7 @@ describe("AppService", () => {
 
   beforeEach(async () => {
     const testingModule = await Test.createTestingModule({
-      imports: [
-        CacheModule.registerAsync({
-          isGlobal: true,
-          /**
-           * Initiates Redis store
-           * @returns Cache manager with Redis store
-           */
-          useFactory: () => ({ store }),
-        }),
-      ],
+      imports: [CacheModule.register({ isGlobal: true, store })],
       providers: [AppService],
     }).compile();
 
