@@ -12,6 +12,11 @@ beforeAll(async () => {
   server.listen({ onUnhandledRequest: "error" });
 });
 
+beforeEach(() => {
+  // Fix "The client is closed" issue: prevents the cache client quit after each test
+  jest.spyOn(cache.client, "quit").mockImplementation();
+});
+
 afterEach(async () => {
   jest.useRealTimers();
   server.resetHandlers();
@@ -20,5 +25,7 @@ afterEach(async () => {
 
 afterAll(async () => {
   server.close();
-  await Promise.all([cache.client.disconnect(), prisma.$disconnect()]);
+  // Restore mocks. One of them prevents cache client quit.
+  jest.restoreAllMocks();
+  await Promise.all([cache.client.quit(), prisma.$disconnect()]);
 });
