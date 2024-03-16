@@ -381,8 +381,8 @@ export class VotebanService {
         ctx.reply(t("voteban:completed"), { reply_parameters: { message_id: message.message_id } }),
         isBan && this.deleteMessages(ctx, candidateMessageId, candidateMediaGroupId),
         // An expected error may happen if there are no enough permissions
-        isBan && candidateSenderChat && ctx.banChatSenderChat(candidateSenderChat.id).catch(() => undefined),
-        isBan && !candidateSenderChat && ctx.banChatMember(candidate.id).catch(() => undefined),
+        isBan && candidateSenderChat && ctx.banChatSenderChat(candidateSenderChat.id).catch(() => false),
+        isBan && !candidateSenderChat && ctx.banChatMember(candidate.id).catch(() => false),
       ]);
       return; // Voting completed, return.
     }

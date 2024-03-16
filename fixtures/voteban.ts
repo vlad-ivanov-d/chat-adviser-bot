@@ -9,6 +9,17 @@ import { adminUser, bot, user } from "./users";
 
 /**
  * Webhook response which contains answer callback query method.
+ * It should be sent as a result of callback vote processing if the vote is not from a chat member.
+ */
+export const answerCbNotChatMemberWebhookResponse = {
+  callback_query_id: "1",
+  method: "answerCallbackQuery",
+  show_alert: true,
+  text: "You must be a member of the chat",
+};
+
+/**
+ * Webhook response which contains answer callback query method.
  * It should be sent as a result of callback vote processing when the bot is not an admin.
  */
 export const answerCbVoteBotNotAdminWebhookResponse = {
@@ -51,6 +62,28 @@ export const answerCbVoteWebhookResponse = {
 };
 
 /**
+ * Webhook payload which contains ban callback against the admin
+ */
+export const cbBanAgainstAdminWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: VotebanAction.BAN,
+    from: user,
+    id: "1",
+    message: {
+      chat: supergroup,
+      date: Date.now(),
+      from: bot,
+      message_id: 3,
+      message_thread_id: 1,
+      reply_to_message: { chat: supergroup, date: Date.now(), from: adminUser, message_id: 1, text: "Bad word" },
+      text: "",
+    },
+  },
+  update_id: 1,
+};
+
+/**
  * Payload for edit message text request. It should be sent as a result of ban callback.
  */
 export const cbBanEditMessageTextPayload = {
@@ -85,6 +118,36 @@ export const cbBanWebhook = {
     },
   },
   update_id: 1,
+};
+
+/**
+ * Payload for edit message text request. It should be sent as a result of ban callback
+ * if the voting is canceled due to the voting against the admin.
+ */
+export const cbCancelledAgainstAdminEditMessageTextPayload = {
+  chat_id: supergroup.id,
+  message_id: 3,
+  parse_mode: "HTML",
+  text:
+    `<a href="tg:user?id=${user.id}">@${user.username}</a> offers to ban ` +
+    `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>. This requires 2 votes.\n\nDo you want to ban ` +
+    `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>?\n\n<b>Voting has been cancelled.</b> ` +
+    "It is not possible to vote against an administrator.",
+};
+
+/**
+ * Payload for edit message text request. It should be sent as a result of no ban callback
+ * if the voting is canceled due to the bot not having admin permissions.
+ */
+export const cbCancelledBotNotAdminEditMessageTextPayload = {
+  chat_id: supergroup.id,
+  message_id: 3,
+  parse_mode: "HTML",
+  text:
+    `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a> offers to ban ` +
+    `<a href="tg:user?id=${user.id}">@${user.username}</a>. This requires 2 votes.\n\nDo you want to ban ` +
+    `<a href="tg:user?id=${user.id}">@${user.username}</a>?\n\n<b>Voting has been cancelled.</b> I need ` +
+    "administrator permissions for this feature to work.",
 };
 
 /**

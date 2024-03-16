@@ -68,7 +68,7 @@ export class ChannelMessageFilterService {
     const { channelMessageFilter } = await this.prismaService.upsertChatWithCache(chat, from);
     if (channelMessageFilter === ChannelMessageFilterRule.FILTER) {
       // An expected error may happen when bot has no enough permissions
-      await Promise.all([ctx.deleteMessage(messageId), ctx.banChatSenderChat(senderChat.id)]).catch(() => undefined);
+      await Promise.all([ctx.deleteMessage(messageId), ctx.banChatSenderChat(senderChat.id)]).catch(() => false);
       return;
     }
 
