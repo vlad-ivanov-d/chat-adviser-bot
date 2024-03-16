@@ -1,5 +1,5 @@
 import { ChatType, type SenderChat, type User as PrismaUser } from "@prisma/client";
-import type { Telegraf, Telegram } from "telegraf";
+import type { Telegram } from "telegraf";
 import type { Chat, InlineKeyboardButton, User } from "telegraf/typings/core/types/typegram";
 
 import { PAGE_SIZE } from "src/app.constants";
@@ -288,15 +288,4 @@ export const isChatMember = async (
     }
   });
   return member && ["administrator", "creator", "member", "restricted"].includes(member.status);
-};
-
-/**
- * Kicks user from the chat.
- * @param bot Telegraf bot instance
- * @param chatId Chat id
- * @param userId User id
- */
-export const kickChatMember = async (bot: Telegraf, chatId: number, userId: number): Promise<void> => {
-  await bot.telegram.banChatMember(chatId, userId);
-  await bot.telegram.unbanChatMember(chatId, userId);
 };
