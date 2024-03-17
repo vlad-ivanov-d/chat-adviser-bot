@@ -241,11 +241,12 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
    */
   private async upsertChat(chat: Chat, editor: TelegramUser): Promise<UpsertedChat> {
     const { botInfo, telegram } = this.bot;
-    const [admins, membersCount] = await Promise.all([
-      // An expected error may happen if administrators are hidden
-      chat.type === "private" ? [] : telegram.getChatAdministrators(chat.id).catch(() => []),
-      telegram.getChatMembersCount(chat.id),
-    ]);
+    const [admins, membersCount] = await Promise.all(
+      chat.type === "private"
+        ? [[], 2]
+        : // An expected error may happen if administrators are hidden
+          [telegram.getChatAdministrators(chat.id).catch(() => []), telegram.getChatMembersCount(chat.id)],
+    );
 
     const adminIds = admins.map((a) => ({ id: a.user.id }));
     const isGroupChat = chat.type === "group" || chat.type === "supergroup";
