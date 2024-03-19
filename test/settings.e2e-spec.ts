@@ -114,6 +114,23 @@ describe("SettingsModule (e2e)", () => {
     expect(editMessageTextPayload).toEqual(fixtures.cbChatsEditMessageTextPayload);
   });
 
+  it("should not prompt admin to make settings when another bot was added to the chat", async () => {
+    let sendMessagePayload;
+    server.use(
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+        sendMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL)
+      .post(TEST_WEBHOOK_PATH)
+      .send(fixtures.anotherBotAddedToChatWebhook);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload).toBeUndefined();
+  });
+
   it("should not render chats as an answer to /mychats command in a supergroup chat", async () => {
     let sendMessagePayload;
     server.use(

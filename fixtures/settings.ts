@@ -7,7 +7,7 @@ import { SettingsAction } from "src/settings/interfaces/action.interface";
 import { VotebanAction } from "src/voteban/interfaces/action.interface";
 
 import { group, privateChat, supergroup } from "./chats";
-import { adminUser, bot } from "./users";
+import { adminUser, bot, systemChannelBot } from "./users";
 
 const chatsText =
   "Below is a list of chats that are available to me, and where you are an administrator. " +
@@ -67,6 +67,22 @@ export const addedToNewChatSendMessagePayload2 = {
   text:
     `Select the feature you want to configure for the @${supergroup.username} chat. The list of features depends ` +
     "on the type of chat (channel, group, etc.).",
+};
+
+/**
+ * Webhook payload which contains update about adding another bot to the chat
+ */
+export const anotherBotAddedToChatWebhook = {
+  message: {
+    chat: supergroup,
+    date: Date.now(),
+    from: adminUser,
+    message_id: 1,
+    new_chat_member: systemChannelBot,
+    new_chat_members: [systemChannelBot],
+    new_chat_participant: systemChannelBot,
+  },
+  update_id: 1,
 };
 
 /**

@@ -77,21 +77,28 @@ export class SettingsService {
   public async promptSettings(@Ctx() ctx: MessageCtx, @Next() next: NextFunction): Promise<void> {
     const botId = ctx.botInfo.id;
     const { message } = ctx.update;
+    const isBotAdded = "new_chat_members" in message && message.new_chat_members.some((m) => m.id === botId);
+    const isChatCreated = "group_chat_created" in message || "supergroup_chat_created" in message;
+
+    if (!isBotAdded && !isChatCreated) {
+      await next();
+      return;
+    }
+
+    this.logger.log(`The bot was added to a ${ctx.chat.type} chat`);
 
     const [chat, userChat] = await Promise.all([
       this.prismaService.upsertChatWithCache(ctx.chat, message.from),
       this.prismaService.chat.findUnique({ select: { id: true, language: true }, where: { id: message.from.id } }),
     ]);
-    this.logger.warn(`The bot was added to a ${ctx.chat.type} chat`);
 
-    const isBotAdded = "new_chat_members" in message && message.new_chat_members.some((m) => m.id === botId);
-    const isChatCreated = "group_chat_created" in message || "supergroup_chat_created" in message;
     const isUserAdmin = this.prismaService.isChatAdmin(chat, message.from.id, message.sender_chat?.id);
 
-    if (userChat && isUserAdmin && (isBotAdded || isChatCreated)) {
+    if (isUserAdmin && userChat) {
       await changeLanguage(userChat.language);
       await ctx.telegram.sendMessage(userChat.id, t("settings:invitation"));
       await this.renderFeatures(ctx, chat.id);
+      this.logger.log("An invitation has been sent to the administrator to complete the settings");
     }
 
     await next();

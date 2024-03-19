@@ -27,11 +27,11 @@ export class CleanupService {
   public async cleanupChats(ctx: MyChatMemberCtx, next: NextFunction): Promise<void> {
     const { status } = ctx.update.my_chat_member.new_chat_member;
     if (status === "kicked" || status === "left") {
+      this.logger.warn("The bot was kicked from a chat");
       await Promise.all([
         this.prismaService.deleteChatCache(ctx.chat.id),
         this.prismaService.chat.deleteMany({ where: { id: ctx.chat.id } }),
       ]);
-      this.logger.warn("The bot was kicked from a chat");
     }
     await next();
   }
@@ -101,8 +101,8 @@ export class CleanupService {
     });
     if (unusedChats.length > 0) {
       await this.prismaService.chat.deleteMany({ where: { id: { in: unusedChats.map((c) => c.id) } } });
-      this.logger.log(`Number of deleted unused chats: ${unusedChats.length}`);
     }
+    this.logger.log(`Number of deleted unused chats: ${unusedChats.length}`);
   }
 
   /**
@@ -145,7 +145,7 @@ export class CleanupService {
     );
     if (unusedUsers.length > 0) {
       await this.prismaService.user.deleteMany({ where: { id: { in: unusedUsers.map((u) => u.id) } } });
-      this.logger.log(`Number of deleted unused users (with additional check): ${unusedUsers.length}`);
     }
+    this.logger.log(`Number of deleted unused users (with the deep check): ${unusedUsers.length}`);
   }
 }
