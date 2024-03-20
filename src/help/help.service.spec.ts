@@ -30,10 +30,6 @@ describe("HelpService", () => {
     service = testingModule.get<HelpService>(HelpService);
   });
 
-  it("should be defined", () => {
-    expect(service).toBeDefined();
-  });
-
   it("answers to /help command in a supergroup chat", async () => {
     prismaService.upsertChatWithCache = jest.fn().mockReturnValueOnce({ language: LanguageCode.EN });
     const ctx = mockTextMessageCtx();

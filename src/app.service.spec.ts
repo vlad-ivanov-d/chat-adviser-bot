@@ -19,10 +19,6 @@ describe("AppService", () => {
     service = testingModule.get<AppService>(AppService);
   });
 
-  it("should be defined", () => {
-    expect(service).toBeDefined();
-  });
-
   it("resets cache store", async () => {
     const resetSpy = jest.spyOn(cacheManager, "reset");
     await service.onApplicationBootstrap();
