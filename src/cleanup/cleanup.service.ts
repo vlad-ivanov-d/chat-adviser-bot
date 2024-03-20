@@ -82,8 +82,8 @@ export class CleanupService {
         },
       }),
     ]);
-    this.logger.log(`Number of deleted unused sender chats: ${deletedSenderChats.count}`);
-    this.logger.log(`Number of deleted unused users: ${deletedUsers.count}`);
+    this.logger.log(`Number of deleted unused sender chats: ${deletedSenderChats.count.toString()}`);
+    this.logger.log(`Number of deleted unused users: ${deletedUsers.count.toString()}`);
     await this.checkUnusedUsers();
   }
 
@@ -102,7 +102,7 @@ export class CleanupService {
     if (unusedChats.length > 0) {
       await this.prismaService.chat.deleteMany({ where: { id: { in: unusedChats.map((c) => c.id) } } });
     }
-    this.logger.log(`Number of deleted unused chats: ${unusedChats.length}`);
+    this.logger.log(`Number of deleted unused chats: ${unusedChats.length.toString()}`);
   }
 
   /**
@@ -146,6 +146,6 @@ export class CleanupService {
     if (unusedUsers.length > 0) {
       await this.prismaService.user.deleteMany({ where: { id: { in: unusedUsers.map((u) => u.id) } } });
     }
-    this.logger.log(`Number of deleted unused users (with the deep check): ${unusedUsers.length}`);
+    this.logger.log(`Number of deleted unused users (with the deep check): ${unusedUsers.length.toString()}`);
   }
 }

@@ -42,7 +42,7 @@ describe("HelpService", () => {
     await service.helpCommand(ctx);
 
     expect(changeLanguage).toHaveBeenCalledWith("EN");
-    expect(t).toHaveBeenCalledWith("common:help", { BOT_LINK: `tg:user?id=${bot.id}` });
+    expect(t).toHaveBeenCalledWith("common:help", { BOT_LINK: `tg:user?id=${bot.id.toString()}` });
     expect(replySpy).toHaveBeenCalledWith("common:help", { parse_mode: "HTML", reply_parameters: { message_id: 1 } });
   });
 });

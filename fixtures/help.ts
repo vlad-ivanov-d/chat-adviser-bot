@@ -13,8 +13,8 @@ export const supergroupSendMessagePayload = {
     "<b>Getting started:</b>\n" +
     "1. add me to chat\n" +
     "2. give me administrator permissions\n" +
-    `3. send a <a href="tg:user?id=${bot.id}">private message</a> command /mychats and I will help you set up ` +
-    "your chat\n\n" +
+    `3. send a <a href="tg:user?id=${bot.id.toString()}">private message</a> command /mychats and I will help ` +
+    "you set up your chat\n\n" +
     "<b>Feature list:</b> ban voting, profanity filter, restriction on adding bots, support for different " +
     "languages, etc.\n" +
     "I'll tell about each feature in more detail during setup.\n\n" +

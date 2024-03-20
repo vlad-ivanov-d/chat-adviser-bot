@@ -220,7 +220,7 @@ export const getUserFullName = (user: User | PrismaUser): string => {
  */
 export const getUserHtmlLink = (user: User | PrismaUser): string => {
   const displayName = getUserDisplayName(user, "short");
-  return `<a href="tg:user?id=${user.id}">${encodeText(displayName)}</a>`;
+  return `<a href="tg:user?id=${user.id.toString()}">${encodeText(displayName)}</a>`;
 };
 
 /**
@@ -248,7 +248,7 @@ export const encodeText = (text: string): string =>
  * @returns Returns true if the user is an admin. Returns undefined if the member list is not available.
  */
 export const isChatAdmin = async (telegram: Telegram, chatId: number, userId: number): Promise<boolean | undefined> => {
-  const member = await telegram.getChatMember(chatId, userId).catch((e) => {
+  const member = await telegram.getChatMember(chatId, userId).catch((e: unknown) => {
     const errorCode = getErrorCode(e);
     switch (errorCode) {
       // User have never been in the chat
@@ -275,7 +275,7 @@ export const isChatMember = async (
   chatId: number,
   userId: number,
 ): Promise<boolean | undefined> => {
-  const member = await telegram.getChatMember(chatId, userId).catch((e) => {
+  const member = await telegram.getChatMember(chatId, userId).catch((e: unknown) => {
     const errorCode = getErrorCode(e);
     switch (errorCode) {
       // User have never been in the chat

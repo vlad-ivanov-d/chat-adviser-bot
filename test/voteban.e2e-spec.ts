@@ -463,6 +463,24 @@ describe("VotebanModule (e2e)", () => {
     expect(sendMessagePayload).toEqual(fixtures.votebanSendMessagePayload);
   });
 
+  it("starts voteban by sender chat command", async () => {
+    await createDbSupergroupChat({ votebanLimit: 2 });
+    let sendMessagePayload;
+    server.use(
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+        sendMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true, result: { message_id: 3 } });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL)
+      .post(TEST_WEBHOOK_PATH)
+      .send(fixtures.votebanSenderChatWebhook);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload).toEqual(fixtures.votebanSenderChatSendMessagePayload);
+  });
+
   it("tells how to use the voteban command correctly", async () => {
     await createDbSupergroupChat({ votebanLimit: 2 });
     let sendMessagePayload;

@@ -58,12 +58,12 @@ export const cbSettingsEditMessageTextPayload = {
     inline_keyboard: [
       [
         {
-          callback_data: `${ChannelMessageFilterAction.SAVE}?cId=${supergroup.id}&v=FILTER`,
+          callback_data: `${ChannelMessageFilterAction.SAVE}?cId=${supergroup.id.toString()}&v=FILTER`,
           text: "Enable filter",
         },
       ],
-      [{ callback_data: `${ChannelMessageFilterAction.SAVE}?cId=${supergroup.id}`, text: "Disable filter" }],
-      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}`, text: "« Back to features" }],
+      [{ callback_data: `${ChannelMessageFilterAction.SAVE}?cId=${supergroup.id.toString()}`, text: "Disable filter" }],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}`, text: "« Back to features" }],
     ],
   },
   text:
@@ -71,7 +71,7 @@ export const cbSettingsEditMessageTextPayload = {
     "forwarded messages) in group chats. Users who have their own Telegram channels can write in public chats on " +
     "behalf of the channels. In this way, they can make advertising for themselves or simply anonymize messages " +
     "without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel and " +
-    `write on its behalf.\n\nEnable message filter on behalf of channels in @${supergroup.username} chat?\n\n` +
+    `write on its behalf.\n\nEnable message filter on behalf of channels in @${supergroup.username ?? ""} chat?\n\n` +
     "Current value: <b>filter disabled</b>",
 };
 
@@ -95,7 +95,7 @@ export const cbSettingsErrorWebhook = {
 export const cbSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${ChannelMessageFilterAction.SETTINGS}?cId=${supergroup.id}`,
+    data: `${ChannelMessageFilterAction.SETTINGS}?cId=${supergroup.id.toString()}`,
     from: adminUser,
     id: "1",
     message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
@@ -115,10 +115,10 @@ export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
     "forwarded messages) in group chats. Users who have their own Telegram channels can write in public chats on " +
     "behalf of the channels. In this way, they can make advertising for themselves or simply anonymize messages " +
     "without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel and " +
-    `write on its behalf.\n\nEnable message filter on behalf of channels in @${supergroup.username} chat?\n\n` +
+    `write on its behalf.\n\nEnable message filter on behalf of channels in @${supergroup.username ?? ""} chat?\n\n` +
     "Current value: <b>filter enabled</b>\n" +
     `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
-    `by <a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>`,
+    `by <a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>`,
 });
 
 /**
@@ -127,7 +127,7 @@ export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
 export const cbSaveSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${ChannelMessageFilterAction.SAVE}?cId=${supergroup.id}&v=FILTER`,
+    data: `${ChannelMessageFilterAction.SAVE}?cId=${supergroup.id.toString()}&v=FILTER`,
     from: adminUser,
     id: "1",
     message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },

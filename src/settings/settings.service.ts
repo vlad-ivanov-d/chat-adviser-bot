@@ -61,7 +61,7 @@ export class SettingsService {
     if (ctx.chat.type !== "private") {
       const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.message.from);
       await changeLanguage(language);
-      const msg = t("common:commandForPrivateChat", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}` });
+      const msg = t("common:commandForPrivateChat", { BOT_LINK: `tg:user?id=${ctx.botInfo.id.toString()}` });
       await ctx.reply(msg, { parse_mode: "HTML", reply_parameters: { message_id: ctx.message.message_id } });
       return;
     }

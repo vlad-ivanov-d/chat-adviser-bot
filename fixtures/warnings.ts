@@ -24,7 +24,7 @@ export const banSendMessagePayload = {
 export const cbSaveIncorrectValueSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${WarningsAction.SAVE}?cId=${supergroup.id}&v=incorrect`,
+    data: `${WarningsAction.SAVE}?cId=${supergroup.id.toString()}&v=incorrect`,
     from: adminUser,
     id: "1",
     message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
@@ -55,17 +55,17 @@ export const cbSettingsEditMessageTextPayload = {
   parse_mode: "HTML",
   reply_markup: {
     inline_keyboard: [
-      [{ callback_data: `${WarningsAction.SAVE}?cId=${supergroup.id}&v=true`, text: "Enable" }],
-      [{ callback_data: `${WarningsAction.SAVE}?cId=${supergroup.id}`, text: "Disable" }],
-      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}`, text: "« Back to features" }],
+      [{ callback_data: `${WarningsAction.SAVE}?cId=${supergroup.id.toString()}&v=true`, text: "Enable" }],
+      [{ callback_data: `${WarningsAction.SAVE}?cId=${supergroup.id.toString()}`, text: "Disable" }],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}`, text: "« Back to features" }],
     ],
   },
   text:
     "<b>Warnings</b>\nI can issue warnings to users by admin command. To do this, respond to the user's message with " +
     "the appropriate command. In this case, the user's message will be deleted. Each warning is valid for " +
-    `90 days, then it is automatically removed. If ${WARNINGS_LIMIT} warnings are received, the user will ` +
-    `be banned.\n\n/warn - issue a warning\n\nEnable warnings in @${supergroup.username} chat?\n\nCurrent value: ` +
-    "<b>disabled</b>",
+    `90 days, then it is automatically removed. If ${WARNINGS_LIMIT.toString()} warnings are received, the user will ` +
+    `be banned.\n\n/warn - issue a warning\n\nEnable warnings in @${supergroup.username ?? ""} chat?\n\n` +
+    "Current value: <b>disabled</b>",
 };
 
 /**
@@ -88,7 +88,7 @@ export const cbSettingsErrorWebhook = {
 export const cbSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${WarningsAction.SETTINGS}?cId=${supergroup.id}`,
+    data: `${WarningsAction.SETTINGS}?cId=${supergroup.id.toString()}`,
     from: adminUser,
     id: "1",
     message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
@@ -107,9 +107,10 @@ export const cbSaveIncorrectValueSettingsEditMessageTextPayload = (): unknown =>
     "<b>Warnings</b>\nI can issue warnings to users by admin command. To do this, respond to the user's message " +
     "with the appropriate command. In this case, the user's message will be deleted. Each warning is valid for " +
     "90 days, then it is automatically removed. If 3 warnings are received, the user will be banned.\n\n" +
-    `/warn - issue a warning\n\nEnable warnings in @${supergroup.username} chat?\n\nCurrent value: <b>disabled</b>\n` +
+    `/warn - issue a warning\n\nEnable warnings in @${supergroup.username ?? ""} chat?\n\n` +
+    "Current value: <b>disabled</b>\n" +
     `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
-    `by <a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>`,
+    `by <a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>`,
 });
 
 /**
@@ -123,9 +124,10 @@ export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
     "<b>Warnings</b>\nI can issue warnings to users by admin command. To do this, respond to the user's message " +
     "with the appropriate command. In this case, the user's message will be deleted. Each warning is valid for " +
     "90 days, then it is automatically removed. If 3 warnings are received, the user will be banned.\n\n" +
-    `/warn - issue a warning\n\nEnable warnings in @${supergroup.username} chat?\n\nCurrent value: <b>enabled</b>\n` +
+    `/warn - issue a warning\n\nEnable warnings in @${supergroup.username ?? ""} chat?\n\n` +
+    "Current value: <b>enabled</b>\n" +
     `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
-    `by <a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>`,
+    `by <a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>`,
 });
 
 /**
@@ -134,7 +136,7 @@ export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
 export const cbSaveSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${WarningsAction.SAVE}?cId=${supergroup.id}&v=true`,
+    data: `${WarningsAction.SAVE}?cId=${supergroup.id.toString()}&v=true`,
     from: adminUser,
     id: "1",
     message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
@@ -244,9 +246,9 @@ export const warnSendMessagePayload = {
   parse_mode: "HTML",
   reply_parameters: { allow_sending_without_reply: true, message_id: 3 },
   text:
-    `<a href="tg:user?id=${user.id}">@${user.username}</a>, you are receiving a warning for violating the rules. ` +
-    `The warning is valid for 90 days. If you receive ${WARNINGS_LIMIT} warnings, you will be banned.\n\n` +
-    `Number of warnings: <b>${WARNINGS_LIMIT} of ${WARNINGS_LIMIT}</b>`,
+    `<a href="tg:user?id=${user.id.toString()}">@${user.username ?? ""}</a>, you are receiving a warning for ` +
+    `violating the rules. The warning is valid for 90 days. If you receive ${WARNINGS_LIMIT.toString()} warnings, ` +
+    `you will be banned.\n\nNumber of warnings: <b>${WARNINGS_LIMIT.toString()} of ${WARNINGS_LIMIT.toString()}</b>`,
 };
 
 /**
@@ -258,9 +260,9 @@ export const warnSenderChatSendMessagePayload = {
   parse_mode: "HTML",
   reply_parameters: { allow_sending_without_reply: true, message_id: 3 },
   text:
-    `@${channel.username}, you are receiving a warning for violating the rules. ` +
-    `The warning is valid for 90 days. If you receive ${WARNINGS_LIMIT} warnings, you will be banned.\n\n` +
-    `Number of warnings: <b>${WARNINGS_LIMIT} of ${WARNINGS_LIMIT}</b>`,
+    `@${channel.username ?? ""}, you are receiving a warning for violating the rules. ` +
+    `The warning is valid for 90 days. If you receive ${WARNINGS_LIMIT.toString()} warnings, you will be banned.\n\n` +
+    `Number of warnings: <b>${WARNINGS_LIMIT.toString()} of ${WARNINGS_LIMIT.toString()}</b>`,
 };
 
 /**

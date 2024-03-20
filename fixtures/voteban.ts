@@ -5,7 +5,7 @@ import { SettingsAction } from "src/settings/interfaces/action.interface";
 import { VotebanAction } from "src/voteban/interfaces/action.interface";
 
 import { privateChat, supergroup } from "./chats";
-import { adminUser, bot, user } from "./users";
+import { adminUser, bot, systemChannelBot, user } from "./users";
 
 /**
  * Webhook response which contains answer callback query method.
@@ -91,11 +91,12 @@ export const cbBanEditMessageTextPayload = {
   message_id: 3,
   parse_mode: "HTML",
   text:
-    `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a> offers to ban ` +
-    `<a href="tg:user?id=${user.id}">@${user.username}</a>. This requires 2 votes.\n\n` +
-    `Do you want to ban <a href="tg:user?id=${user.id}">@${user.username}</a>?\n\n———\n\nDecided: <b>ban</b>.\n\n` +
-    `Voted for ban: <a href="tg:user?id=${user.id}">@${user.username}</a>, ` +
-    `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>.`,
+    `<a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a> offers to ban ` +
+    `<a href="tg:user?id=${user.id.toString()}">@${user.username ?? ""}</a>. This requires 2 votes.\n\n` +
+    `Do you want to ban <a href="tg:user?id=${user.id.toString()}">@${user.username ?? ""}</a>?` +
+    "\n\n———\n\nDecided: <b>ban</b>.\n\n" +
+    `Voted for ban: <a href="tg:user?id=${user.id.toString()}">@${user.username ?? ""}</a>, ` +
+    `<a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>.`,
 };
 
 /**
@@ -129,10 +130,10 @@ export const cbCancelledAgainstAdminEditMessageTextPayload = {
   message_id: 3,
   parse_mode: "HTML",
   text:
-    `<a href="tg:user?id=${user.id}">@${user.username}</a> offers to ban ` +
-    `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>. This requires 2 votes.\n\nDo you want to ban ` +
-    `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>?\n\n<b>Voting has been cancelled.</b> ` +
-    "It is not possible to vote against an administrator.",
+    `<a href="tg:user?id=${user.id.toString()}">@${user.username ?? ""}</a> offers to ban ` +
+    `<a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>. This requires 2 votes.\n\n` +
+    `Do you want to ban <a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>?\n\n` +
+    "<b>Voting has been cancelled.</b> It is not possible to vote against an administrator.",
 };
 
 /**
@@ -144,10 +145,10 @@ export const cbCancelledBotNotAdminEditMessageTextPayload = {
   message_id: 3,
   parse_mode: "HTML",
   text:
-    `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a> offers to ban ` +
-    `<a href="tg:user?id=${user.id}">@${user.username}</a>. This requires 2 votes.\n\nDo you want to ban ` +
-    `<a href="tg:user?id=${user.id}">@${user.username}</a>?\n\n<b>Voting has been cancelled.</b> I need ` +
-    "administrator permissions for this feature to work.",
+    `<a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a> offers to ban ` +
+    `<a href="tg:user?id=${user.id.toString()}">@${user.username ?? ""}</a>. This requires 2 votes.\n\n` +
+    `Do you want to ban <a href="tg:user?id=${user.id.toString()}">@${user.username ?? ""}</a>?\n\n` +
+    "<b>Voting has been cancelled.</b> I need administrator permissions for this feature to work.",
 };
 
 /**
@@ -158,9 +159,9 @@ export const cbCancelledEditMessageTextPayload = {
   message_id: 3,
   parse_mode: "HTML",
   text:
-    `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a> offers to ban ` +
-    `<a href="tg:user?id=${user.id}">@${user.username}</a>.\n\nDo you want to ban ` +
-    `<a href="tg:user?id=${user.id}">@${user.username}</a>?\n\n<b>Voting has been cancelled.</b> ` +
+    `<a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a> offers to ban ` +
+    `<a href="tg:user?id=${user.id.toString()}">@${user.username ?? ""}</a>.\n\nDo you want to ban ` +
+    `<a href="tg:user?id=${user.id.toString()}">@${user.username ?? ""}</a>?\n\n<b>Voting has been cancelled.</b> ` +
     "Ban Voting feature is disabled.",
 };
 
@@ -178,9 +179,9 @@ export const cbNoBanEditMessageTextPayload = {
     ],
   },
   text:
-    `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a> offers to ban ` +
-    `<a href="tg:user?id=${user.id}">@${user.username}</a>. This requires 2 votes.\n\n` +
-    `Do you want to ban <a href="tg:user?id=${user.id}">@${user.username}</a>?`,
+    `<a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a> offers to ban ` +
+    `<a href="tg:user?id=${user.id.toString()}">@${user.username ?? ""}</a>. This requires 2 votes.\n\n` +
+    `Do you want to ban <a href="tg:user?id=${user.id.toString()}">@${user.username ?? ""}</a>?`,
 };
 
 /**
@@ -217,15 +218,15 @@ export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
   reply_markup: {
     inline_keyboard: [
       [
-        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}&v=2`, text: "-1" },
-        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}&v=4`, text: "+1" },
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id.toString()}&v=2`, text: "-1" },
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id.toString()}&v=4`, text: "+1" },
       ],
       [
-        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}&v=-47`, text: "-50" },
-        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}&v=53`, text: "+50" },
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id.toString()}&v=-47`, text: "-50" },
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id.toString()}&v=53`, text: "+50" },
       ],
-      [{ callback_data: `${VotebanAction.SAVE}?cId=${supergroup.id}&v=3`, text: "Save" }],
-      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}`, text: "« Back to features" }],
+      [{ callback_data: `${VotebanAction.SAVE}?cId=${supergroup.id.toString()}&v=3`, text: "Save" }],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}`, text: "« Back to features" }],
     ],
   },
   text:
@@ -234,10 +235,10 @@ export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
     "administrators are offline. Messages sent more than 48 hours ago won't be deleted according to Telegram rules.\n" +
     "\n/voteban - start voting (can be used without the slash)\n\n<b>Tip:</b> Don't set your vote limit too low. " +
     "Otherwise, a user who has several accounts will be able to single-handedly collect the required number of votes " +
-    `and ban other chat members.\n\nSet the vote limit for making a decision in @${supergroup.username} chat. ` +
+    `and ban other chat members.\n\nSet the vote limit for making a decision in @${supergroup.username ?? ""} chat. ` +
     "If set a value less than 2, the feature will be disabled.\n\nCurrent value: <b>3</b>\n" +
     `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
-    `by <a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>`,
+    `by <a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>`,
 });
 
 /**
@@ -260,7 +261,7 @@ export const cbSaveSettingsErrorWebhook = {
 export const cbSaveSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${VotebanAction.SAVE}?cId=${supergroup.id}&v=3`,
+    data: `${VotebanAction.SAVE}?cId=${supergroup.id.toString()}&v=3`,
     from: adminUser,
     id: "1",
     message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
@@ -292,15 +293,15 @@ export const cbSettingsEditMessageTextPayload = {
   reply_markup: {
     inline_keyboard: [
       [
-        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}&v=-1`, text: "-1" },
-        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}&v=2`, text: "+1" },
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id.toString()}&v=-1`, text: "-1" },
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id.toString()}&v=2`, text: "+1" },
       ],
       [
-        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}&v=-50`, text: "-50" },
-        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}&v=50`, text: "+50" },
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id.toString()}&v=-50`, text: "-50" },
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id.toString()}&v=50`, text: "+50" },
       ],
-      [{ callback_data: `${VotebanAction.SAVE}?cId=${supergroup.id}&v=0`, text: "Save" }],
-      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}`, text: "« Back to features" }],
+      [{ callback_data: `${VotebanAction.SAVE}?cId=${supergroup.id.toString()}&v=0`, text: "Save" }],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}`, text: "« Back to features" }],
     ],
   },
   text:
@@ -310,7 +311,7 @@ export const cbSettingsEditMessageTextPayload = {
     "Telegram rules.\n\n/voteban - start voting (can be used without the slash)\n\n<b>Tip:</b> " +
     "Don't set your vote limit too low. Otherwise, a user who has several accounts will be able to single-handedly " +
     "collect the required number of votes and ban other chat members.\n\nSet the vote limit for making a decision " +
-    `in @${supergroup.username} chat. If set a value less than 2, the feature will be disabled.\n\n` +
+    `in @${supergroup.username ?? ""} chat. If set a value less than 2, the feature will be disabled.\n\n` +
     "Current state: <b>disabled</b>",
 };
 
@@ -320,7 +321,7 @@ export const cbSettingsEditMessageTextPayload = {
 export const cbSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}`,
+    data: `${VotebanAction.SETTINGS}?cId=${supergroup.id.toString()}`,
     from: adminUser,
     id: "1",
     message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
@@ -394,9 +395,45 @@ export const votebanSendMessagePayload = {
   },
   reply_parameters: { allow_sending_without_reply: true, message_id: 1 },
   text:
-    `<a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a> offers to ban ` +
-    `<a href="tg:user?id=${user.id}">@${user.username}</a>. This requires 2 votes.\n\n` +
-    `Do you want to ban <a href="tg:user?id=${user.id}">@${user.username}</a>?`,
+    `<a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a> offers to ban ` +
+    `<a href="tg:user?id=${user.id.toString()}">@${user.username ?? ""}</a>. This requires 2 votes.\n\n` +
+    `Do you want to ban <a href="tg:user?id=${user.id.toString()}">@${user.username ?? ""}</a>?`,
+};
+
+/**
+ * Payload for send message request. It should be sent as a result of voteban command from a sender chat.
+ */
+export const votebanSenderChatSendMessagePayload = {
+  chat_id: supergroup.id,
+  parse_mode: "HTML",
+  reply_markup: {
+    inline_keyboard: [
+      [{ callback_data: VotebanAction.BAN, text: "Ban (0/2)" }],
+      [{ callback_data: VotebanAction.NO_BAN, text: "Keep (0/2)" }],
+    ],
+  },
+  reply_parameters: { allow_sending_without_reply: true, message_id: 1 },
+  text:
+    `@${supergroup.username ?? ""} offers to ban ` +
+    `<a href="tg:user?id=${user.id.toString()}">@${user.username ?? ""}</a>. This requires 2 votes.\n\n` +
+    `Do you want to ban <a href="tg:user?id=${user.id.toString()}">@${user.username ?? ""}</a>?`,
+};
+
+/**
+ * Webhook payload which contains voteban command
+ */
+export const votebanSenderChatWebhook = {
+  message: {
+    chat: supergroup,
+    date: Date.now(),
+    from: systemChannelBot,
+    message_id: 2,
+    message_thread_id: 1,
+    reply_to_message: { chat: supergroup, date: Date.now(), from: user, message_id: 1, text: "Bad" },
+    sender_chat: supergroup,
+    text: "/voteban",
+  },
+  update_id: 1,
 };
 
 /**

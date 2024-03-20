@@ -195,7 +195,7 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
    * @returns Cache key
    */
   private getChatCacheKey(chatId: number): string {
-    return `database-upsert-chat-${chatId}`;
+    return `database-upsert-chat-${chatId.toString()}`;
   }
 
   /**
