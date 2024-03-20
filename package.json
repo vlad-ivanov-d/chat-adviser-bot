@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "build": "eslint \"{src,apps,fixtures,k6,libs,test}/**/*.ts\" && nest build",
-    "dev:env:up": "docker compose -f compose.dev.yml up --remove-orphans --wait -d && prisma migrate dev",
+    "dev:env:up": "docker compose up --remove-orphans --wait -d && prisma migrate dev",
     "k6": "ts-node k6/utils/setup",
     "lint": "eslint \"{src,apps,fixtures,k6,libs,test}/**/*.ts\" --fix",
     "make:badges": "istanbul-badges-readme --coverageDir=\"./coverage-total\" --exitCode=1 --silent",
@@ -15,7 +15,7 @@
     "start:debug": "npm run dev:env:up && nest start --debug --watch",
     "start:dev": "npm run dev:env:up && nest start --watch",
     "start:prod": "node dist/main",
-    "start:prod:docker": "docker compose up --build --remove-orphans -d",
+    "start:prod:docker": "docker compose -f compose.build.yml up --build --remove-orphans -d",
     "test": "jest",
     "test:cov": "jest --coverage",
     "test:watch": "jest --watch",

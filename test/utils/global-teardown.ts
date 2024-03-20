@@ -11,7 +11,7 @@ let isEventAdded = false;
  */
 // eslint-disable-next-line import/no-default-export
 export default (config: Config): void => {
-  const command = "docker compose -f compose.test.yml down -v";
+  const command = "docker compose -p chat-adviser-bot-test down -v";
   if (isEventAdded) {
     return;
   }
