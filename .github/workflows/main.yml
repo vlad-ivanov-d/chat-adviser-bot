@@ -32,7 +32,7 @@ jobs:
           name: app
           path: |
             Dockerfile
-            compose.yml
+            compose.build.yml
             dist
             package-lock.json
             package.json
