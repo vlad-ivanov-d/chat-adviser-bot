@@ -15,11 +15,12 @@ import { Cache as CacheManager } from "cache-manager";
 import { formatInTimeZone } from "date-fns-tz";
 import i18next, { t } from "i18next";
 import { InjectBot } from "nestjs-telegraf";
+import { Telegraf } from "telegraf";
+import type { Chat, User as TelegramUser } from "telegraf/typings/core/types/typegram";
+
 import { DATE_FORMAT } from "src/app.constants";
 import { getDateLocale } from "src/utils/dates";
 import { getChatDisplayTitle, getUserDisplayName, getUserHtmlLink } from "src/utils/telegraf";
-import { Telegraf } from "telegraf";
-import type { Chat, User as TelegramUser } from "telegraf/typings/core/types/typegram";
 
 import type { UpsertedChat } from "./interfaces/upserted-chat.interface";
 import { CHAT_CACHE_TIMEOUT } from "./prisma.constants";
@@ -44,8 +45,7 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
    */
   public async deleteChatCache(chatId: number): Promise<void> {
     const cacheKey = this.getChatCacheKey(chatId);
-    const keys = await this.cacheManager.store.keys();
-    await Promise.all(keys.filter((k) => k.startsWith(cacheKey)).map((k) => this.cacheManager.del(k)));
+    await this.cacheManager.del(cacheKey);
   }
 
   /**
@@ -117,7 +117,7 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
    * @returns Chat
    */
   public async upsertChatWithCache(chat: Chat, editor: TelegramUser): Promise<UpsertedChat> {
-    const cacheKey = this.getChatCacheKey(chat.id, editor.id);
+    const cacheKey = this.getChatCacheKey(chat.id);
     return this.cacheManager.wrap(cacheKey, () => this.upsertChat(chat, editor), CHAT_CACHE_TIMEOUT);
   }
 
@@ -192,11 +192,10 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
   /**
    * Gets cache key for the chat
    * @param chatId Chat id
-   * @param editorId Editor id
    * @returns Cache key
    */
-  private getChatCacheKey(chatId: number, editorId?: number): string {
-    return `database-upsert-chat-${chatId}` + (typeof editorId === "undefined" ? "" : `-${editorId}`);
+  private getChatCacheKey(chatId: number): string {
+    return `database-upsert-chat-${chatId.toString()}`;
   }
 
   /**
@@ -242,11 +241,12 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
    */
   private async upsertChat(chat: Chat, editor: TelegramUser): Promise<UpsertedChat> {
     const { botInfo, telegram } = this.bot;
-    const [admins, membersCount] = await Promise.all([
-      // An expected error may happen if administrators are hidden
-      chat.type === "private" ? [] : telegram.getChatAdministrators(chat.id).catch(() => []),
-      telegram.getChatMembersCount(chat.id),
-    ]);
+    const [admins, membersCount] = await Promise.all(
+      chat.type === "private"
+        ? [[], 2]
+        : // An expected error may happen if administrators are hidden
+          [telegram.getChatAdministrators(chat.id).catch(() => []), telegram.getChatMembersCount(chat.id)],
+    );
 
     const adminIds = admins.map((a) => ({ id: a.user.id }));
     const isGroupChat = chat.type === "group" || chat.type === "supergroup";

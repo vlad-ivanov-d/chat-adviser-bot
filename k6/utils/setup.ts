@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 dotenv.config({ path: ".env.test" });
 process.env.NODE_ENV = "test";
 import { build } from "esbuild";
+
 import { AppModule } from "src/app.module";
 import { store } from "src/utils/redis";
 import { cleanupDb } from "test/utils/database";
@@ -81,7 +82,7 @@ const setup = async (): Promise<void> => {
 
   // Start env
   server.listen({ onUnhandledRequest: "error" });
-  execSync("docker compose -f compose.test.yml up --force-recreate --remove-orphans --wait -d");
+  execSync("docker compose -p chat-adviser-bot-test up --remove-orphans --wait -d");
   execSync("npx prisma migrate deploy");
   const moduleFixture = await Test.createTestingModule({ imports: [AppModule] }).compile();
   const app = moduleFixture.createNestApplication();
@@ -98,7 +99,7 @@ const setup = async (): Promise<void> => {
 
   // Stop the env
   await app.close();
-  execSync("docker compose -f compose.test.yml down -v");
+  execSync("docker compose -p chat-adviser-bot-test down -v");
 
   process.exit();
 };

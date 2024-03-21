@@ -7,7 +7,7 @@ import { SettingsAction } from "src/settings/interfaces/action.interface";
 import { VotebanAction } from "src/voteban/interfaces/action.interface";
 
 import { group, privateChat, supergroup } from "./chats";
-import { adminUser, bot } from "./users";
+import { adminUser, bot, systemChannelBot } from "./users";
 
 const chatsText =
   "Below is a list of chats that are available to me, and where you are an administrator. " +
@@ -50,23 +50,54 @@ export const addedToNewChatSendMessagePayload2 = {
   parse_mode: "HTML",
   reply_markup: {
     inline_keyboard: [
-      [{ callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id}`, text: "Ban Voting" }],
-      [{ callback_data: `${LanguageAction.SETTINGS}?cId=${supergroup.id}`, text: "Language" }],
+      [{ callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id.toString()}`, text: "Ban Voting" }],
+      [{ callback_data: `${LanguageAction.SETTINGS}?cId=${supergroup.id.toString()}`, text: "Language" }],
       [
         {
-          callback_data: `${ChannelMessageFilterAction.SETTINGS}?cId=${supergroup.id}`,
+          callback_data: `${ChannelMessageFilterAction.SETTINGS}?cId=${supergroup.id.toString()}`,
           text: "Messages On Behalf Of Channels",
         },
       ],
-      [{ callback_data: `${ProfanityFilterAction.SETTINGS}?cId=${supergroup.id}`, text: "Profanity Filter" }],
-      [{ callback_data: `${AddingBotsAction.SETTINGS}?cId=${supergroup.id}`, text: "Restriction On Adding Bots" }],
-      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}&s=${PAGE_SIZE}`, text: "»" }],
+      [
+        {
+          callback_data: `${ProfanityFilterAction.SETTINGS}?cId=${supergroup.id.toString()}`,
+          text: "Profanity Filter",
+        },
+      ],
+      [
+        {
+          callback_data: `${AddingBotsAction.SETTINGS}?cId=${supergroup.id.toString()}`,
+          text: "Restriction On Adding Bots",
+        },
+      ],
+      [
+        {
+          callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}&s=${PAGE_SIZE.toString()}`,
+          text: "»",
+        },
+      ],
       [{ callback_data: SettingsAction.CHATS, text: "« Back to chats" }],
     ],
   },
   text:
-    `Select the feature you want to configure for the @${supergroup.username} chat. The list of features depends ` +
-    "on the type of chat (channel, group, etc.).",
+    `Select the feature you want to configure for the @${supergroup.username ?? ""} chat. The list of features ` +
+    "depends on the type of chat (channel, group, etc.).",
+};
+
+/**
+ * Webhook payload which contains update about adding another bot to the chat
+ */
+export const anotherBotAddedToChatWebhook = {
+  message: {
+    chat: supergroup,
+    date: Date.now(),
+    from: adminUser,
+    message_id: 1,
+    new_chat_member: systemChannelBot,
+    new_chat_members: [systemChannelBot],
+    new_chat_participant: systemChannelBot,
+  },
+  update_id: 1,
 };
 
 /**
@@ -137,7 +168,7 @@ export const cbRefreshEditMessageTextPayload = {
   parse_mode: "HTML",
   reply_markup: {
     inline_keyboard: [
-      [{ callback_data: `${SettingsAction.FEATURES}?cId=${privateChat.id}`, text: `@${bot.username}` }],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${privateChat.id.toString()}`, text: `@${bot.username}` }],
       [],
       [{ callback_data: SettingsAction.REFRESH, text: refreshListText }],
     ],
@@ -176,7 +207,7 @@ export const cbSettingsNotAdminEditMessageTextPayload = {
   parse_mode: "HTML",
   reply_markup: {
     inline_keyboard: [
-      [{ callback_data: `${SettingsAction.FEATURES}?cId=${privateChat.id}`, text: `@${bot.username}` }],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${privateChat.id.toString()}`, text: `@${bot.username}` }],
       [],
       [{ callback_data: SettingsAction.REFRESH, text: "↻ Refresh the list" }],
     ],
@@ -192,17 +223,22 @@ export const groupCreatedSendMessagePayload = {
   parse_mode: "HTML",
   reply_markup: {
     inline_keyboard: [
-      [{ callback_data: `${VotebanAction.SETTINGS}?cId=${group.id}`, text: "Ban Voting" }],
-      [{ callback_data: `${LanguageAction.SETTINGS}?cId=${group.id}`, text: "Language" }],
+      [{ callback_data: `${VotebanAction.SETTINGS}?cId=${group.id.toString()}`, text: "Ban Voting" }],
+      [{ callback_data: `${LanguageAction.SETTINGS}?cId=${group.id.toString()}`, text: "Language" }],
       [
         {
-          callback_data: `${ChannelMessageFilterAction.SETTINGS}?cId=${group.id}`,
+          callback_data: `${ChannelMessageFilterAction.SETTINGS}?cId=${group.id.toString()}`,
           text: "Messages On Behalf Of Channels",
         },
       ],
-      [{ callback_data: `${ProfanityFilterAction.SETTINGS}?cId=${group.id}`, text: "Profanity Filter" }],
-      [{ callback_data: `${AddingBotsAction.SETTINGS}?cId=${group.id}`, text: "Restriction On Adding Bots" }],
-      [{ callback_data: `${SettingsAction.FEATURES}?cId=${group.id}&s=${PAGE_SIZE}`, text: "»" }],
+      [{ callback_data: `${ProfanityFilterAction.SETTINGS}?cId=${group.id.toString()}`, text: "Profanity Filter" }],
+      [
+        {
+          callback_data: `${AddingBotsAction.SETTINGS}?cId=${group.id.toString()}`,
+          text: "Restriction On Adding Bots",
+        },
+      ],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${group.id.toString()}&s=${PAGE_SIZE.toString()}`, text: "»" }],
       [{ callback_data: SettingsAction.CHATS, text: "« Back to chats" }],
     ],
   },
@@ -247,7 +283,7 @@ export const myChatsInPrivateChatSendMessagePayload = {
   parse_mode: "HTML",
   reply_markup: {
     inline_keyboard: [
-      [{ callback_data: `${SettingsAction.FEATURES}?cId=${privateChat.id}`, text: `@${bot.username}` }],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${privateChat.id.toString()}`, text: `@${bot.username}` }],
       [],
       [{ callback_data: SettingsAction.REFRESH, text: refreshListText }],
     ],
@@ -278,7 +314,7 @@ export const myChatsInSupergroupSendMessagePayload = {
   parse_mode: "HTML",
   reply_parameters: { message_id: 1 },
   text:
-    `Send this command to me in <a href="tg:user?id=${bot.id}">private messages</a> ` +
+    `Send this command to me in <a href="tg:user?id=${bot.id.toString()}">private messages</a> ` +
     "and I'll help you to configure your chats.",
 };
 

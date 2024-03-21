@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ChannelMessageFilterRule, ChatSettingName } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
 import { Ctx, Next, On, Update } from "nestjs-telegraf";
+
 import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
 import { NextFunction } from "src/types/next-function";
@@ -67,7 +68,7 @@ export class ChannelMessageFilterService {
     const { channelMessageFilter } = await this.prismaService.upsertChatWithCache(chat, from);
     if (channelMessageFilter === ChannelMessageFilterRule.FILTER) {
       // An expected error may happen when bot has no enough permissions
-      await Promise.all([ctx.deleteMessage(messageId), ctx.banChatSenderChat(senderChat.id)]).catch(() => undefined);
+      await Promise.all([ctx.deleteMessage(messageId), ctx.banChatSenderChat(senderChat.id)]).catch(() => false);
       return;
     }
 

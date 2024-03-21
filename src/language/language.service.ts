@@ -1,13 +1,14 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, type OnModuleInit } from "@nestjs/common";
 import { ChatSettingName, LanguageCode } from "@prisma/client";
 import { changeLanguage, init, t } from "i18next";
 import { On, Update } from "nestjs-telegraf";
+import type { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
+
 import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
 import { NextFunction } from "src/types/next-function";
 import { CallbackCtx } from "src/types/telegraf-context";
 import { buildCbData, getChatHtmlLink, parseCbData } from "src/utils/telegraf";
-import type { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 
 import { LanguageAction } from "./interfaces/action.interface";
 import { DEFAULT_NS } from "./language.constants";
@@ -16,7 +17,7 @@ import ru from "./translations/ru.json";
 
 @Update()
 @Injectable()
-export class LanguageService {
+export class LanguageService implements OnModuleInit {
   private readonly logger = new Logger(LanguageService.name);
 
   /**

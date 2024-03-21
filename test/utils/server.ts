@@ -1,8 +1,10 @@
 import { http, HttpResponse, type HttpResponseResolver, passthrough, type PathParams } from "msw";
 import { setupServer } from "msw/node";
-import { group, privateChat, supergroup } from "test/fixtures/chats";
-import { adminUser, bot, user } from "test/fixtures/users";
-import { TELEGRAM_API_BASE_URL } from "test/utils/constants";
+
+import { group, privateChat, supergroup } from "fixtures/chats";
+import { adminUser, bot, user } from "fixtures/users";
+
+import { TEST_TELEGRAM_API_BASE_URL } from "./constants";
 
 /**
  * Resolves response for /getChatAdministrators endpoint.
@@ -67,10 +69,10 @@ const getChatResolver: HttpResponseResolver<PathParams, { chat_id: number }> = a
  */
 export const server = setupServer(
   ...(process.env.WEBHOOK_PATH ? [http.post(`**${process.env.WEBHOOK_PATH}`, passthrough)] : []),
-  http.post(`${TELEGRAM_API_BASE_URL}/getChat`, getChatResolver),
-  http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, getChatAdministratorsResolver),
-  http.post(`${TELEGRAM_API_BASE_URL}/getChatMember`, getChatMemberResolver),
-  http.post(`${TELEGRAM_API_BASE_URL}/getChatMembersCount`, getChatMembersCountResolver),
-  http.post(`${TELEGRAM_API_BASE_URL}/getMe`, () => HttpResponse.json({ ok: true, result: bot })),
-  http.post(`${TELEGRAM_API_BASE_URL}/setWebhook`, () => HttpResponse.json({ ok: true, result: true })),
+  http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChat`, getChatResolver),
+  http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, getChatAdministratorsResolver),
+  http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatMember`, getChatMemberResolver),
+  http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatMembersCount`, getChatMembersCountResolver),
+  http.post(`${TEST_TELEGRAM_API_BASE_URL}/getMe`, () => HttpResponse.json({ ok: true, result: bot })),
+  http.post(`${TEST_TELEGRAM_API_BASE_URL}/setWebhook`, () => HttpResponse.json({ ok: true, result: true })),
 );

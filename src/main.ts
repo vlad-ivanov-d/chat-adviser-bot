@@ -1,4 +1,5 @@
 import { NestFactory } from "@nestjs/core";
+import type { TransformableInfo } from "logform";
 import { WinstonModule } from "nest-winston";
 import { createLogger, format, transports } from "winston";
 
@@ -17,7 +18,9 @@ const bootstrap = async (): Promise<void> => {
             format.colorize({ all: true }),
             format.timestamp({ format: "MM/DD/YYYY, hh:mm:ss A" }),
             format.printf(
-              (info) => `[Nest] - ${info.timestamp} ${info.level} \u001b[33m[${info.context}]\x1b[0m ${info.message}`,
+              (info: TransformableInfo & { context?: string; timestamp?: string }) =>
+                `[Nest] - ${info.timestamp ?? ""} ${info.level} ` +
+                `\u001b[33m[${info.context ?? ""}]\x1b[0m ${typeof info.message === "string" ? info.message : ""}`,
             ),
           ),
         }),

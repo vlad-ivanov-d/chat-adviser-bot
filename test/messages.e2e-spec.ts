@@ -2,11 +2,12 @@ import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import request from "supertest";
 import type { App } from "supertest/types";
-import { createDbSupergroupChat, prisma } from "test/utils/database";
 
-import { AppModule } from "../src/app.module";
-import * as fixtures from "./fixtures/messages";
-import { ASYNC_REQUEST_DELAY, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./utils/constants";
+import * as fixtures from "fixtures/messages";
+import { AppModule } from "src/app.module";
+
+import { TEST_ASYNC_DELAY, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./utils/constants";
+import { createDbSupergroupChat, prisma } from "./utils/database";
 import { sleep } from "./utils/sleep";
 
 describe("MessagesModule (e2e)", () => {
@@ -26,7 +27,7 @@ describe("MessagesModule (e2e)", () => {
     await createDbSupergroupChat();
     await prisma.message.create({ data: fixtures.oldSavedMessage, select: { id: true } });
     await jest.advanceTimersByTimeAsync(24 * 60 * 60 * 1000); // 24h to run the daily cron job
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
 
     const savedMessages = await prisma.message.findMany();
     expect(savedMessages.length).toBe(0);

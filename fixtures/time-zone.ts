@@ -11,7 +11,7 @@ export const backToFeaturesText = "« Back to features";
 export const cbSaveIncorrectValueSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${TimeZoneAction.SAVE}?cId=${supergroup.id}&v=incorrect`,
+    data: `${TimeZoneAction.SAVE}?cId=${supergroup.id.toString()}&v=incorrect`,
     from: adminUser,
     id: "1",
     message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
@@ -39,7 +39,7 @@ export const cbSaveSettingsErrorWebhook = {
 export const cbSaveSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${TimeZoneAction.SAVE}?cId=${supergroup.id}&v=Europe%2FLondon`,
+    data: `${TimeZoneAction.SAVE}?cId=${supergroup.id.toString()}&v=Europe%2FLondon`,
     from: adminUser,
     id: "1",
     message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
@@ -67,7 +67,7 @@ export const cbSettingsErrorWebhook = {
 export const cbSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${TimeZoneAction.SETTINGS}?cId=${supergroup.id}`,
+    data: `${TimeZoneAction.SETTINGS}?cId=${supergroup.id.toString()}`,
     from: adminUser,
     id: "1",
     message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },

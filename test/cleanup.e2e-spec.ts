@@ -2,11 +2,12 @@ import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import request from "supertest";
 import type { App } from "supertest/types";
-import { createDbPrivateChat, createDbSupergroupChat, prisma } from "test/utils/database";
 
-import { AppModule } from "../src/app.module";
-import * as fixtures from "./fixtures/cleanup";
-import { ASYNC_REQUEST_DELAY, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./utils/constants";
+import * as fixtures from "fixtures/cleanup";
+import { AppModule } from "src/app.module";
+
+import { TEST_ASYNC_DELAY, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./utils/constants";
+import { createDbPrivateChat, createDbSupergroupChat, prisma } from "./utils/database";
 import { sleep } from "./utils/sleep";
 
 describe("CleanupModule (e2e)", () => {
@@ -25,7 +26,7 @@ describe("CleanupModule (e2e)", () => {
   it("cleanups unused private chats and users at midnight", async () => {
     await createDbPrivateChat();
     await jest.advanceTimersByTimeAsync(24 * 60 * 60 * 1000); // 24h to run the daily cron job
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
 
     const chats = await prisma.chat.findMany();
     expect(chats.length).toBe(0);

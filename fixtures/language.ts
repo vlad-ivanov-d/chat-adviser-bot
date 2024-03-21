@@ -1,4 +1,5 @@
 import { formatInTimeZone } from "date-fns-tz";
+
 import { DATE_FORMAT } from "src/app.constants";
 import { LanguageAction } from "src/language/interfaces/action.interface";
 import { SettingsAction } from "src/settings/interfaces/action.interface";
@@ -12,7 +13,7 @@ import { adminUser, bot } from "./users";
 export const cbSaveIncorrectValueSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${LanguageAction.SAVE}?cId=${supergroup.id}&v=incorrect`,
+    data: `${LanguageAction.SAVE}?cId=${supergroup.id.toString()}&v=incorrect`,
     from: adminUser,
     id: "1",
     message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
@@ -26,7 +27,7 @@ export const cbSaveIncorrectValueSettingsWebhook = {
 export const cbSaveSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${LanguageAction.SAVE}?cId=${supergroup.id}&v=RU`,
+    data: `${LanguageAction.SAVE}?cId=${supergroup.id.toString()}&v=RU`,
     from: adminUser,
     id: "1",
     message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
@@ -43,9 +44,9 @@ export const cbSettingsEditMessageTextPayload = {
   parse_mode: "HTML",
   reply_markup: {
     inline_keyboard: [
-      [{ callback_data: `${LanguageAction.SAVE}?cId=${supergroup.id}&v=EN`, text: "English" }],
-      [{ callback_data: `${LanguageAction.SAVE}?cId=${supergroup.id}&v=RU`, text: "Русский" }],
-      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}`, text: "« Back to features" }],
+      [{ callback_data: `${LanguageAction.SAVE}?cId=${supergroup.id.toString()}&v=EN`, text: "English" }],
+      [{ callback_data: `${LanguageAction.SAVE}?cId=${supergroup.id.toString()}&v=RU`, text: "Русский" }],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}`, text: "« Back to features" }],
     ],
   },
   text:
@@ -65,7 +66,7 @@ export const cbSaveIncorrectValueSettingsEditMessageTextPayload = (): unknown =>
     "<b>Language</b>\nI can communicate in different languages so that chat users can understand me.\n\n" +
     "Select a language for @test_supergroup chat.\n\nCurrent language: <b>English</b>\n" +
     `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
-    `by <a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>`,
+    `by <a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>`,
 });
 
 /**
@@ -79,7 +80,7 @@ export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
     "<b>Language</b>\nI can communicate in different languages so that chat users can understand me.\n\n" +
     "Select a language for @test_supergroup chat.\n\nCurrent language: <b>Русский</b>\n" +
     `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
-    `by <a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>`,
+    `by <a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>`,
 });
 
 /**
@@ -116,7 +117,7 @@ export const cbSettingsErrorWebhook = {
 export const cbSettingsWebhook = {
   callback_query: {
     chat_instance: "1",
-    data: `${LanguageAction.SETTINGS}?cId=${supergroup.id}`,
+    data: `${LanguageAction.SETTINGS}?cId=${supergroup.id.toString()}`,
     from: adminUser,
     id: "1",
     message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },

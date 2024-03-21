@@ -1,9 +1,10 @@
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
-import { Inject, Injectable } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { ChatSettingName, ProfanityFilterRule } from "@prisma/client";
 import { Cache as CacheManager } from "cache-manager";
 import { changeLanguage, t } from "i18next";
 import { Ctx, Next, On, Update } from "nestjs-telegraf";
+
 import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
 import { NextFunction } from "src/types/next-function";
@@ -18,6 +19,8 @@ import { WORDS_CACHE_KEY, WORDS_CACHE_TIMEOUT } from "./profanity-filter.constan
 @Update()
 @Injectable()
 export class ProfanityFilterService {
+  private readonly logger = new Logger(ProfanityFilterService.name);
+
   /**
    * Creates service
    * @param cacheManager Cache manager
@@ -60,14 +63,10 @@ export class ProfanityFilterService {
     const message = "message" in ctx.update ? ctx.update.message : ctx.update.edited_message;
     const { chat, from, message_id: messageId, sender_chat: senderChat } = message;
 
-    if ("is_automatic_forward" in message) {
-      // Message from linked chat
-      await next();
-      return;
-    }
-
-    if ("left_chat_member" in message && message.left_chat_member.id === ctx.botInfo.id) {
-      // The bot is kicked from the chat
+    if (
+      "is_automatic_forward" in message ||
+      ("left_chat_member" in message && message.left_chat_member.id === ctx.botInfo.id)
+    ) {
       await next();
       return;
     }
@@ -100,6 +99,7 @@ export class ProfanityFilterService {
       profanity.filter(stringsToFilter.userFullName).hasProfanity ||
       profanity.filter(stringsToFilter.username).hasProfanity
     ) {
+      this.logger.warn("A profanity was detected");
       // An expected error may happen if there are no enough permissions
       const isDeleted = await ctx.deleteMessage(messageId).catch(() => false);
       if (isDeleted && !("new_chat_members" in message)) {

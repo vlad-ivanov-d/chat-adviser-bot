@@ -1,8 +1,9 @@
 import { ChatType, type SenderChat, type User as PrismaUser } from "@prisma/client";
+import type { Telegram } from "telegraf";
+import type { Chat, InlineKeyboardButton, User } from "telegraf/typings/core/types/typegram";
+
 import { PAGE_SIZE } from "src/app.constants";
 import type { CallbackCtx } from "src/types/telegraf-context";
-import type { Telegraf, Telegram } from "telegraf";
-import type { Chat, InlineKeyboardButton, User } from "telegraf/typings/core/types/typegram";
 
 export interface BuildCbDataParams {
   /**
@@ -219,7 +220,7 @@ export const getUserFullName = (user: User | PrismaUser): string => {
  */
 export const getUserHtmlLink = (user: User | PrismaUser): string => {
   const displayName = getUserDisplayName(user, "short");
-  return `<a href="tg:user?id=${user.id}">${encodeText(displayName)}</a>`;
+  return `<a href="tg:user?id=${user.id.toString()}">${encodeText(displayName)}</a>`;
 };
 
 /**
@@ -247,7 +248,7 @@ export const encodeText = (text: string): string =>
  * @returns Returns true if the user is an admin. Returns undefined if the member list is not available.
  */
 export const isChatAdmin = async (telegram: Telegram, chatId: number, userId: number): Promise<boolean | undefined> => {
-  const member = await telegram.getChatMember(chatId, userId).catch((e) => {
+  const member = await telegram.getChatMember(chatId, userId).catch((e: unknown) => {
     const errorCode = getErrorCode(e);
     switch (errorCode) {
       // User have never been in the chat
@@ -274,7 +275,7 @@ export const isChatMember = async (
   chatId: number,
   userId: number,
 ): Promise<boolean | undefined> => {
-  const member = await telegram.getChatMember(chatId, userId).catch((e) => {
+  const member = await telegram.getChatMember(chatId, userId).catch((e: unknown) => {
     const errorCode = getErrorCode(e);
     switch (errorCode) {
       // User have never been in the chat
@@ -287,15 +288,4 @@ export const isChatMember = async (
     }
   });
   return member && ["administrator", "creator", "member", "restricted"].includes(member.status);
-};
-
-/**
- * Kicks user from the chat.
- * @param bot Telegraf bot instance
- * @param chatId Chat id
- * @param userId User id
- */
-export const kickChatMember = async (bot: Telegraf, chatId: number, userId: number): Promise<void> => {
-  await bot.telegram.banChatMember(chatId, userId);
-  await bot.telegram.unbanChatMember(chatId, userId);
 };

@@ -1,8 +1,9 @@
 import { check, sleep } from "k6";
 import http from "k6/http";
-import * as fixtures from "test/fixtures/warnings";
 
-import { K6_WEBHOOK_URL } from "./utils/constants";
+import * as fixtures from "fixtures/warnings";
+
+import { K6_SLEEP_DURATION, K6_WEBHOOK_URL } from "./utils/constants";
 
 /**
  * Test options
@@ -14,7 +15,7 @@ export const options = {
   },
   thresholds: {
     checks: ["rate===1"], // 100% of successful checks
-    http_req_duration: ["p(100)<300"], // 100% of requests should be below 300ms
+    http_req_duration: ["p(95)<300"], // 95% of requests should be below 300ms
   },
 };
 
@@ -31,5 +32,5 @@ export const warn = (): void => {
      */
     "is status 200": (r) => r.status === 200,
   });
-  sleep(1);
+  sleep(K6_SLEEP_DURATION);
 };

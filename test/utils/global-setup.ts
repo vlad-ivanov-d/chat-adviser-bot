@@ -14,7 +14,7 @@ export default (): void => {
     return;
   }
   dotenv.config({ path: ".env.test" });
-  execSync("docker compose -f compose.test.yml up --force-recreate --remove-orphans --wait -d");
+  execSync("docker compose -p chat-adviser-bot-test up --remove-orphans --wait -d");
   execSync("npx prisma migrate deploy");
   isEnvRunning = true;
 };

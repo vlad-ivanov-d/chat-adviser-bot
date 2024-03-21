@@ -2,12 +2,13 @@ import { Injectable } from "@nestjs/common";
 import { AddingBotsRule, ChatSettingName } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
 import { Ctx, InjectBot, Next, On, Update } from "nestjs-telegraf";
+import { Telegraf } from "telegraf";
+
 import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
 import { NextFunction } from "src/types/next-function";
 import { CallbackCtx, NewChatMembersCtx } from "src/types/telegraf-context";
-import { buildCbData, getChatHtmlLink, getUserHtmlLink, kickChatMember, parseCbData } from "src/utils/telegraf";
-import { Telegraf } from "telegraf";
+import { buildCbData, getChatHtmlLink, getUserHtmlLink, parseCbData } from "src/utils/telegraf";
 
 import { AddingBotsAction } from "./interfaces/action.interface";
 
@@ -73,7 +74,12 @@ export class AddingBotsService {
 
     try {
       if (dbChat.addingBots === AddingBotsRule.RESTRICT) {
-        await Promise.all(newBots.map(async ({ id }) => kickChatMember(this.bot, chat.id, id)));
+        await Promise.all(
+          newBots.map(async ({ id }) => {
+            await ctx.banChatMember(id);
+            await ctx.unbanChatMember(id);
+          }),
+        );
       }
       if (dbChat.addingBots === AddingBotsRule.BAN && senderChat) {
         const msg = t("addingBots:userBanned", { USER: getChatHtmlLink(senderChat) });

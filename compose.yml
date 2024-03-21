@@ -1,23 +1,6 @@
 name: "chat-adviser-bot"
 
 services:
-  app:
-    build: .
-    depends_on:
-      - cache
-      - db
-    environment:
-      BOT_TOKEN: ${BOT_TOKEN}
-      DATABASE_URL: ${DATABASE_URL}
-      REDIS_HOST: ${REDIS_HOST:-cache}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      REDIS_PORT: ${REDIS_PORT}
-      WEBHOOK_DOMAIN: ${WEBHOOK_DOMAIN}
-      WEBHOOK_PATH: ${WEBHOOK_PATH}
-      WEBHOOK_PORT: ${WEBHOOK_PORT}
-      WEBHOOK_SECRET_TOKEN: ${WEBHOOK_SECRET_TOKEN}
-    restart: unless-stopped
-
   cache:
     command: --requirepass ${REDIS_PASSWORD}
     image: redis:7.2.4-alpine
@@ -32,7 +15,7 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
       POSTGRES_USER: ${DATABASE_USER}
     healthcheck:
-      interval: 15s
+      interval: 5s
       test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER}"]
     image: postgres:16.2-alpine
     ports:

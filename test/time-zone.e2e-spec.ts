@@ -2,25 +2,26 @@ import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { formatInTimeZone } from "date-fns-tz";
 import { http, HttpResponse } from "msw";
-import { DATE_FORMAT } from "src/app.constants";
-import { SettingsAction } from "src/settings/interfaces/action.interface";
-import { TimeZoneAction } from "src/time-zone/interfaces/action.interface";
 import request from "supertest";
 import type { App } from "supertest/types";
-import { server } from "test/utils/server";
 
-import { AppModule } from "../src/app.module";
-import { privateChat, supergroup } from "./fixtures/chats";
-import * as settingsFixtures from "./fixtures/settings";
-import * as fixtures from "./fixtures/time-zone";
-import { adminUser } from "./fixtures/users";
+import { privateChat, supergroup } from "fixtures/chats";
+import * as settingsFixtures from "fixtures/settings";
+import * as fixtures from "fixtures/time-zone";
+import { adminUser } from "fixtures/users";
+import { DATE_FORMAT } from "src/app.constants";
+import { AppModule } from "src/app.module";
+import { SettingsAction } from "src/settings/interfaces/action.interface";
+import { TimeZoneAction } from "src/time-zone/interfaces/action.interface";
+
 import {
-  ASYNC_REQUEST_DELAY,
-  TELEGRAM_API_BASE_URL,
+  TEST_ASYNC_DELAY,
+  TEST_TELEGRAM_API_BASE_URL,
   TEST_WEBHOOK_BASE_URL,
   TEST_WEBHOOK_PATH,
 } from "./utils/constants";
 import { createDbSupergroupChat } from "./utils/database";
+import { server } from "./utils/server";
 import { sleep } from "./utils/sleep";
 
 describe("TimeZoneModule (e2e)", () => {
@@ -50,7 +51,7 @@ describe("TimeZoneModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return new HttpResponse(null, { status: 400 });
       }),
@@ -71,14 +72,19 @@ describe("TimeZoneModule (e2e)", () => {
           expect.arrayContaining([]),
           expect.arrayContaining([]),
           expect.arrayContaining([]),
-          [{ callback_data: `${TimeZoneAction.SETTINGS}?cId=${supergroup.id}&s=5`, text: "»" }],
-          [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}`, text: fixtures.backToFeaturesText }],
+          [{ callback_data: `${TimeZoneAction.SETTINGS}?cId=${supergroup.id.toString()}&s=5`, text: "»" }],
+          [
+            {
+              callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}`,
+              text: fixtures.backToFeaturesText,
+            },
+          ],
         ],
       },
       text:
         "<b>Time Zone</b>\n" +
         "I can work in different time zones and display dates in the appropriate format.\n\n" +
-        `Select a time zone for @${supergroup.username} chat.\n\nCurrent time zone: <b>GMT+0 UTC</b>`,
+        `Select a time zone for @${supergroup.username ?? ""} chat.\n\nCurrent time zone: <b>GMT+0 UTC</b>`,
     });
   });
 
@@ -86,7 +92,7 @@ describe("TimeZoneModule (e2e)", () => {
     await createDbSupergroupChat({ timeZone: "Europe/London" });
     let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return new HttpResponse(null, { status: 400 });
       }),
@@ -104,14 +110,23 @@ describe("TimeZoneModule (e2e)", () => {
         // Necessary for expectations
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         inline_keyboard: expect.arrayContaining([
-          [expect.objectContaining({ callback_data: `${TimeZoneAction.SAVE}?cId=${supergroup.id}&v=Europe%2FLondon` })],
+          [
+            expect.objectContaining({
+              callback_data: `${TimeZoneAction.SAVE}?cId=${supergroup.id.toString()}&v=Europe%2FLondon`,
+            }),
+          ],
           [expect.objectContaining({ text: "«" }), expect.objectContaining({ text: "»" })],
-          [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}`, text: fixtures.backToFeaturesText }],
+          [
+            {
+              callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}`,
+              text: fixtures.backToFeaturesText,
+            },
+          ],
         ]),
       },
       text:
         "<b>Time Zone</b>\nI can work in different time zones and display dates in the appropriate format.\n\n" +
-        `Select a time zone for @${supergroup.username} chat.\n\nCurrent time zone: <b>GMT+0 Europe/London</b>`,
+        `Select a time zone for @${supergroup.username ?? ""} chat.\n\nCurrent time zone: <b>GMT+0 Europe/London</b>`,
     });
   });
 
@@ -119,7 +134,7 @@ describe("TimeZoneModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -129,7 +144,7 @@ describe("TimeZoneModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(editMessageTextPayload).toEqual({
       chat_id: privateChat.id,
       message_id: 1,
@@ -138,17 +153,27 @@ describe("TimeZoneModule (e2e)", () => {
         // Necessary for expectations
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         inline_keyboard: expect.arrayContaining([
-          [expect.objectContaining({ callback_data: `${TimeZoneAction.SAVE}?cId=${supergroup.id}&v=Europe%2FLondon` })],
+          [
+            expect.objectContaining({
+              callback_data: `${TimeZoneAction.SAVE}?cId=${supergroup.id.toString()}&v=Europe%2FLondon`,
+            }),
+          ],
           [expect.objectContaining({ text: "«" }), expect.objectContaining({ text: "»" })],
-          [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}`, text: fixtures.backToFeaturesText }],
+          [
+            {
+              callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}`,
+              text: fixtures.backToFeaturesText,
+            },
+          ],
         ]),
       },
       text:
         "<b>Time Zone</b>\n" +
         "I can work in different time zones and display dates in the appropriate format.\n\n" +
-        `Select a time zone for @${supergroup.username} chat.\n\nCurrent time zone: <b>GMT+0 Europe/London</b>\n` +
+        `Select a time zone for @${supergroup.username ?? ""} chat.\n\n` +
+        `Current time zone: <b>GMT+0 Europe/London</b>\n` +
         `Modified at ${formatInTimeZone(Date.now(), "Europe/London", DATE_FORMAT)} ` +
-        `by <a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>`,
+        `by <a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>`,
     });
   });
 
@@ -156,7 +181,7 @@ describe("TimeZoneModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
@@ -168,7 +193,7 @@ describe("TimeZoneModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(editMessageTextPayload).toEqual({
       chat_id: privateChat.id,
       message_id: 1,
@@ -180,33 +205,40 @@ describe("TimeZoneModule (e2e)", () => {
           expect.arrayContaining([]),
           expect.arrayContaining([]),
           expect.arrayContaining([]),
-          [{ callback_data: `${TimeZoneAction.SETTINGS}?cId=${supergroup.id}&s=5`, text: "»" }],
-          [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id}`, text: fixtures.backToFeaturesText }],
+          [{ callback_data: `${TimeZoneAction.SETTINGS}?cId=${supergroup.id.toString()}&s=5`, text: "»" }],
+          [
+            {
+              callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}`,
+              text: fixtures.backToFeaturesText,
+            },
+          ],
         ],
       },
       text:
         "<b>Time Zone</b>\nI can work in different time zones and display dates in the appropriate format.\n\n" +
-        `Select a time zone for @${supergroup.username} chat.\n\nCurrent time zone: <b>GMT+0 Etc/UTC</b>\n` +
+        `Select a time zone for @${supergroup.username ?? ""} chat.\n\nCurrent time zone: <b>GMT+0 Etc/UTC</b>\n` +
         `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
-        `by <a href="tg:user?id=${adminUser.id}">@${adminUser.username}</a>`,
+        `by <a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>`,
     });
   });
 
   it("should not render settings if the user is not an admin", async () => {
     let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
+        HttpResponse.json({ ok: true, result: [] }),
+      ),
     );
 
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSettingsNotAdminWebhookResponse);
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(editMessageTextPayload).toEqual(settingsFixtures.cbSettingsNotAdminEditMessageTextPayload);
   });
 
@@ -214,18 +246,20 @@ describe("TimeZoneModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
+        HttpResponse.json({ ok: true, result: [] }),
+      ),
     );
 
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSaveSettingsWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSettingsNotAdminWebhookResponse);
-    await sleep(ASYNC_REQUEST_DELAY);
+    await sleep(TEST_ASYNC_DELAY);
     expect(editMessageTextPayload).toEqual(settingsFixtures.cbSettingsNotAdminEditMessageTextPayload);
   });
 });

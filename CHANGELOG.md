@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.20.0 (2024-03-21)
+
+- Other: improved stability and performance
+
 ## 1.19.0 (2024-03-10)
 
 - Improvement: profanity filter now checks edited messages

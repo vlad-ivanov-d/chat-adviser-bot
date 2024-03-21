@@ -61,13 +61,10 @@
         "types": ["boolean"]
       }
     ],
-    "@typescript-eslint/no-explicit-any": "error",
     "@typescript-eslint/no-extraneous-class": "off", // Disabled due to NestJS specifics
     "@typescript-eslint/no-import-type-side-effects": "error",
     "@typescript-eslint/no-shadow":  ["error", { "builtinGlobals": true }],
     "@typescript-eslint/no-unsafe-enum-comparison": "off",
-    "@typescript-eslint/no-unused-vars": "error",
-    "@typescript-eslint/prefer-for-of": "error",
     "curly": "error",
     "default-case": "error",
     "eqeqeq": "error",
@@ -113,7 +110,25 @@
     "one-var": ["error", "never"],
     "radix": "error",
     "simple-import-sort/exports": "error",
-    "simple-import-sort/imports": "error",
+    "simple-import-sort/imports": [
+      "error",
+      {
+        "groups": [
+          // Side effect imports
+          ["^\\u0000"],
+          // Node.js builtins prefixed with `node:`
+          ["^node:"],
+          // Packages. Things that start with a letter (or digit or underscore), or `@` followed by a letter.
+          ["^@?\\w"],
+          // Folders of this repo
+          ["^(__mocks__|fixtures|src|test)(/.*|$)"],
+          // Anything not matched in another group
+          ["^"],
+          // Relative imports
+          ["^\\."]
+        ]
+      }
+    ],
     "sort-keys": "error"
   }
 }

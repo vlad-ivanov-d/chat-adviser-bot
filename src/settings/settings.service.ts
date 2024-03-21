@@ -2,6 +2,8 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ChatType } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
 import { Ctx, Hears, Next, On, Update } from "nestjs-telegraf";
+import type { InlineKeyboardButton, InlineKeyboardMarkup } from "telegraf/typings/core/types/typegram";
+
 import { AddingBotsAction } from "src/adding-bots/interfaces/action.interface";
 import { PAGE_SIZE } from "src/app.constants";
 import { ChannelMessageFilterAction } from "src/channel-message-filter/interfaces/action.interface";
@@ -15,7 +17,6 @@ import { CallbackCtx, MessageCtx, type TextMessageCtx } from "src/types/telegraf
 import { buildCbData, getChatHtmlLink, getErrorCode, getPagination, parseCbData } from "src/utils/telegraf";
 import { VotebanAction } from "src/voteban/interfaces/action.interface";
 import { WarningsAction } from "src/warnings/interfaces/action.interface";
-import type { InlineKeyboardButton, InlineKeyboardMarkup } from "telegraf/typings/core/types/typegram";
 
 import { SettingsAction } from "./interfaces/action.interface";
 
@@ -60,7 +61,7 @@ export class SettingsService {
     if (ctx.chat.type !== "private") {
       const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.message.from);
       await changeLanguage(language);
-      const msg = t("common:commandForPrivateChat", { BOT_LINK: `tg:user?id=${ctx.botInfo.id}` });
+      const msg = t("common:commandForPrivateChat", { BOT_LINK: `tg:user?id=${ctx.botInfo.id.toString()}` });
       await ctx.reply(msg, { parse_mode: "HTML", reply_parameters: { message_id: ctx.message.message_id } });
       return;
     }
@@ -75,22 +76,29 @@ export class SettingsService {
   @On(["group_chat_created", "new_chat_members", "supergroup_chat_created"])
   public async promptSettings(@Ctx() ctx: MessageCtx, @Next() next: NextFunction): Promise<void> {
     const botId = ctx.botInfo.id;
-    const { message: msg } = ctx.update;
+    const { message } = ctx.update;
+    const isBotAdded = "new_chat_members" in message && message.new_chat_members.some((m) => m.id === botId);
+    const isChatCreated = "group_chat_created" in message || "supergroup_chat_created" in message;
+
+    if (!isBotAdded && !isChatCreated) {
+      await next();
+      return;
+    }
+
+    this.logger.log(`The bot was added to a ${ctx.chat.type} chat`);
 
     const [chat, userChat] = await Promise.all([
-      this.prismaService.upsertChatWithCache(ctx.chat, msg.from),
-      this.prismaService.chat.findUnique({ select: { id: true, language: true }, where: { id: msg.from.id } }),
+      this.prismaService.upsertChatWithCache(ctx.chat, message.from),
+      this.prismaService.chat.findUnique({ select: { id: true, language: true }, where: { id: message.from.id } }),
     ]);
-    this.logger.warn("The bot was added to a chat");
 
-    const isBotAdded = "new_chat_members" in msg && msg.new_chat_members.some((m) => m.id === botId);
-    const isChatCreated = "group_chat_created" in msg || "supergroup_chat_created" in msg;
-    const isUserAdmin = this.prismaService.isChatAdmin(chat, msg.from.id, msg.sender_chat?.id);
+    const isUserAdmin = this.prismaService.isChatAdmin(chat, message.from.id, message.sender_chat?.id);
 
-    if (userChat && isUserAdmin && (isBotAdded || isChatCreated)) {
+    if (isUserAdmin && userChat) {
       await changeLanguage(userChat.language);
       await ctx.telegram.sendMessage(userChat.id, t("settings:invitation"));
       await this.renderFeatures(ctx, chat.id);
+      this.logger.log("An invitation has been sent to the administrator to complete the settings");
     }
 
     await next();
