@@ -1,4 +1,4 @@
-import { check, sleep } from "k6";
+import { sleep } from "k6";
 import http from "k6/http";
 
 import * as fixtures from "fixtures/help";
@@ -14,8 +14,8 @@ export const options = {
     help: { duration: "10s", exec: "help", executor: "constant-vus", vus: 50 },
   },
   thresholds: {
-    checks: ["rate===1"], // 100% of successful checks
     http_req_duration: ["p(95)<300"], // 95% of requests should be below 300ms
+    http_req_failed: ["rate===0"], // 0% of errors
   },
 };
 
@@ -23,14 +23,6 @@ export const options = {
  * It should answer to /help command in a supergroup chat
  */
 export const help = (): void => {
-  const res = http.post(K6_WEBHOOK_URL, JSON.stringify(fixtures.supergroupHelpWebhook));
-  check(res, {
-    /**
-     * Checks status code
-     * @param r Response
-     * @returns True if success
-     */
-    "is status 200": (r) => r.status === 200,
-  });
+  http.post(K6_WEBHOOK_URL, JSON.stringify(fixtures.supergroupHelpWebhook));
   sleep(K6_SLEEP_DURATION);
 };
