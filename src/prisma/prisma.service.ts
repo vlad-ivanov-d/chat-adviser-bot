@@ -23,7 +23,7 @@ import { getDateLocale } from "src/utils/dates";
 import { getChatDisplayTitle, getUserDisplayName, getUserHtmlLink } from "src/utils/telegraf";
 
 import type { UpsertedChat } from "./interfaces/upserted-chat.interface";
-import { CHAT_CACHE_TIMEOUT } from "./prisma.constants";
+import { CHAT_CACHE_TTL } from "./prisma.constants";
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleDestroy {
@@ -118,7 +118,7 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
    */
   public async upsertChatWithCache(chat: Chat, editor: TelegramUser): Promise<UpsertedChat> {
     const cacheKey = this.getChatCacheKey(chat.id);
-    return this.cacheManager.wrap(cacheKey, () => this.upsertChat(chat, editor), CHAT_CACHE_TIMEOUT);
+    return this.cacheManager.wrap(cacheKey, () => this.upsertChat(chat, editor), CHAT_CACHE_TTL);
   }
 
   /**

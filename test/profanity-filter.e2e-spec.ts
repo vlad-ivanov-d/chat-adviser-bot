@@ -1,11 +1,13 @@
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
+import { LanguageCode } from "@prisma/client";
 import { http, HttpResponse } from "msw";
 import request from "supertest";
 import type { App } from "supertest/types";
 
-import * as fixtures from "fixtures/channel-message-filter";
+import * as fixtures from "fixtures/profanity-filter";
 import * as settingsFixtures from "fixtures/settings";
+import { adminUser } from "fixtures/users";
 import { AppModule } from "src/app.module";
 
 import {
@@ -14,11 +16,11 @@ import {
   TEST_WEBHOOK_BASE_URL,
   TEST_WEBHOOK_PATH,
 } from "./utils/constants";
-import { createDbSupergroupChat } from "./utils/database";
+import { createDbSupergroupChat, createDbUser, prisma } from "./utils/database";
 import { server } from "./utils/server";
 import { sleep } from "./utils/sleep";
 
-describe("ChannelMessageFilterModule (e2e)", () => {
+describe("ProfanityFilterModule (e2e)", () => {
   let app: INestApplication<App>;
 
   afterEach(() => app.close());
@@ -30,19 +32,16 @@ describe("ChannelMessageFilterModule (e2e)", () => {
   });
 
   it("filters messages in a new supergroup chat", async () => {
-    let banChatSenderChatPayload;
-    server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/banChatSenderChat`, async (info) => {
-        banChatSenderChatPayload = await info.request.json();
-        return new HttpResponse(null, { status: 400 });
+    await prisma.$transaction([
+      createDbUser(adminUser),
+      prisma.profaneWord.create({
+        data: { authorId: adminUser.id, editorId: adminUser.id, language: LanguageCode.EN, word: "bad" },
       }),
-    );
-
+    ]);
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.channelMessageWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.deleteMessageWebhookResponse);
-    expect(banChatSenderChatPayload).toEqual(fixtures.banSenderChatPayload);
   });
 
   it("handles an error if chat id is incorrect during settings rendering", async () => {
@@ -93,13 +92,12 @@ describe("ChannelMessageFilterModule (e2e)", () => {
   });
 
   it("should not filter messages from the linked channel", async () => {
-    let banChatSenderChatPayload;
-    server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/banChatSenderChat`, async (info) => {
-        banChatSenderChatPayload = await info.request.json();
-        return HttpResponse.json({ ok: true });
+    await prisma.$transaction([
+      createDbUser(adminUser),
+      prisma.profaneWord.create({
+        data: { authorId: adminUser.id, editorId: adminUser.id, language: LanguageCode.EN, word: "bad" },
       }),
-    );
+    ]);
 
     const response = await request(TEST_WEBHOOK_BASE_URL)
       .post(TEST_WEBHOOK_PATH)
@@ -107,24 +105,18 @@ describe("ChannelMessageFilterModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({});
-    expect(banChatSenderChatPayload).toBeUndefined();
   });
 
   it("should not filter messages if the feature is disabled", async () => {
     await createDbSupergroupChat();
-    let banChatSenderChatPayload;
-    server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/banChatSenderChat`, async (info) => {
-        banChatSenderChatPayload = await info.request.json();
-        return HttpResponse.json({ ok: true });
-      }),
-    );
+    await prisma.profaneWord.create({
+      data: { authorId: adminUser.id, editorId: adminUser.id, language: LanguageCode.EN, word: "bad" },
+    });
 
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.channelMessageWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({});
-    expect(banChatSenderChatPayload).toBeUndefined();
   });
 
   it("should not render settings if the user is not an admin", async () => {

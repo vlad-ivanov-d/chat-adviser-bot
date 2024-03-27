@@ -21,7 +21,7 @@ export interface FilterStrings extends ForwardFilterStrings {
   /**
    * Username of the chat that sent the message
    */
-  senderChatUserName: string;
+  senderChatUsername: string;
   /**
    * Message text
    */

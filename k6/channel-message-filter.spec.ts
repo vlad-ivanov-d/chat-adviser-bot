@@ -1,4 +1,4 @@
-import { check, sleep } from "k6";
+import { sleep } from "k6";
 import http from "k6/http";
 
 import * as fixtures from "fixtures/channel-message-filter";
@@ -14,8 +14,8 @@ export const options = {
     channel_message_filter: { duration: "10s", exec: "channelMessageFilter", executor: "constant-vus", vus: 50 },
   },
   thresholds: {
-    checks: ["rate===1"], // 100% of successful checks
     http_req_duration: ["p(95)<300"], // 95% of requests should be below 300ms
+    http_req_failed: ["rate===0"], // 0% of errors
   },
 };
 
@@ -23,14 +23,6 @@ export const options = {
  * It should filter channel messages in a new supergroup chat
  */
 export const channelMessageFilter = (): void => {
-  const res = http.post(K6_WEBHOOK_URL, JSON.stringify(fixtures.channelMessageWebhook));
-  check(res, {
-    /**
-     * Checks status code
-     * @param r Response
-     * @returns True if success
-     */
-    "is status 200": (r) => r.status === 200,
-  });
+  http.post(K6_WEBHOOK_URL, JSON.stringify(fixtures.channelMessageWebhook));
   sleep(K6_SLEEP_DURATION);
 };
