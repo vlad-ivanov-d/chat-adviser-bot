@@ -93,12 +93,14 @@
   },
   "homepage": "https://github.com/vlad-ivanov-d/chat-adviser-bot#readme",
   "keywords": [
-    "bot",
-    "telegram",
-    "moderation",
-    "administration",
+    "nodejs",
     "chat",
-    "nodejs"
+    "bot",
+    "administration",
+    "telegram",
+    "telegram-bot",
+    "moderation",
+    "nestjs"
   ],
   "main": "dist/main.js",
   "repository": {
