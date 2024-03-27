@@ -6,9 +6,13 @@ export interface ProfanityResult {
    */
   filteredText: string;
   /**
-   * Shows if text contains profsnity
+   * Shows if text contains profanity
    */
   hasProfanity: boolean;
+  /**
+   * Original text
+   */
+  text: string;
 }
 
 export class Profanity {
@@ -24,7 +28,7 @@ export class Profanity {
     ["i", ["1", "!"]],
     ["k", ["к", "i{", "|{"]],
     ["m", ["м"]],
-    ["o", ["0", "о"]],
+    ["o", ["0", "о", "●"]],
     ["p", ["р"]],
     ["s", ["$", "z"]],
     ["t", ["+", "7", "т"]],
@@ -45,7 +49,7 @@ export class Profanity {
     ["л", ["l", "ji"]],
     ["м", ["m"]],
     ["н", ["h", "n"]],
-    ["о", ["o", "0"]],
+    ["о", ["o", "0", "●"]],
     ["п", ["п", "n", "p"]],
     ["р", ["p", "r"]],
     ["с", ["c", "s", "$"]],
@@ -85,14 +89,14 @@ export class Profanity {
      * @returns Filtered word
      */
     const mapFunction = (word: string): string => {
-      const { filteredText: filteredWord, hasProfanity: hasProfanityWord } = this.filterWord(word);
-      hasProfanity = hasProfanity || hasProfanityWord;
-      return filteredWord;
+      const filterWordResult = this.filterWord(word);
+      hasProfanity = hasProfanity || filterWordResult.hasProfanity;
+      return filterWordResult.filteredText;
     };
     const firstPassText = this.splitText(text, "spaces+punctuation").map(mapFunction).join("");
     const secondPassText = this.splitText(firstPassText, "spaces+punctuation+capital").map(mapFunction).join("");
     const thirdPassText = this.splitText(secondPassText, "spaces").map(mapFunction).join("");
-    return { filteredText: thirdPassText, hasProfanity };
+    return { filteredText: thirdPassText, hasProfanity, text };
   }
 
   /**
@@ -115,10 +119,10 @@ export class Profanity {
       // Known issue with no-unnecessary-condition
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       if (hasWord) {
-        return { filteredText, hasProfanity };
+        return { filteredText, hasProfanity, text: word };
       }
     }
-    return { filteredText: word, hasProfanity };
+    return { filteredText: word, hasProfanity, text: word };
   }
 
   /**

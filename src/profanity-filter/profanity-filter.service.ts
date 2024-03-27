@@ -14,7 +14,8 @@ import { buildCbData, getChatHtmlLink, getUserFullName, parseCbData } from "src/
 
 import { ProfanityFilterAction } from "./interfaces/action.interface";
 import type { FilterStrings, ForwardFilterStrings } from "./interfaces/filter-strings.interface";
-import { WORDS_CACHE_KEY, WORDS_CACHE_TIMEOUT } from "./profanity-filter.constants";
+import { FilterStringsResult } from "./interfaces/filter-strings-result.interface";
+import { WORDS_CACHE_KEY, WORDS_CACHE_TTL } from "./profanity-filter.constants";
 
 @Update()
 @Injectable()
@@ -46,7 +47,7 @@ export class ProfanityFilterService {
         await this.saveSettings(ctx, chatId, value);
         break;
       case ProfanityFilterAction.SETTINGS:
-        await this.renderSettings(ctx, chatId);
+        await this.renderSettings(ctx, chatId, true);
         break;
       default:
         await next();
@@ -85,21 +86,31 @@ export class ProfanityFilterService {
     const profaneWords = await this.cacheManager.wrap(
       WORDS_CACHE_KEY,
       () => this.prismaService.profaneWord.findMany({ select: { word: true } }),
-      WORDS_CACHE_TIMEOUT,
+      WORDS_CACHE_TTL,
     );
     const profanity = new Profanity(profaneWords.map((i) => i.word));
+    const result: FilterStringsResult = {
+      forwardChatTitle: profanity.filter(stringsToFilter.forwardChatTitle),
+      forwardSenderName: profanity.filter(stringsToFilter.forwardSenderName),
+      forwardUserFullName: profanity.filter(stringsToFilter.forwardUserFullName),
+      senderChatTitle: profanity.filter(stringsToFilter.senderChatTitle),
+      senderChatUsername: profanity.filter(stringsToFilter.senderChatUsername),
+      text: profanity.filter(stringsToFilter.text),
+      userFullName: profanity.filter(stringsToFilter.userFullName),
+      username: profanity.filter(stringsToFilter.username),
+    };
 
     if (
-      profanity.filter(stringsToFilter.forwardChatTitle).hasProfanity ||
-      profanity.filter(stringsToFilter.forwardSenderName).hasProfanity ||
-      profanity.filter(stringsToFilter.forwardUserFullName).hasProfanity ||
-      profanity.filter(stringsToFilter.senderChatTitle).hasProfanity ||
-      profanity.filter(stringsToFilter.senderChatUserName).hasProfanity ||
-      profanity.filter(stringsToFilter.text).hasProfanity ||
-      profanity.filter(stringsToFilter.userFullName).hasProfanity ||
-      profanity.filter(stringsToFilter.username).hasProfanity
+      result.forwardChatTitle.hasProfanity ||
+      result.forwardSenderName.hasProfanity ||
+      result.forwardUserFullName.hasProfanity ||
+      result.senderChatTitle.hasProfanity ||
+      result.senderChatUsername.hasProfanity ||
+      result.text.hasProfanity ||
+      result.userFullName.hasProfanity ||
+      result.username.hasProfanity
     ) {
-      this.logger.warn("A profanity was detected");
+      this.logProfanity(result);
       // An expected error may happen if there are no enough permissions
       const isDeleted = await ctx.deleteMessage(messageId).catch(() => false);
       if (isDeleted && !("new_chat_members" in message)) {
@@ -180,7 +191,7 @@ export class ProfanityFilterService {
     return {
       ...this.getForwardRelatedStringsToFilter(message),
       senderChatTitle: senderChat && "title" in senderChat ? senderChat.title : "",
-      senderChatUserName: senderChat && "username" in senderChat ? senderChat.username ?? "" : "",
+      senderChatUsername: senderChat && "username" in senderChat ? senderChat.username ?? "" : "",
       text: this.getMessageText(message),
       userFullName: getUserFullName(from),
       username: from.username ?? "",
@@ -188,13 +199,54 @@ export class ProfanityFilterService {
   }
 
   /**
+   * Logs found profanity
+   * @param filterStringsResult Filter strings result
+   */
+  private logProfanity(filterStringsResult: FilterStringsResult): void {
+    if (filterStringsResult.forwardChatTitle.hasProfanity) {
+      const { text } = filterStringsResult.forwardChatTitle;
+      this.logger.warn(`A profanity was found in forward chat title: ${text}`);
+    }
+    if (filterStringsResult.forwardSenderName.hasProfanity) {
+      const { text } = filterStringsResult.forwardSenderName;
+      this.logger.warn(`A profanity was found in forward sender name: ${text}`);
+    }
+    if (filterStringsResult.forwardUserFullName.hasProfanity) {
+      const { text } = filterStringsResult.forwardUserFullName;
+      this.logger.warn(`A profanity was found in forward user full name: ${text}`);
+    }
+    if (filterStringsResult.senderChatTitle.hasProfanity) {
+      const { text } = filterStringsResult.senderChatTitle;
+      this.logger.warn(`A profanity was found in sender chat title: ${text}`);
+    }
+    if (filterStringsResult.senderChatUsername.hasProfanity) {
+      const { text } = filterStringsResult.senderChatUsername;
+      this.logger.warn(`A profanity was found in sender chat username: ${text}`);
+    }
+    if (filterStringsResult.text.hasProfanity) {
+      const { text } = filterStringsResult.text;
+      this.logger.warn(`A profanity was found in text:\n${text}`);
+    }
+    if (filterStringsResult.userFullName.hasProfanity) {
+      const { text } = filterStringsResult.userFullName;
+      this.logger.warn(`A profanity was found in user full name: ${text}`);
+    }
+    if (filterStringsResult.username.hasProfanity) {
+      const { text } = filterStringsResult.username;
+      this.logger.warn(`A profanity was found in username: ${text}`);
+    }
+  }
+
+  /**
    * Renders settings
    * @param ctx Callback context
    * @param chatId Id of the chat which is edited
+   * @param shouldAnswerCallback Answer callback query will be sent if true
    */
-  private async renderSettings(ctx: CallbackCtx, chatId: number): Promise<void> {
+  private async renderSettings(ctx: CallbackCtx, chatId: number, shouldAnswerCallback?: boolean): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      throw new Error("Chat is not defined to render profanity filter settings.");
+      this.logger.error("Chat is not defined to render profanity filter settings");
+      return;
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
@@ -207,12 +259,11 @@ export class ProfanityFilterService {
     const chatLink = getChatHtmlLink(dbChat);
     const disableCbData = buildCbData({ action: ProfanityFilterAction.SAVE, chatId });
     const filterCbData = buildCbData({ action: ProfanityFilterAction.SAVE, chatId, value: ProfanityFilterRule.FILTER });
-    const sanitizedValue = this.sanitizeValue(dbChat.profanityFilter);
-    const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";
+    const value = this.getOptions().find((o) => o.id === dbChat.profanityFilter)?.title ?? "";
     const msg = t("profanityFilter:set", { CHAT: chatLink, VALUE: value });
 
     await Promise.all([
-      ctx.answerCbQuery(),
+      shouldAnswerCallback && ctx.answerCbQuery(),
       ctx.editMessageText(this.prismaService.joinModifiedInfo(msg, ChatSettingName.PROFANITY_FILTER, dbChat), {
         parse_mode: "HTML",
         reply_markup: {
@@ -243,7 +294,8 @@ export class ProfanityFilterService {
    */
   private async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
     if (!ctx.chat || isNaN(chatId)) {
-      throw new Error("Chat is not defined to save profanity filter settings.");
+      this.logger.error("Chat is not defined to save profanity filter settings");
+      return;
     }
 
     const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);

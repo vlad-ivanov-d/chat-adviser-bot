@@ -1,7 +1,7 @@
 /**
  * Chat cache timout in milliseconds (10 seconds).
  */
-export const CHAT_CACHE_TIMEOUT = 10_000;
+export const CHAT_CACHE_TTL = 10_000;
 
 /**
  * Database maximum integer limit.
