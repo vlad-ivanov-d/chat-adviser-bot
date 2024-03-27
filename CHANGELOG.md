@@ -1,5 +1,7 @@
 # Changelog
 
+## 1.22.0 (xxxx-xx-xx)
+
 ## 1.21.0 (2024-03-28)
 
 - Improvement: the profanity filter has become more accurate
