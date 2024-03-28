@@ -3,9 +3,9 @@ import type { Config } from "jest";
 const config: Config = {
   collectCoverageFrom: ["src/**"],
   coverageDirectory: "./coverage-e2e",
-  coveragePathIgnorePatterns: [".spec.ts", "src/main.ts"],
+  coveragePathIgnorePatterns: [".spec.ts", "src/main.ts", "src/utils/logger.ts"],
   coverageReporters: [["json", { file: "../.nyc_output/coverage-e2e-final.json" }], "html", "text-summary"],
-  coverageThreshold: { global: { branches: 76, functions: 80, lines: 80, statements: 80 } },
+  coverageThreshold: { global: { branches: 77, functions: 90, lines: 90, statements: 90 } },
   detectOpenHandles: true,
   forceExit: true,
   globalSetup: "<rootDir>/test/utils/global-setup.ts",
