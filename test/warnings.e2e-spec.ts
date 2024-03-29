@@ -1,5 +1,6 @@
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
+import { ChatType } from "@prisma/client";
 import { http, HttpResponse } from "msw";
 import request from "supertest";
 import type { App } from "supertest/types";
@@ -92,7 +93,7 @@ describe("WarningsModule (e2e)", () => {
           editorId: adminUser.id,
           id: channel.id,
           title: channel.title,
-          type: "CHANNEL",
+          type: ChatType.CHANNEL,
           username: channel.username,
         },
       }),

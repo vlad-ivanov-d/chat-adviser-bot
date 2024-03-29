@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { Ctx, Next, On, Update } from "nestjs-telegraf";
 
@@ -11,6 +11,8 @@ import { OUTDATED_MESSAGE_TIMEOUT } from "./messages.constants";
 @Update()
 @Injectable()
 export class MessagesService {
+  private readonly logger = new Logger(MessagesService.name);
+
   /**
    * Creates service
    * @param prismaService Database service
@@ -23,7 +25,8 @@ export class MessagesService {
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   public async cleanup(): Promise<void> {
     const date = new Date(Date.now() - OUTDATED_MESSAGE_TIMEOUT);
-    await this.prismaService.message.deleteMany({ where: { createdAt: { lt: date } } });
+    const { count } = await this.prismaService.message.deleteMany({ where: { createdAt: { lt: date } } });
+    this.logger.log(`Number of deleted unused messages: ${count.toString()}`);
   }
 
   /**
