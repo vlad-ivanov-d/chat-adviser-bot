@@ -145,12 +145,11 @@ model ProfaneWord {
   editorId  Float        @map("editor_id")
   language  LanguageCode
   updatedAt DateTime     @updatedAt @map("updated_at")
-  word      String
+  word      String       @unique
 
   author User @relation("ProfaneWordAuthor", fields: [authorId], references: [id])
   editor User @relation("ProfaneWordEditor", fields: [editorId], references: [id])
 
-  @@unique([word])
   @@map("profane_words")
 }
 
