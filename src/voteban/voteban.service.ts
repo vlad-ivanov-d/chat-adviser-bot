@@ -79,15 +79,15 @@ export class VotebanService {
    */
   @Hears(/^(\/)?voteban$/i)
   public async votebanCommand(@Ctx() ctx: TextMessageCtx): Promise<void> {
+    if (ctx.message.chat.type === "private") {
+      await ctx.reply(t("common:commandNotForPrivateChats"));
+      return;
+    }
+
     const { from, message_id: messageId, sender_chat: fromSenderChat, reply_to_message: replyToMessage } = ctx.message;
     const candidate = replyToMessage?.from;
     const candidateSenderChat = replyToMessage?.sender_chat;
     const isCandidateAutomaticForward = !!replyToMessage && "is_automatic_forward" in replyToMessage;
-
-    if (ctx.message.chat.type === "private") {
-      await ctx.reply(t("common:commandNotForPrivateChats"));
-      return; // Private chat, return.
-    }
 
     const [chat, isCandidateAdmin] = await Promise.all([
       this.prismaService.upsertChatWithCache(ctx.chat, from),
