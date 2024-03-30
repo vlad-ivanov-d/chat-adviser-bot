@@ -466,6 +466,16 @@ export const votebanInPrivateChatWebhook = {
 };
 
 /**
+ * Payload for send message request. It should be sent as a result of voteban command
+ * when voteban has already been started.
+ */
+export const votebanAlreadyStartedSendMessagePayload = {
+  chat_id: supergroup.id,
+  reply_parameters: { message_id: 2 },
+  text: "Voting has already started",
+};
+
+/**
  * Payload for send message request. It should be sent as a result of voteban command processing in a supergroup chat
  * without admin permissions.
  */

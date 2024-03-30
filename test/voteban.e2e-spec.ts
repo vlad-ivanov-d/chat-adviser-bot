@@ -40,6 +40,7 @@ describe("VotebanModule (e2e)", () => {
         data: {
           authorId: adminUser.id,
           candidateId: user.id,
+          candidateMessageId: 1,
           chatId: supergroup.id,
           editorId: adminUser.id,
           messageId: 3,
@@ -80,6 +81,7 @@ describe("VotebanModule (e2e)", () => {
         data: {
           authorId: adminUser.id,
           candidateId: user.id,
+          candidateMessageId: 1,
           chatId: supergroup.id,
           editorId: adminUser.id,
           messageId: 3,
@@ -155,6 +157,7 @@ describe("VotebanModule (e2e)", () => {
           authorId: adminUser.id,
           candidateId: systemChannelBot.id,
           candidateMediaGroupId: "100",
+          candidateMessageId: 1,
           candidateSenderChatId: channel.id,
           chatId: supergroup.id,
           editorId: adminUser.id,
@@ -225,6 +228,7 @@ describe("VotebanModule (e2e)", () => {
         data: {
           authorId: adminUser.id,
           candidateId: user.id,
+          candidateMessageId: 1,
           chatId: supergroup.id,
           editorId: adminUser.id,
           messageId: 3,
@@ -257,6 +261,7 @@ describe("VotebanModule (e2e)", () => {
         data: {
           authorId: user.id,
           candidateId: adminUser.id,
+          candidateMessageId: 1,
           chatId: supergroup.id,
           editorId: user.id,
           messageId: 3,
@@ -290,6 +295,7 @@ describe("VotebanModule (e2e)", () => {
         data: {
           authorId: adminUser.id,
           candidateId: user.id,
+          candidateMessageId: 1,
           chatId: supergroup.id,
           editorId: adminUser.id,
           messageId: 3,
@@ -350,6 +356,7 @@ describe("VotebanModule (e2e)", () => {
         data: {
           authorId: adminUser.id,
           candidateId: user.id,
+          candidateMessageId: 1,
           chatId: supergroup.id,
           editorId: adminUser.id,
           messageId: 3,
@@ -376,6 +383,7 @@ describe("VotebanModule (e2e)", () => {
         data: {
           authorId: adminUser.id,
           candidateId: user.id,
+          candidateMessageId: 1,
           chatId: supergroup.id,
           editorId: adminUser.id,
           messageId: 3,
@@ -439,10 +447,11 @@ describe("VotebanModule (e2e)", () => {
 
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSaveSettingsWebhook);
 
+    const expectedEditMessageTextPayload = fixtures.cbSaveSettingsEditMessageTextPayload();
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
     await sleep(TEST_ASYNC_DELAY);
-    expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayload());
+    expect(editMessageTextPayload).toEqual(expectedEditMessageTextPayload);
   });
 
   it("says if the bot is not an admin", async () => {
@@ -526,6 +535,36 @@ describe("VotebanModule (e2e)", () => {
     expect(response.body).toEqual(settingsFixtures.answerCbSettingsNotAdminWebhookResponse);
     await sleep(TEST_ASYNC_DELAY);
     expect(editMessageTextPayload).toEqual(settingsFixtures.cbSettingsNotAdminEditMessageTextPayload);
+  });
+
+  it("should not start voteban if it has already been started", async () => {
+    await createDbSupergroupChat({ votebanLimit: 2 });
+    await prisma.$transaction([
+      createDbUser(user),
+      prisma.voteban.create({
+        data: {
+          authorId: adminUser.id,
+          candidateId: user.id,
+          candidateMessageId: 1,
+          chatId: supergroup.id,
+          editorId: adminUser.id,
+          messageId: 3,
+        },
+        select: { id: true },
+      }),
+    ]);
+    let sendMessagePayload;
+    server.use(
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+        sendMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.votebanWebhook);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload).toEqual(fixtures.votebanAlreadyStartedSendMessagePayload);
   });
 
   it("should not start voteban against itself", async () => {

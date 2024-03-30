@@ -212,10 +212,11 @@ describe("WarningsModule (e2e)", () => {
 
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSaveSettingsWebhook);
 
+    const expectedEditMessageTextPayload = fixtures.cbSaveSettingsEditMessageTextPayload();
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
     await sleep(TEST_ASYNC_DELAY);
-    expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayload());
+    expect(editMessageTextPayload).toEqual(expectedEditMessageTextPayload);
   });
 
   it("saves settings with sanitized value", async () => {
@@ -232,10 +233,11 @@ describe("WarningsModule (e2e)", () => {
       .post(TEST_WEBHOOK_PATH)
       .send(fixtures.cbSaveIncorrectValueSettingsWebhook);
 
+    const expectedEditMessageTextPayload = fixtures.cbSaveIncorrectValueSettingsEditMessageTextPayload();
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
     await sleep(TEST_ASYNC_DELAY);
-    expect(editMessageTextPayload).toEqual(fixtures.cbSaveIncorrectValueSettingsEditMessageTextPayload());
+    expect(editMessageTextPayload).toEqual(expectedEditMessageTextPayload);
   });
 
   it("says /warn command is not for a private chat", async () => {
