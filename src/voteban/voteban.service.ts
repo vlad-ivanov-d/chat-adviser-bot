@@ -121,8 +121,7 @@ export class VotebanService {
     const authorLink = getUserOrChatHtmlLink(from, fromSenderChat);
     const candidateLink = getUserOrChatHtmlLink(candidate, candidateSenderChat);
     // Do not accept vote from sender chat
-    const banVotesCount = fromSenderChat ? 0 : 1;
-    const banButtonText = t("voteban:banWithCounter", { LIMIT: chat.votebanLimit, VOTES: banVotesCount });
+    const banButtonText = t("voteban:banWithCounter", { LIMIT: chat.votebanLimit, VOTES: fromSenderChat ? 0 : 1 });
     const noBanButtonText = t("voteban:noBanWithCounter", { LIMIT: chat.votebanLimit, VOTES: 0 });
 
     const [reply] = await Promise.all([
