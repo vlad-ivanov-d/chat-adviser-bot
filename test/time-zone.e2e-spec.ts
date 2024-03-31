@@ -24,6 +24,8 @@ import { createDbSupergroupChat } from "./utils/database";
 import { server } from "./utils/server";
 import { sleep } from "./utils/sleep";
 
+const londonTzId = "Europe/London";
+
 describe("TimeZoneModule (e2e)", () => {
   let app: INestApplication<App>;
 
@@ -89,7 +91,7 @@ describe("TimeZoneModule (e2e)", () => {
   });
 
   it("renders specific page of settings if the time zone has already been selected", async () => {
-    await createDbSupergroupChat({ timeZone: "Europe/London" });
+    await createDbSupergroupChat({ timeZone: londonTzId });
     let editMessageTextPayload;
     server.use(
       http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
@@ -126,7 +128,8 @@ describe("TimeZoneModule (e2e)", () => {
       },
       text:
         "<b>Time Zone</b>\nI can work in different time zones and display dates in the appropriate format.\n\n" +
-        `Select a time zone for @${supergroup.username ?? ""} chat.\n\nCurrent time zone: <b>GMT+0 Europe/London</b>`,
+        `Select a time zone for @${supergroup.username ?? ""} chat.\n\nCurrent time zone: ` +
+        `<b>${formatInTimeZone(new Date(), londonTzId, "zzz")} ${londonTzId}</b>`,
     });
   });
 
@@ -171,8 +174,8 @@ describe("TimeZoneModule (e2e)", () => {
         "<b>Time Zone</b>\n" +
         "I can work in different time zones and display dates in the appropriate format.\n\n" +
         `Select a time zone for @${supergroup.username ?? ""} chat.\n\n` +
-        `Current time zone: <b>GMT+0 Europe/London</b>\n` +
-        `Modified at ${formatInTimeZone(Date.now(), "Europe/London", DATE_FORMAT)} ` +
+        `Current time zone: <b>${formatInTimeZone(new Date(), londonTzId, "zzz")} ${londonTzId}</b>\n` +
+        `Modified at ${formatInTimeZone(Date.now(), londonTzId, DATE_FORMAT)} ` +
         `by <a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>`,
     });
   });
