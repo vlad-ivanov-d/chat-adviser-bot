@@ -102,7 +102,7 @@ export class CleanupService {
     if (unusedChats.length > 0) {
       await this.prismaService.chat.deleteMany({ where: { id: { in: unusedChats.map((c) => c.id) } } });
     }
-    this.logger.log(`Number of deleted unused chats: ${unusedChats.length.toString()}`);
+    this.logger.log(`Number of deleted unused private chats: ${unusedChats.length.toString()}`);
   }
 
   /**
