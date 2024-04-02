@@ -221,21 +221,26 @@ export class WarningsService {
       return;
     }
 
-    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    const { language, timeZone } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const dbChat = await this.settingsService.resolveChat(ctx, chatId);
-    if (!dbChat) {
+    const chat = await this.settingsService.resolveChat(ctx, chatId);
+    if (!chat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
-    const chatLink = getChatHtmlLink(dbChat);
-    const hasWarnings = this.sanitizeValue(dbChat.hasWarnings);
+    const chatLink = getChatHtmlLink(chat);
+    const hasWarnings = this.sanitizeValue(chat.hasWarnings);
     const value = hasWarnings ? t("warnings:enabled") : t("warnings:disabled");
     const msg = t("warnings:set", { CHAT: chatLink, VALUE: value });
+    const msgWithModifiedInfo = this.settingsService.withModifiedInfo(msg, {
+      chat,
+      settingName: ChatSettingName.HAS_WARNINGS,
+      timeZone,
+    });
 
     await Promise.all([
       shouldAnswerCallback && ctx.answerCbQuery(),
-      ctx.editMessageText(this.prismaService.joinModifiedInfo(msg, ChatSettingName.HAS_WARNINGS, dbChat), {
+      ctx.editMessageText(msgWithModifiedInfo, {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [

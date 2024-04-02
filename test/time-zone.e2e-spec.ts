@@ -175,7 +175,7 @@ describe("TimeZoneModule (e2e)", () => {
         "I can work in different time zones and display dates in the appropriate format.\n\n" +
         `Select a time zone for @${supergroup.username ?? ""} chat.\n\n` +
         `Current time zone: <b>${formatInTimeZone(new Date(), londonTzId, "zzz")} ${londonTzId}</b>\n` +
-        `Modified at ${formatInTimeZone(Date.now(), londonTzId, DATE_FORMAT)} ` +
+        `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
         `by <a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>`,
     });
   });

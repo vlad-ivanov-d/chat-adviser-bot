@@ -120,24 +120,29 @@ export class AddingBotsService {
       throw new Error("Chat is not defined to render adding bots settings.");
     }
 
-    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    const { language, timeZone } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const dbChat = await this.settingsService.resolveChat(ctx, chatId);
-    if (!dbChat) {
+    const chat = await this.settingsService.resolveChat(ctx, chatId);
+    if (!chat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
     const allowedCbData = buildCbData({ action: AddingBotsAction.SAVE, chatId });
     const banCbData = buildCbData({ action: AddingBotsAction.SAVE, chatId, value: AddingBotsRule.BAN });
     const restrictCbData = buildCbData({ action: AddingBotsAction.SAVE, chatId, value: AddingBotsRule.RESTRICT });
-    const chatLink = getChatHtmlLink(dbChat);
-    const sanitizedValue = this.sanitizeValue(dbChat.addingBots);
+    const chatLink = getChatHtmlLink(chat);
+    const sanitizedValue = this.sanitizeValue(chat.addingBots);
     const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";
     const msg = t("addingBots:set", { CHAT: chatLink, VALUE: value });
+    const msgWithModifiedInfo = this.settingsService.withModifiedInfo(msg, {
+      chat,
+      settingName: ChatSettingName.ADDING_BOTS,
+      timeZone,
+    });
 
     await Promise.all([
       ctx.answerCbQuery(),
-      ctx.editMessageText(this.prismaService.joinModifiedInfo(msg, ChatSettingName.ADDING_BOTS, dbChat), {
+      ctx.editMessageText(msgWithModifiedInfo, {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [

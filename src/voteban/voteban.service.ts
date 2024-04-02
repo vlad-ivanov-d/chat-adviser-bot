@@ -248,22 +248,27 @@ export class VotebanService {
       return;
     }
 
-    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    const { language, timeZone } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const dbChat = await this.settingsService.resolveChat(ctx, chatId);
-    if (!dbChat) {
+    const chat = await this.settingsService.resolveChat(ctx, chatId);
+    if (!chat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
-    const chatLink = getChatHtmlLink(dbChat);
-    const { votebanLimit } = dbChat;
+    const chatLink = getChatHtmlLink(chat);
+    const { votebanLimit } = chat;
     const newValue = this.sanitizeValue(typeof value === "undefined" || isNaN(value) ? votebanLimit : value);
     const tip = t("voteban:tip");
     const msg = t("voteban:setLimit", { CHAT: chatLink, TIP: tip, count: newValue });
+    const msgWithModifiedInfo = this.settingsService.withModifiedInfo(msg, {
+      chat,
+      settingName: ChatSettingName.VOTEBAN_LIMIT,
+      timeZone,
+    });
 
     await Promise.all([
       shouldAnswerCallback && ctx.answerCbQuery(),
-      ctx.editMessageText(this.prismaService.joinModifiedInfo(msg, ChatSettingName.VOTEBAN_LIMIT, dbChat), {
+      ctx.editMessageText(msgWithModifiedInfo, {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [

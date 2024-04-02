@@ -85,20 +85,25 @@ export class LanguageService implements OnModuleInit {
       return;
     }
 
-    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    const { language, timeZone } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const dbChat = await this.settingsService.resolveChat(ctx, chatId);
-    if (!dbChat) {
+    const chat = await this.settingsService.resolveChat(ctx, chatId);
+    if (!chat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
-    const chatLink = getChatHtmlLink(dbChat);
-    const value = this.getOptions().find((l) => l.code === dbChat.language)?.title;
+    const chatLink = getChatHtmlLink(chat);
+    const value = this.getOptions().find((l) => l.code === chat.language)?.title;
     const msg = t("language:select", { CHAT: chatLink, VALUE: value });
+    const msgWithModifiedInfo = this.settingsService.withModifiedInfo(msg, {
+      chat,
+      settingName: ChatSettingName.LANGUAGE,
+      timeZone,
+    });
 
     await Promise.all([
       shouldAnswerCallback && ctx.answerCbQuery(),
-      ctx.editMessageText(this.prismaService.joinModifiedInfo(msg, ChatSettingName.LANGUAGE, dbChat), {
+      ctx.editMessageText(msgWithModifiedInfo, {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [

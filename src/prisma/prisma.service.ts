@@ -12,15 +12,11 @@ import {
   type User,
 } from "@prisma/client";
 import { Cache as CacheManager } from "cache-manager";
-import { formatInTimeZone } from "date-fns-tz";
-import i18next, { t } from "i18next";
 import { InjectBot } from "nestjs-telegraf";
 import { Telegraf } from "telegraf";
 import type { Chat, User as TelegramUser } from "telegraf/typings/core/types/typegram";
 
-import { DATE_FORMAT } from "src/app.constants";
-import { getDateLocale } from "src/utils/dates";
-import { getChatDisplayTitle, getUserDisplayName, getUserHtmlLink } from "src/utils/telegraf";
+import { getChatDisplayTitle, getUserDisplayName } from "src/utils/telegraf";
 
 import type { UpsertedChat } from "./interfaces/upserted-chat.interface";
 import { CHAT_CACHE_TTL } from "./prisma.constants";
@@ -68,30 +64,6 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
       senderChatId === chat.id || // A message can be send on behalf of current chat
       chat.admins.some((a) => a.id === userId) // Check admin list. IMPORTANT: other bots won't be in this array.
     );
-  }
-
-  /**
-   * Adds modified info to the text
-   * @param text Text
-   * @param settingName Setting name
-   * @param chat Chat
-   * @returns Text with modified information if available
-   */
-  public joinModifiedInfo(text: string, settingName: ChatSettingName, chat: UpsertedChat): string {
-    const { chatSettingsHistory, timeZone } = chat;
-    const historyItem = chatSettingsHistory.find((s) => s.settingName === settingName);
-    const locale = getDateLocale(i18next.language);
-    return [
-      text,
-      historyItem
-        ? t("settings:modified", {
-            DATE: formatInTimeZone(historyItem.updatedAt, timeZone, DATE_FORMAT, { locale }),
-            USER: getUserHtmlLink(historyItem.editor),
-          })
-        : "",
-    ]
-      .filter((p) => p)
-      .join("\n");
   }
 
   /**

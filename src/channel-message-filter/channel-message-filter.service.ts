@@ -87,30 +87,35 @@ export class ChannelMessageFilterService {
       return;
     }
 
-    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    const { language, timeZone } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const dbChat = await this.settingsService.resolveChat(ctx, chatId);
-    if (!dbChat) {
+    const chat = await this.settingsService.resolveChat(ctx, chatId);
+    if (!chat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
-    const chatLink = getChatHtmlLink(dbChat);
+    const chatLink = getChatHtmlLink(chat);
     const disableCbData = buildCbData({ action: ChannelMessageFilterAction.SAVE, chatId });
     const filterCbData = buildCbData({
       action: ChannelMessageFilterAction.SAVE,
       chatId,
       value: ChannelMessageFilterRule.FILTER,
     });
-    const sanitizedValue = this.sanitizeValue(dbChat.channelMessageFilter);
+    const sanitizedValue = this.sanitizeValue(chat.channelMessageFilter);
     const value =
       sanitizedValue === ChannelMessageFilterRule.FILTER
         ? t("channelMessageFilter:filterEnabled")
         : t("channelMessageFilter:filterDisabled");
     const msg = t("channelMessageFilter:set", { CHAT: chatLink, VALUE: value });
+    const msgWithModifiedInfo = this.settingsService.withModifiedInfo(msg, {
+      chat,
+      settingName: ChatSettingName.CHANNEL_MESSAGE_FILTER,
+      timeZone,
+    });
 
     await Promise.all([
       shouldAnswerCallback && ctx.answerCbQuery(),
-      ctx.editMessageText(this.prismaService.joinModifiedInfo(msg, ChatSettingName.CHANNEL_MESSAGE_FILTER, dbChat), {
+      ctx.editMessageText(msgWithModifiedInfo, {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [

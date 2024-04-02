@@ -139,12 +139,75 @@ export const cbChatsEditMessageTextPayload = {
 };
 
 /**
+ * Webhook payload which contains chats callback with incorrect skip parameter
+ */
+export const cbChatsErrorWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: `${SettingsAction.CHATS}?s=error`,
+    from: adminUser,
+    id: "1",
+    message: {
+      chat: privateChat,
+      date: Date.now(),
+      edit_date: Date.now(),
+      from: bot,
+      message_id: 1,
+      text: "",
+    },
+  },
+  update_id: 1,
+};
+
+/**
  * Webhook payload which contains chats callback
  */
 export const cbChatsWebhook = {
   callback_query: {
     chat_instance: "1",
     data: `${SettingsAction.CHATS}?s=4`,
+    from: adminUser,
+    id: "1",
+    message: {
+      chat: privateChat,
+      date: Date.now(),
+      edit_date: Date.now(),
+      from: bot,
+      message_id: 1,
+      text: "",
+    },
+  },
+  update_id: 1,
+};
+
+/**
+ * Webhook payload which contains features callback
+ */
+export const cbFeaturesWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}`,
+    from: adminUser,
+    id: "1",
+    message: {
+      chat: privateChat,
+      date: Date.now(),
+      edit_date: Date.now(),
+      from: bot,
+      message_id: 1,
+      text: "",
+    },
+  },
+  update_id: 1,
+};
+
+/**
+ * Webhook payload which contains features callback with incorrect skip parameter
+ */
+export const cbFeaturesErrorWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}&s=error`,
     from: adminUser,
     id: "1",
     message: {
@@ -214,6 +277,11 @@ export const cbSettingsNotAdminEditMessageTextPayload = {
   },
   text: chatsText,
 };
+
+/**
+ * Payload for edit message text request. It should be sent as a result of features callback.
+ */
+export const featuresEditMessageTextPayload = { ...addedToNewChatSendMessagePayload2, message_id: 1 };
 
 /**
  * Payload for send message request. It should be sent as a result of group creation.

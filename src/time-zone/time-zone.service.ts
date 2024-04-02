@@ -77,24 +77,29 @@ export class TimeZoneService {
       return;
     }
 
-    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    const { language, timeZone } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const dbChat = await this.settingsService.resolveChat(ctx, chatId);
-    if (!dbChat) {
+    const chat = await this.settingsService.resolveChat(ctx, chatId);
+    if (!chat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
-    const chatLink = getChatHtmlLink(dbChat);
+    const chatLink = getChatHtmlLink(chat);
     const timeZones = this.getAllTimeZones();
-    const valueIndex = timeZones.indexOf(dbChat.timeZone);
+    const valueIndex = timeZones.indexOf(chat.timeZone);
     // Use provided skip or the index of the current value. Use 0 as the last fallback.
     const patchedSkip = skip ?? (valueIndex > -1 ? Math.floor(valueIndex / PAGE_SIZE) * PAGE_SIZE : 0);
-    const value = `${format(Date.now(), "O", { timeZone: dbChat.timeZone })} ${dbChat.timeZone}`;
+    const value = `${format(Date.now(), "O", { timeZone: chat.timeZone })} ${chat.timeZone}`;
     const msg = t("timeZone:select", { CHAT: chatLink, VALUE: value });
+    const msgWithModifiedInfo = this.settingsService.withModifiedInfo(msg, {
+      chat,
+      settingName: ChatSettingName.TIME_ZONE,
+      timeZone,
+    });
 
     await Promise.all([
       shouldAnswerCallback && ctx.answerCbQuery(),
-      ctx.editMessageText(this.prismaService.joinModifiedInfo(msg, ChatSettingName.TIME_ZONE, dbChat), {
+      ctx.editMessageText(msgWithModifiedInfo, {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
