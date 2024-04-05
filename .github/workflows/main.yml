@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20.12.1
-      - name: Restore dependencies
+      - name: Install dependencies
         run: npm ci
       - name: Build sources
         run: npm run build
@@ -47,13 +47,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20.12.1
-      - name: Restore dependencies
+      - name: Install dependencies
         run: npm ci
       - name: Run unit tests
         run: npm run test:cov
       - name: Run e2e tests
         run: npm run test:e2e:cov
-      - name: Merge test coverage
+      - name: Merge unit and e2e test coverage
         run: npm run merge:cov
       - name: Check test coverage badges
         run: npm run make:badges -- --ci
