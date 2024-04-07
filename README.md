@@ -1,4 +1,4 @@
-# Chat Adviser
+# Chat Adviser Bot
 
 Open source Telegram bot that helps to moderate chats.
 

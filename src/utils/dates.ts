@@ -1,7 +1,7 @@
 import { LanguageCode } from "@prisma/client";
 import type { Locale } from "date-fns";
-import en from "date-fns/locale/en-US";
-import ru from "date-fns/locale/ru";
+import { enUS } from "date-fns/locale/en-US";
+import { ru } from "date-fns/locale/ru";
 
 /**
  * Gets date locale for date-fns library
@@ -14,6 +14,6 @@ export const getDateLocale = (languageCode: string): Locale => {
     case "ru":
       return ru;
     default:
-      return en;
+      return enUS;
   }
 };
