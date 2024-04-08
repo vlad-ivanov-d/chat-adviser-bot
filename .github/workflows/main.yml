@@ -14,6 +14,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.head_ref != 'refs/heads/dev' && github.head_ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,13 +29,13 @@ jobs:
         id: cache-npm
         uses: actions/cache@v4
         with:
-          key: ${{runner.os}}-build-${{env.CACHE_NAME}}-${{hashFiles('**/package-lock.json')}}
+          key: ${{ runner.os }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('**/package-lock.json') }}
           # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.npm
           restore-keys: |
-            ${{runner.os}}-build-${{env.CACHE_NAME}}-
-            ${{runner.os}}-build-
-            ${{runner.os}}-
+            ${{ runner.os }}-build-${{ env.CACHE_NAME }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
       - name: Install dependencies
         run: npm ci
       - name: Build sources
@@ -52,6 +53,7 @@ jobs:
             prisma
 
   test:
+    if: github.head_ref != 'refs/heads/dev' && github.head_ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -66,13 +68,13 @@ jobs:
         id: cache-npm
         uses: actions/cache@v4
         with:
-          key: ${{runner.os}}-build-${{env.CACHE_NAME}}-${{hashFiles('**/package-lock.json')}}
+          key: ${{ runner.os }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('**/package-lock.json') }}
           # npm cache files are stored in `~/.npm` on Linux/macOS
           path: ~/.npm
           restore-keys: |
-            ${{runner.os}}-build-${{env.CACHE_NAME}}-
-            ${{runner.os}}-build-
-            ${{runner.os}}-
+            ${{ runner.os }}-build-${{ env.CACHE_NAME }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
       - name: Install dependencies
         run: npm ci
       - name: Run unit tests
@@ -87,8 +89,11 @@ jobs:
         run: npm run k6
 
   deploy:
-    environment: production
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: |-
+      ${{
+        github.ref_name == 'main' && 'production'
+      }}
+    if: github.event_name == 'push' && github.ref_name == 'main'
     needs: [build, test]
     runs-on: ubuntu-latest
     steps:
@@ -102,8 +107,8 @@ jobs:
           name: app
       - name: Configure SSH
         env:
-          SSH_KNOWN_HOSTS: ${{secrets.SSH_KNOWN_HOSTS}}
-          SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           eval $(ssh-agent -s)
           echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
@@ -113,17 +118,17 @@ jobs:
           chmod 644 ~/.ssh/known_hosts
       - name: Start the app in docker
         env:
-          BOT_TOKEN: ${{secrets.BOT_TOKEN}}
-          DATABASE_PASSWORD: ${{secrets.DATABASE_PASSWORD}}
-          DATABASE_PORT: ${{secrets.DATABASE_PORT}}
-          DATABASE_URL: ${{secrets.DATABASE_URL}}
-          DATABASE_USER: ${{secrets.DATABASE_USER}}
-          DOCKER_HOST: ${{secrets.DOCKER_HOST}}
-          REDIS_HOST: ${{secrets.REDIS_HOST}}
-          REDIS_PASSWORD: ${{secrets.REDIS_PASSWORD}}
-          REDIS_PORT: ${{secrets.REDIS_PORT}}
-          WEBHOOK_DOMAIN: ${{secrets.WEBHOOK_DOMAIN}}
-          WEBHOOK_PATH: ${{secrets.WEBHOOK_PATH}}
-          WEBHOOK_PORT: ${{secrets.WEBHOOK_PORT}}
-          WEBHOOK_SECRET_TOKEN: ${{secrets.WEBHOOK_SECRET_TOKEN}}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
+          DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_USER: ${{ secrets.DATABASE_USER }}
+          DOCKER_HOST: ${{ secrets.DOCKER_HOST }}
+          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          WEBHOOK_DOMAIN: ${{ secrets.WEBHOOK_DOMAIN }}
+          WEBHOOK_PATH: ${{ secrets.WEBHOOK_PATH }}
+          WEBHOOK_PORT: ${{ secrets.WEBHOOK_PORT }}
+          WEBHOOK_SECRET_TOKEN: ${{ secrets.WEBHOOK_SECRET_TOKEN }}
         run: npm run start:prod:docker
