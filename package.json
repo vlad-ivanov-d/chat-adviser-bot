@@ -36,7 +36,7 @@
     "cache-manager-redis-yet": "5.0.0",
     "date-fns": "3.6.0",
     "date-fns-tz": "3.0.0",
-    "i18next": "23.10.1",
+    "i18next": "23.11.0",
     "lodash.escaperegexp": "4.1.2",
     "nest-winston": "1.9.4",
     "nestjs-telegraf": "2.7.0",
