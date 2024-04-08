@@ -22,6 +22,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20.12.1
+      - name: Cache node modules
+        env:
+          CACHE_NAME: cache-node-modules
+        id: cache-npm
+        uses: actions/cache@v4
+        with:
+          key: ${{runner.os}}-build-${{env.CACHE_NAME}}-${{hashFiles('**/package-lock.json')}}
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          restore-keys: |
+            ${{runner.os}}-build-${{env.CACHE_NAME}}-
+            ${{runner.os}}-build-
+            ${{runner.os}}-
       - name: Install dependencies
         run: npm ci
       - name: Build sources
@@ -47,6 +60,19 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20.12.1
+      - name: Cache node modules
+        env:
+          CACHE_NAME: cache-node-modules
+        id: cache-npm
+        uses: actions/cache@v4
+        with:
+          key: ${{runner.os}}-build-${{env.CACHE_NAME}}-${{hashFiles('**/package-lock.json')}}
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          restore-keys: |
+            ${{runner.os}}-build-${{env.CACHE_NAME}}-
+            ${{runner.os}}-build-
+            ${{runner.os}}-
       - name: Install dependencies
         run: npm ci
       - name: Run unit tests
