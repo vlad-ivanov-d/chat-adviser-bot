@@ -8,6 +8,7 @@ import { channel, privateChat, supergroup } from "./chats";
 import { adminUser, bot, systemChannelBot, user } from "./users";
 
 const backToFeaturesText = "« Back to features";
+const noBanButtonText = "Keep (0/2)";
 
 /**
  * Webhook response which contains answer callback query method.
@@ -458,6 +459,48 @@ export const votebanAgainstBotWebhook = {
 };
 
 /**
+ * Webhook payload which contains voteban command against the sender chat
+ */
+export const votebanAgainstSenderChatWebhook = {
+  message: {
+    chat: supergroup,
+    date: Date.now(),
+    from: adminUser,
+    message_id: 3,
+    message_thread_id: 1,
+    reply_to_message: {
+      chat: supergroup,
+      date: Date.now(),
+      from: systemChannelBot,
+      media_group_id: "100",
+      message_id: 1,
+      sender_chat: channel,
+      text: "Bad",
+    },
+    text: "voteban",
+  },
+  update_id: 1,
+};
+
+/**
+ * Payload for send message request. It should be sent as a result of voteban command against the sender chat.
+ */
+export const votebanAgainstSenderChatSendMessagePayload = {
+  chat_id: supergroup.id,
+  parse_mode: "HTML",
+  reply_markup: {
+    inline_keyboard: [
+      [{ callback_data: VotebanAction.BAN, text: "Ban (1/2)" }],
+      [{ callback_data: VotebanAction.NO_BAN, text: noBanButtonText }],
+    ],
+  },
+  reply_parameters: { allow_sending_without_reply: true, message_id: 1 },
+  text:
+    `<a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a> offers to ban ` +
+    `@${channel.username ?? ""}. This requires 2 votes.\n\nDo you want to ban @${channel.username ?? ""}?`,
+};
+
+/**
  * Webhook payload which contains voteban command in a private chat
  */
 export const votebanInPrivateChatWebhook = {
@@ -494,7 +537,7 @@ export const votebanSendMessagePayload = {
   reply_markup: {
     inline_keyboard: [
       [{ callback_data: VotebanAction.BAN, text: "Ban (1/2)" }],
-      [{ callback_data: VotebanAction.NO_BAN, text: "Keep (0/2)" }],
+      [{ callback_data: VotebanAction.NO_BAN, text: noBanButtonText }],
     ],
   },
   reply_parameters: { allow_sending_without_reply: true, message_id: 1 },
@@ -513,7 +556,7 @@ export const votebanSenderChatSendMessagePayload = {
   reply_markup: {
     inline_keyboard: [
       [{ callback_data: VotebanAction.BAN, text: "Ban (0/2)" }],
-      [{ callback_data: VotebanAction.NO_BAN, text: "Keep (0/2)" }],
+      [{ callback_data: VotebanAction.NO_BAN, text: noBanButtonText }],
     ],
   },
   reply_parameters: { allow_sending_without_reply: true, message_id: 1 },
