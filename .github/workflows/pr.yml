@@ -1,0 +1,72 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+
+name: Continuous Integration (PR)
+
+on:
+  pull_request:
+    branches: ["*"]
+
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  build:
+    if: github.head_ref != 'refs/heads/dev' && github.head_ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.12.1
+      - name: Cache node modules
+        env:
+          CACHE_NAME: cache-node-modules
+        id: cache-npm
+        uses: actions/cache@v4
+        with:
+          key: ${{ runner.os }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('**/package-lock.json') }}
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.CACHE_NAME }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Install dependencies
+        run: npm ci
+      - name: Build sources
+        run: npm run build
+
+  test:
+    if: github.head_ref != 'refs/heads/dev' && github.head_ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.12.1
+      - name: Cache node modules
+        env:
+          CACHE_NAME: cache-node-modules
+        id: cache-npm
+        uses: actions/cache@v4
+        with:
+          key: ${{ runner.os }}-build-${{ env.CACHE_NAME }}-${{ hashFiles('**/package-lock.json') }}
+          # npm cache files are stored in `~/.npm` on Linux/macOS
+          path: ~/.npm
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.CACHE_NAME }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Install dependencies
+        run: npm ci
+      - name: Run unit tests
+        run: npm run test:cov
+      - name: Run e2e tests
+        run: npm run test:e2e:cov
+      - name: Run load tests
+        run: npm run k6

@@ -3,8 +3,6 @@
 name: Continuous Integration
 
 on:
-  pull_request:
-    branches: ["*"]
   push:
     branches: [dev, main]
 
@@ -14,7 +12,6 @@ concurrency:
 
 jobs:
   build:
-    if: github.head_ref != 'refs/heads/dev' && github.head_ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -53,7 +50,6 @@ jobs:
             prisma
 
   test:
-    if: github.head_ref != 'refs/heads/dev' && github.head_ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -83,17 +79,23 @@ jobs:
         run: npm run test:e2e:cov
       - name: Merge unit and e2e test coverage
         run: npm run merge:cov
-      - name: Check test coverage badges
-        run: npm run make:badges -- --ci
       - name: Run load tests
         run: npm run k6
+      - name: Generate test coverage badges
+        run: npm run make:badges
+      - name: Update test coverage badges
+        run: |
+          git config --global user.email "actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git commit -am "Update test coverage badges"
+          git push
 
   deploy:
     environment: |-
       ${{
         github.ref_name == 'main' && 'production'
       }}
-    if: github.event_name == 'push' && github.ref_name == 'main'
+    if: github.ref_name == 'main'
     needs: [build, test]
     runs-on: ubuntu-latest
     steps:
