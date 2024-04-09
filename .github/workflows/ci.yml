@@ -77,20 +77,12 @@ jobs:
         run: npm run test:cov
       - name: Run e2e tests
         run: npm run test:e2e:cov
-      - name: Run load tests
-        run: npm run k6
       - name: Merge unit and e2e test coverage
         run: npm run merge:cov
-      - name: Generate test coverage badges
-        run: npm run make:badges
-      - name: Update test coverage badges in README.md
-        # continue in case there are no changes
-        continue-on-error: true
-        run: |
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
-          git commit -am "Update test coverage badges"
-          git push
+      - name: Check test coverage badges
+        run: npm run make:badges -- --ci
+      - name: Run load tests
+        run: npm run k6
 
   deploy:
     environment: |-

@@ -9,7 +9,7 @@
     "dev:env:up": "docker compose up --remove-orphans --wait -d && prisma migrate dev",
     "k6": "ts-node k6/utils/setup",
     "lint": "eslint \"{__mocks__,fixtures,k6,libs,src,test}/**/*.ts\" --fix",
-    "make:badges": "istanbul-badges-readme --coverageDir=\"./coverage-total\" --silent",
+    "make:badges": "istanbul-badges-readme --coverageDir=\"./coverage-total\" --exitCode=1 --silent",
     "merge:cov": "nyc report --report-dir coverage-total --reporter=json-summary --reporter=html --reporter=text-summary",
     "start": "npm run dev:env:up && nest start",
     "start:debug": "npm run dev:env:up && nest start --debug --watch",
