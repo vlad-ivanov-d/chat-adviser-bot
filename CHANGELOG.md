@@ -3,6 +3,7 @@
 ## 1.22.0 (xxxx-xx-xx)
 
 - Improvement: repeat voteban against the same message cannot be started within 2 minutes
+- Other: internal improvements
 
 ## 1.21.0 (2024-03-28)
 

@@ -19,7 +19,7 @@ import type { Chat, User as TelegramUser } from "telegraf/typings/core/types/typ
 import { getChatDisplayTitle, getUserDisplayName } from "src/utils/telegraf";
 
 import type { UpsertedChat } from "./interfaces/upserted-chat.interface";
-import { CHAT_CACHE_TTL } from "./prisma.constants";
+import { CHAT_CACHE_TTL, CHAT_MEMBERS_COUNT_CACHE_TTL } from "./prisma.constants";
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleDestroy {
@@ -167,7 +167,7 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
    * @returns Cache key
    */
   private getChatCacheKey(chatId: number): string {
-    return `database-upsert-chat-${chatId.toString()}`;
+    return `upserted-chat-${chatId.toString()}`;
   }
 
   /**
@@ -216,8 +216,15 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
     const [admins, membersCount] = await Promise.all(
       chat.type === "private"
         ? [[], 2]
-        : // An expected error may happen if administrators are hidden
-          [telegram.getChatAdministrators(chat.id).catch(() => []), telegram.getChatMembersCount(chat.id)],
+        : [
+            // An expected error may happen if administrators are hidden
+            telegram.getChatAdministrators(chat.id).catch(() => []),
+            this.cacheManager.wrap(
+              `chat-${chat.id.toString()}-members-count`,
+              () => telegram.getChatMembersCount(chat.id),
+              CHAT_MEMBERS_COUNT_CACHE_TTL,
+            ),
+          ],
     );
 
     const adminIds = admins.map((a) => ({ id: a.user.id }));

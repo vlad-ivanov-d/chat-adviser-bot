@@ -14,10 +14,10 @@ describe("Logger", () => {
     // Node.js maps "process.stdout" to "console._stdout"
     const consoleWithStdout: Console & { _stdout?: { write: (message: string) => void } } = console;
     const stdoutWriteSpy = jest.spyOn(consoleWithStdout._stdout ?? { write: jest.fn() }, "write");
+    const timestamp = format(new Date(), "MM/DD/YYYY, hh:mm:ss A");
 
     logger.log("Test message");
 
-    const timestamp = format(new Date(), "MM/DD/YYYY, hh:mm:ss A");
     await sleep(TEST_ASYNC_DELAY);
     expect(stdoutWriteSpy).toHaveBeenCalledWith(
       `[Nest] - ${timestamp} \x1B[32m   INFO\x1B[39m \x1B[33m[]\x1B[39m \x1B[32mTest message\x1B[39m\n`,
