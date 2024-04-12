@@ -19,7 +19,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 20.12.1
+          node-version: 20.12.2
       - name: Cache node modules
         env:
           CACHE_NAME: cache-node-modules
@@ -57,7 +57,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 20.12.1
+          node-version: 20.12.2
       - name: Cache node modules
         env:
           CACHE_NAME: cache-node-modules
@@ -96,7 +96,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 20.12.1
+          node-version: 20.12.2
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
