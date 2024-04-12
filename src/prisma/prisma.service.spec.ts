@@ -21,7 +21,9 @@ describe("PrismaService", () => {
     service = testingModule.get<PrismaService>(PrismaService);
   });
 
-  it("should be defined", () => {
-    expect(service).toBeDefined();
+  it("disconnects on module destroy", async () => {
+    const disconnectSpy = jest.spyOn(service, "$disconnect");
+    await service.onModuleDestroy();
+    expect(disconnectSpy).toHaveBeenCalledWith();
   });
 });

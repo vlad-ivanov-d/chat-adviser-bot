@@ -1,4 +1,4 @@
-# Chat Adviser
+# Chat Adviser Bot
 
 Open source Telegram bot that helps to moderate chats.
 
@@ -51,7 +51,7 @@ The bot can issue warnings to users by admin command. To do this, respond to the
 ### Production
 
 1. Provide environment variables. Copy `.env.sample` to `.env` and set correct values.
-2. Restore dependencies
+2. Install dependencies
 
     ```text
     npm ci
@@ -78,7 +78,7 @@ The bot can issue warnings to users by admin command. To do this, respond to the
 ### Development
 
 1. Provide environment variables. Copy `.env.sample` to `.env` and set correct values.
-2. Restore dependencies
+2. Install dependencies
 
     ```text
     npm ci
@@ -96,7 +96,7 @@ Get more details in [Contributing](./CONTRIBUTING.md)
 
 | Statements                  | Branches                | Functions                 | Lines             |
 | --------------------------- | ----------------------- | ------------------------- | ----------------- |
-| ![Statements](https://img.shields.io/badge/statements-90.31%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-76.66%25-red.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-89.47%25-yellow.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-90%25-brightgreen.svg?style=flat) |
+| ![Statements](https://img.shields.io/badge/statements-92.01%25-brightgreen.svg?style=flat) | ![Branches](https://img.shields.io/badge/branches-80.3%25-yellow.svg?style=flat) | ![Functions](https://img.shields.io/badge/functions-93.19%25-brightgreen.svg?style=flat) | ![Lines](https://img.shields.io/badge/lines-91.68%25-brightgreen.svg?style=flat) |
 
 ## License
 

@@ -1,11 +1,12 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ChatType } from "@prisma/client";
-import { changeLanguage, t } from "i18next";
+import { formatInTimeZone } from "date-fns-tz";
+import i18next, { changeLanguage, t } from "i18next";
 import { Ctx, Hears, Next, On, Update } from "nestjs-telegraf";
 import type { InlineKeyboardButton, InlineKeyboardMarkup } from "telegraf/typings/core/types/typegram";
 
 import { AddingBotsAction } from "src/adding-bots/interfaces/action.interface";
-import { PAGE_SIZE } from "src/app.constants";
+import { DATE_FORMAT, PAGE_SIZE } from "src/app.constants";
 import { ChannelMessageFilterAction } from "src/channel-message-filter/interfaces/action.interface";
 import { LanguageAction } from "src/language/interfaces/action.interface";
 import type { UpsertedChat } from "src/prisma/interfaces/upserted-chat.interface";
@@ -14,11 +15,20 @@ import { ProfanityFilterAction } from "src/profanity-filter/interfaces/action.in
 import { TimeZoneAction } from "src/time-zone/interfaces/action.interface";
 import { NextFunction } from "src/types/next-function";
 import { CallbackCtx, MessageCtx, type TextMessageCtx } from "src/types/telegraf-context";
-import { buildCbData, getChatHtmlLink, getErrorCode, getPagination, parseCbData } from "src/utils/telegraf";
+import { getDateLocale } from "src/utils/dates";
+import {
+  buildCbData,
+  getChatHtmlLink,
+  getErrorCode,
+  getPagination,
+  getUserHtmlLink,
+  parseCbData,
+} from "src/utils/telegraf";
 import { VotebanAction } from "src/voteban/interfaces/action.interface";
 import { WarningsAction } from "src/warnings/interfaces/action.interface";
 
 import { SettingsAction } from "./interfaces/action.interface";
+import { WithModifiedOptions } from "./interfaces/with-modified-options.interface";
 
 @Update()
 @Injectable()
@@ -158,6 +168,29 @@ export class SettingsService {
   }
 
   /**
+   * Adds modified info to the text
+   * @param text Text
+   * @param options Options to get modified info
+   * @returns Text with modified information if available
+   */
+  public withModifiedInfo(text: string, options: WithModifiedOptions): string {
+    const { chat, settingName, timeZone } = options;
+    const historyItem = chat.chatSettingsHistory.find((h) => h.settingName === settingName);
+    const locale = getDateLocale(i18next.language);
+    return [
+      text,
+      historyItem
+        ? t("settings:modified", {
+            DATE: formatInTimeZone(historyItem.updatedAt, timeZone, DATE_FORMAT, { locale }),
+            USER: getUserHtmlLink(historyItem.editor),
+          })
+        : "",
+    ]
+      .filter((p) => p)
+      .join("\n");
+  }
+
+  /**
    * Renders chats
    * @param ctx Callback or message context
    * @param skip Skip count
@@ -167,7 +200,8 @@ export class SettingsService {
     const { from } = typeof ctx.callbackQuery === "undefined" ? ctx.update.message : ctx.callbackQuery;
     const take = skip === 0 ? PAGE_SIZE - 1 : PAGE_SIZE;
     if (!ctx.chat || isNaN(skip)) {
-      return; // Incorrect parameters to render chats
+      this.logger.error("Incorrect parameters to render chats");
+      return;
     }
 
     const [[chats, count], dbChat] = await Promise.all([
@@ -217,7 +251,8 @@ export class SettingsService {
     const { callbackQuery: cbQuery, chat, telegram, update } = ctx;
     const { from } = typeof cbQuery === "undefined" ? update.message : cbQuery;
     if (!chat || isNaN(chatId) || isNaN(skip)) {
-      return; // Incorrect parameters to render features
+      this.logger.error("Incorrect parameters to render features");
+      return;
     }
 
     const destDbChat = cbQuery

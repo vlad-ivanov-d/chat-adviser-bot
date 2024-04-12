@@ -55,6 +55,7 @@
     "select": "<b>Time Zone</b>\nI can work in different time zones and display dates in the appropriate format.\n\nSelect a time zone for {{CHAT}} chat.\n\nCurrent time zone: <b>{{VALUE}}</b>"
   },
   "voteban": {
+    "alreadyStarted": "Voting has already started",
     "alreadyVoted": "You have already voted",
     "banResults": "Decided: <b>ban</b>.\n\nVoted for ban: {{USERS}}.",
     "banWithCounter": "Ban ({{VOTES}}/{{LIMIT}})",

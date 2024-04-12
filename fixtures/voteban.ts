@@ -4,8 +4,11 @@ import { DATE_FORMAT } from "src/app.constants";
 import { SettingsAction } from "src/settings/interfaces/action.interface";
 import { VotebanAction } from "src/voteban/interfaces/action.interface";
 
-import { privateChat, supergroup } from "./chats";
+import { channel, privateChat, supergroup } from "./chats";
 import { adminUser, bot, systemChannelBot, user } from "./users";
+
+const backToFeaturesText = "« Back to features";
+const noBanButtonText = "Keep (0/2)";
 
 /**
  * Webhook response which contains answer callback query method.
@@ -100,6 +103,23 @@ export const cbBanEditMessageTextPayload = {
 };
 
 /**
+ * Payload for edit message text request. It should be sent as a result of ban sender chat callback.
+ */
+export const cbBanSenderChatEditMessageTextPayload = {
+  chat_id: supergroup.id,
+  message_id: 4,
+  parse_mode: "HTML",
+  text:
+    `<a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a> offers to ban ` +
+    `@${channel.username ?? ""}. This requires 45 votes.\n\nDo you want to ban @${channel.username ?? ""}?` +
+    "\n\n———\n\nDecided: <b>ban</b>.\n\nVoted for ban: " +
+    Array.from(Array(44))
+      .map((v, i) => `<a href="tg:user?id=${(i + 1000).toString()}">@${user.username ?? ""}${i.toString()}</a>`)
+      .join(", ") +
+    " and others.",
+};
+
+/**
  * Webhook payload which contains ban callback
  */
 export const cbBanWebhook = {
@@ -115,6 +135,35 @@ export const cbBanWebhook = {
       message_id: 3,
       message_thread_id: 1,
       reply_to_message: { chat: supergroup, date: Date.now(), from: user, message_id: 1, text: "Bad word" },
+      text: "",
+    },
+  },
+  update_id: 1,
+};
+
+/**
+ * Webhook payload which contains ban sender chat callback
+ */
+export const cbBanSenderChatWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: VotebanAction.BAN,
+    from: adminUser,
+    id: "1",
+    message: {
+      chat: supergroup,
+      date: Date.now(),
+      from: bot,
+      message_id: 4,
+      message_thread_id: 1,
+      reply_to_message: {
+        chat: supergroup,
+        date: Date.now(),
+        from: systemChannelBot,
+        message_id: 1,
+        sender_chat: channel,
+        text: "Bad word",
+      },
       text: "",
     },
   },
@@ -226,7 +275,7 @@ export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
         { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id.toString()}&v=53`, text: "+50" },
       ],
       [{ callback_data: `${VotebanAction.SAVE}?cId=${supergroup.id.toString()}&v=3`, text: "Save" }],
-      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}`, text: "« Back to features" }],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}`, text: backToFeaturesText }],
     ],
   },
   text:
@@ -301,7 +350,7 @@ export const cbSettingsEditMessageTextPayload = {
         { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id.toString()}&v=50`, text: "+50" },
       ],
       [{ callback_data: `${VotebanAction.SAVE}?cId=${supergroup.id.toString()}&v=0`, text: "Save" }],
-      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}`, text: "« Back to features" }],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}`, text: backToFeaturesText }],
     ],
   },
   text:
@@ -327,6 +376,52 @@ export const cbSettingsWebhook = {
     message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
   },
   update_id: 1,
+};
+
+/**
+ * Webhook payload which contains unsaved settings callback
+ */
+export const cbUnsavedSettingsWebhook = {
+  callback_query: {
+    chat_instance: "1",
+    data: `${VotebanAction.SETTINGS}?cId=${supergroup.id.toString()}&v=3`,
+    from: adminUser,
+    id: "1",
+    message: { chat: privateChat, date: Date.now(), edit_date: Date.now(), from: bot, message_id: 1, text: "" },
+  },
+  update_id: 1,
+};
+
+/**
+ * Payload for edit message text request. It should be sent as a result of unsaved settings callback.
+ */
+export const cbUnsavedSettingsEditMessageTextPayload = {
+  chat_id: privateChat.id,
+  message_id: 1,
+  parse_mode: "HTML",
+  reply_markup: {
+    inline_keyboard: [
+      [
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id.toString()}&v=2`, text: "-1" },
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id.toString()}&v=4`, text: "+1" },
+      ],
+      [
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id.toString()}&v=-47`, text: "-50" },
+        { callback_data: `${VotebanAction.SETTINGS}?cId=${supergroup.id.toString()}&v=53`, text: "+50" },
+      ],
+      [{ callback_data: `${VotebanAction.SAVE}?cId=${supergroup.id.toString()}&v=3`, text: "Save" }],
+      [{ callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}`, text: backToFeaturesText }],
+    ],
+  },
+  text:
+    "<b>Ban Voting</b>\nI can run votes to ban a user in a chat. The user will be banned and their " +
+    "message deleted if the appropriate number of votes is reached. This feature will help users ban the violator " +
+    "when administrators are offline. Messages sent more than 48 hours ago won't be deleted according to " +
+    "Telegram rules.\n\n/voteban - start voting (can be used without the slash)\n\n<b>Tip:</b> " +
+    "Don't set your vote limit too low. Otherwise, a user who has several accounts will be able to single-handedly " +
+    "collect the required number of votes and ban other chat members.\n\nSet the vote limit for making a decision " +
+    `in @${supergroup.username ?? ""} chat. If set a value less than 2, the feature will be disabled.\n\n` +
+    "Current value: <b>3</b>",
 };
 
 /**
@@ -364,11 +459,63 @@ export const votebanAgainstBotWebhook = {
 };
 
 /**
+ * Webhook payload which contains voteban command against the sender chat
+ */
+export const votebanAgainstSenderChatWebhook = {
+  message: {
+    chat: supergroup,
+    date: Date.now(),
+    from: adminUser,
+    message_id: 3,
+    message_thread_id: 1,
+    reply_to_message: {
+      chat: supergroup,
+      date: Date.now(),
+      from: systemChannelBot,
+      media_group_id: "100",
+      message_id: 1,
+      sender_chat: channel,
+      text: "Bad",
+    },
+    text: "voteban",
+  },
+  update_id: 1,
+};
+
+/**
+ * Payload for send message request. It should be sent as a result of voteban command against the sender chat.
+ */
+export const votebanAgainstSenderChatSendMessagePayload = {
+  chat_id: supergroup.id,
+  parse_mode: "HTML",
+  reply_markup: {
+    inline_keyboard: [
+      [{ callback_data: VotebanAction.BAN, text: "Ban (1/2)" }],
+      [{ callback_data: VotebanAction.NO_BAN, text: noBanButtonText }],
+    ],
+  },
+  reply_parameters: { allow_sending_without_reply: true, message_id: 1 },
+  text:
+    `<a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a> offers to ban ` +
+    `@${channel.username ?? ""}. This requires 2 votes.\n\nDo you want to ban @${channel.username ?? ""}?`,
+};
+
+/**
  * Webhook payload which contains voteban command in a private chat
  */
 export const votebanInPrivateChatWebhook = {
   message: { chat: privateChat, date: Date.now(), from: adminUser, message_id: 1, text: "voteban" },
   update_id: 1,
+};
+
+/**
+ * Payload for send message request. It should be sent as a result of voteban command
+ * when voteban has already been started.
+ */
+export const votebanAlreadyStartedSendMessagePayload = {
+  chat_id: supergroup.id,
+  reply_parameters: { message_id: 2 },
+  text: "Voting has already started",
 };
 
 /**
@@ -390,7 +537,7 @@ export const votebanSendMessagePayload = {
   reply_markup: {
     inline_keyboard: [
       [{ callback_data: VotebanAction.BAN, text: "Ban (1/2)" }],
-      [{ callback_data: VotebanAction.NO_BAN, text: "Keep (0/2)" }],
+      [{ callback_data: VotebanAction.NO_BAN, text: noBanButtonText }],
     ],
   },
   reply_parameters: { allow_sending_without_reply: true, message_id: 1 },
@@ -409,7 +556,7 @@ export const votebanSenderChatSendMessagePayload = {
   reply_markup: {
     inline_keyboard: [
       [{ callback_data: VotebanAction.BAN, text: "Ban (0/2)" }],
-      [{ callback_data: VotebanAction.NO_BAN, text: "Keep (0/2)" }],
+      [{ callback_data: VotebanAction.NO_BAN, text: noBanButtonText }],
     ],
   },
   reply_parameters: { allow_sending_without_reply: true, message_id: 1 },

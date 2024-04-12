@@ -2,7 +2,7 @@ import type { Config } from "jest";
 
 const config: Config = {
   collectCoverageFrom: ["src/**"],
-  coveragePathIgnorePatterns: [".spec.ts"],
+  coveragePathIgnorePatterns: [".spec.ts", "src/main.ts"],
   coverageReporters: [["json", { file: "../.nyc_output/coverage-final.json" }], "html", "text-summary"],
   coverageThreshold: { global: { branches: 4, functions: 4, lines: 4, statements: 4 } },
   globalSetup: "<rootDir>/test/utils/global-setup.ts",

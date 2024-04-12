@@ -22,6 +22,16 @@ describe("SettingsModule (e2e)", () => {
     await app.init();
   });
 
+  it("handles an error if parameters are incorrect during chats rendering", async () => {
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbChatsErrorWebhook);
+    expect(response.status).toBe(200);
+  });
+
+  it("handles an error if parameters are incorrect during features rendering", async () => {
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbFeaturesErrorWebhook);
+    expect(response.status).toBe(200);
+  });
+
   it("prompts admin to make settings when a new group chat has been created", async () => {
     await createDbPrivateChat();
     let sendMessagePayload1: unknown;
@@ -70,7 +80,7 @@ describe("SettingsModule (e2e)", () => {
     server.use(
       http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
-        return HttpResponse.json({ ok: true });
+        return new HttpResponse(null, { status: 400 });
       }),
     );
 
@@ -96,6 +106,21 @@ describe("SettingsModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(sendMessagePayload).toEqual(fixtures.myChatsInPrivateChatSendMessagePayload);
+  });
+
+  it("renders features", async () => {
+    let editMessageTextPayload;
+    server.use(
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+        editMessageTextPayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbFeaturesWebhook);
+
+    expect(response.status).toBe(200);
+    expect(editMessageTextPayload).toEqual(fixtures.featuresEditMessageTextPayload);
   });
 
   it("renders the second page of chats", async () => {

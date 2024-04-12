@@ -22,7 +22,7 @@ import {
 
 import { VotebanAction } from "./interfaces/action.interface";
 import type { VotebanRenderSettingsOptions } from "./interfaces/settings-options.interface";
-import { EXPIRED_VOTEBAN_TIMEOUT } from "./voteban.constants";
+import { EXPIRED_VOTEBAN_TIMEOUT, VOTEBAN_DELAY } from "./voteban.constants";
 
 @Update()
 @Injectable()
@@ -69,7 +69,8 @@ export class VotebanService {
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   public async cleanup(): Promise<void> {
     const date = new Date(Date.now() - EXPIRED_VOTEBAN_TIMEOUT);
-    await this.prismaService.voteban.deleteMany({ where: { createdAt: { lt: date } } });
+    const { count } = await this.prismaService.voteban.deleteMany({ where: { createdAt: { lt: date } } });
+    this.logger.log(`Number of deleted expired votebans: ${count.toString()}`);
   }
 
   /**
@@ -79,28 +80,29 @@ export class VotebanService {
    */
   @Hears(/^(\/)?voteban$/i)
   public async votebanCommand(@Ctx() ctx: TextMessageCtx): Promise<void> {
-    const { from, message_id: messageId, sender_chat: fromSenderChat, reply_to_message: replyToMessage } = ctx.message;
-    const candidate = replyToMessage?.from;
-    const candidateSenderChat = replyToMessage?.sender_chat;
-    const isCandidateAutomaticForward = !!replyToMessage && "is_automatic_forward" in replyToMessage;
-
     if (ctx.message.chat.type === "private") {
       await ctx.reply(t("common:commandNotForPrivateChats"));
-      return; // Private chat, return.
+      return;
     }
 
-    const [chat, isCandidateAdmin] = await Promise.all([
+    const { from, message_id: messageId, sender_chat: senderChat, reply_to_message: replyToMessage } = ctx.message;
+    const candidate = replyToMessage?.from;
+    const candidateSenderChat = replyToMessage?.sender_chat;
+
+    const [chat, isCandidateAdmin, isVotingStarted] = await Promise.all([
       this.prismaService.upsertChatWithCache(ctx.chat, from),
       typeof candidate?.id === "number" && !candidateSenderChat
         ? // Check seperately, because other bots are not included in admin list.
           isChatAdmin(ctx.telegram, ctx.chat.id, candidate.id)
         : candidateSenderChat?.id === ctx.chat.id,
+      this.checkIsVotingStarted(ctx.message),
     ]);
     await changeLanguage(chat.language);
 
     if (!chat.votebanLimit) {
       return; // The feature is disabled, return.
     }
+    this.logger.log("The /voteban command was used");
     if (!this.prismaService.isChatAdmin(chat, ctx.botInfo.id)) {
       await ctx.reply(t("common:needAdminPermissions"), { reply_parameters: { message_id: messageId } });
       return; // Bot is not an admin, return.
@@ -113,16 +115,19 @@ export class VotebanService {
       await ctx.reply(t("voteban:cannotVoteAgainstMyself"), { reply_parameters: { message_id: messageId } });
       return; // Candidate is the bot itself, return.
     }
-    if (isCandidateAutomaticForward || isCandidateAdmin) {
+    if ("is_automatic_forward" in replyToMessage || isCandidateAdmin) {
       await ctx.reply(t("voteban:cannotVoteAgainstAdmin"), { reply_parameters: { message_id: messageId } });
       return; // Candidate is an admin, return.
     }
+    if (isVotingStarted) {
+      await ctx.reply(t("voteban:alreadyStarted"), { reply_parameters: { message_id: messageId } });
+      return; // Voting has already started, return.
+    }
 
-    const authorLink = getUserOrChatHtmlLink(from, fromSenderChat);
+    const authorLink = getUserOrChatHtmlLink(from, senderChat);
     const candidateLink = getUserOrChatHtmlLink(candidate, candidateSenderChat);
     // Do not accept vote from sender chat
-    const banVotesCount = fromSenderChat ? 0 : 1;
-    const banButtonText = t("voteban:banWithCounter", { LIMIT: chat.votebanLimit, VOTES: banVotesCount });
+    const banButtonText = t("voteban:banWithCounter", { LIMIT: chat.votebanLimit, VOTES: senderChat ? 0 : 1 });
     const noBanButtonText = t("voteban:noBanWithCounter", { LIMIT: chat.votebanLimit, VOTES: 0 });
 
     const [reply] = await Promise.all([
@@ -141,19 +146,20 @@ export class VotebanService {
 
     await Promise.all([
       candidateSenderChat && this.prismaService.upsertSenderChat(candidateSenderChat, from),
-      fromSenderChat && this.prismaService.upsertSenderChat(fromSenderChat, from),
+      senderChat && this.prismaService.upsertSenderChat(senderChat, from),
     ]);
 
-    await this.prismaService.$transaction([
+    const [, voting] = await this.prismaService.$transaction([
       this.prismaService.upsertUser(candidate, from),
       this.prismaService.voteban.create({
         data: {
           authorId: from.id,
-          authorSenderChatId: fromSenderChat?.id,
+          authorSenderChatId: senderChat?.id,
           // Do not accept vote from sender chat
-          banVoters: fromSenderChat ? undefined : { create: { authorId: from.id, editorId: from.id } },
+          banVoters: senderChat ? undefined : { create: { authorId: from.id, editorId: from.id } },
           candidateId: candidate.id,
-          candidateMediaGroupId: "media_group_id" in replyToMessage ? replyToMessage.media_group_id : undefined,
+          candidateMediaGroupId: "media_group_id" in replyToMessage ? replyToMessage.media_group_id : null,
+          candidateMessageId: replyToMessage.message_id,
           candidateSenderChatId: candidateSenderChat?.id,
           chatId: chat.id,
           editorId: from.id,
@@ -162,6 +168,7 @@ export class VotebanService {
         select: { id: true },
       }),
     ]);
+    this.logger.log(`Voting started: ${voting.id}`);
   }
 
   /**
@@ -209,6 +216,28 @@ export class VotebanService {
   }
 
   /**
+   * Checks if there is already a recently started voting against this message
+   * @param message Message from context
+   * @returns True if the same voting exists
+   */
+  private async checkIsVotingStarted(message: TextMessageCtx["message"]): Promise<boolean> {
+    if (message.reply_to_message) {
+      const candidateMediaGroupId =
+        "media_group_id" in message.reply_to_message ? message.reply_to_message.media_group_id : null;
+      const voting = await this.prismaService.voteban.findFirst({
+        select: { id: true },
+        where: {
+          OR: [{ candidateMediaGroupId }, { candidateMessageId: message.reply_to_message.message_id }],
+          chatId: message.chat.id,
+          createdAt: { gt: new Date(Date.now() - VOTEBAN_DELAY) },
+        },
+      });
+      return !!voting;
+    }
+    return false;
+  }
+
+  /**
    * Renders settings
    * @param ctx Callback context
    * @param options Render options
@@ -220,22 +249,27 @@ export class VotebanService {
       return;
     }
 
-    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    const { language, timeZone } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
     await changeLanguage(language);
-    const dbChat = await this.settingsService.resolveChat(ctx, chatId);
-    if (!dbChat) {
+    const chat = await this.settingsService.resolveChat(ctx, chatId);
+    if (!chat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
-    const chatLink = getChatHtmlLink(dbChat);
-    const { votebanLimit } = dbChat;
+    const chatLink = getChatHtmlLink(chat);
+    const { votebanLimit } = chat;
     const newValue = this.sanitizeValue(typeof value === "undefined" || isNaN(value) ? votebanLimit : value);
     const tip = t("voteban:tip");
     const msg = t("voteban:setLimit", { CHAT: chatLink, TIP: tip, count: newValue });
+    const msgWithModifiedInfo = this.settingsService.withModifiedInfo(msg, {
+      chat,
+      settingName: ChatSettingName.VOTEBAN_LIMIT,
+      timeZone,
+    });
 
     await Promise.all([
       shouldAnswerCallback && ctx.answerCbQuery(),
-      ctx.editMessageText(this.prismaService.joinModifiedInfo(msg, ChatSettingName.VOTEBAN_LIMIT, dbChat), {
+      ctx.editMessageText(msgWithModifiedInfo, {
         parse_mode: "HTML",
         reply_markup: {
           inline_keyboard: [
@@ -334,6 +368,7 @@ export class VotebanService {
           candidate: true,
           candidateMediaGroupId: true,
           candidateSenderChat: true,
+          id: true,
           noBanVoters: { orderBy: { createdAt: "asc" }, select: { author: true } },
         },
         where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
@@ -371,9 +406,9 @@ export class VotebanService {
     if (voteUsers.length >= chat.votebanLimit) {
       const candidateMessageId = "reply_to_message" in message ? message.reply_to_message?.message_id : undefined;
       const resultsMsg = isBan ? t("voteban:banResults", tOptions) : t("voteban:noBanResults", tOptions);
+      this.logger.log(`Voting completed: ${voting.id}`);
       await Promise.all([
-        this.prismaService.voteban.update({
-          data: { isCompleted: true },
+        this.prismaService.voteban.delete({
           select: { id: true },
           where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
         }),
@@ -419,10 +454,7 @@ export class VotebanService {
           id: true,
           noBanVoters: { select: { authorId: true }, where: { authorId: from.id } },
         },
-        where: {
-          OR: [{ isCompleted: false }, { isCompleted: null }],
-          chatId_messageId: { chatId: message.chat.id, messageId: message.message_id },
-        },
+        where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
       }),
     ]);
 

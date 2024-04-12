@@ -17,7 +17,7 @@ The required are:
 - ESLint
 - Prettier
 
-## Restore Dependencies
+## Install Dependencies
 
 ```text
 npm ci

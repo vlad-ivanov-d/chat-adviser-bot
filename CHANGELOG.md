@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.22.0 (2024-04-12)
+
+- Improvement: repeat voteban against the same message cannot be started within 2 minutes
+- Other: internal improvements
+
 ## 1.21.0 (2024-03-28)
 
 - Improvement: the profanity filter has become more accurate

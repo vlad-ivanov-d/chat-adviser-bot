@@ -1,5 +1,6 @@
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
+import { ChatType } from "@prisma/client";
 import { http, HttpResponse } from "msw";
 import request from "supertest";
 import type { App } from "supertest/types";
@@ -92,7 +93,7 @@ describe("WarningsModule (e2e)", () => {
           editorId: adminUser.id,
           id: channel.id,
           title: channel.title,
-          type: "CHANNEL",
+          type: ChatType.CHANNEL,
           username: channel.username,
         },
       }),
@@ -211,10 +212,11 @@ describe("WarningsModule (e2e)", () => {
 
     const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSaveSettingsWebhook);
 
+    const expectedEditMessageTextPayload = fixtures.cbSaveSettingsEditMessageTextPayload();
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
     await sleep(TEST_ASYNC_DELAY);
-    expect(editMessageTextPayload).toEqual(fixtures.cbSaveSettingsEditMessageTextPayload());
+    expect(editMessageTextPayload).toEqual(expectedEditMessageTextPayload);
   });
 
   it("saves settings with sanitized value", async () => {
@@ -231,10 +233,11 @@ describe("WarningsModule (e2e)", () => {
       .post(TEST_WEBHOOK_PATH)
       .send(fixtures.cbSaveIncorrectValueSettingsWebhook);
 
+    const expectedEditMessageTextPayload = fixtures.cbSaveIncorrectValueSettingsEditMessageTextPayload();
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSaveSettingsWebhookResponse);
     await sleep(TEST_ASYNC_DELAY);
-    expect(editMessageTextPayload).toEqual(fixtures.cbSaveIncorrectValueSettingsEditMessageTextPayload());
+    expect(editMessageTextPayload).toEqual(expectedEditMessageTextPayload);
   });
 
   it("says /warn command is not for a private chat", async () => {

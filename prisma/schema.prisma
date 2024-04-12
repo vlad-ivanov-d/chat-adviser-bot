@@ -145,12 +145,11 @@ model ProfaneWord {
   editorId  Float        @map("editor_id")
   language  LanguageCode
   updatedAt DateTime     @updatedAt @map("updated_at")
-  word      String
+  word      String       @unique
 
   author User @relation("ProfaneWordAuthor", fields: [authorId], references: [id])
   editor User @relation("ProfaneWordEditor", fields: [editorId], references: [id])
 
-  @@unique([word])
   @@map("profane_words")
 }
 
@@ -201,11 +200,11 @@ model Voteban {
   banVoters             VotebanBanVoter[]
   candidateId           Float               @map("candidate_id")
   candidateMediaGroupId String?             @map("candidate_media_group_id")
+  candidateMessageId    Float               @map("candidate_message_id")
   candidateSenderChatId Float?              @map("candidate_sender_chat_id")
   chatId                Float               @map("chat_id")
   createdAt             DateTime            @default(now()) @map("created_at")
   editorId              Float               @map("editor_id")
-  isCompleted           Boolean?            @map("is_completed")
   messageId             Float               @map("message_id")
   noBanVoters           VotebanNoBanVoter[]
   updatedAt             DateTime            @updatedAt @map("updated_at")
@@ -218,7 +217,8 @@ model Voteban {
   editor              User        @relation("VotebanEditor", fields: [editorId], references: [id])
 
   @@unique([chatId, messageId])
-  @@index([isCompleted])
+  @@index([candidateMediaGroupId])
+  @@index([candidateMessageId])
   @@index([createdAt])
   @@map("votebans")
 }
