@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   build:
-    if: github.head_ref != 'refs/heads/dev' && github.head_ref != 'refs/heads/main'
+    if: github.head_ref != 'dev' && github.head_ref != 'main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -40,7 +40,7 @@ jobs:
         run: npm run build
 
   test:
-    if: github.head_ref != 'refs/heads/dev' && github.head_ref != 'refs/heads/main'
+    if: github.head_ref != 'dev' && github.head_ref != 'main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
