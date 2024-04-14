@@ -74,5 +74,6 @@ export const server = setupServer(
   http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatMember`, getChatMemberResolver),
   http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatMembersCount`, getChatMembersCountResolver),
   http.post(`${TEST_TELEGRAM_API_BASE_URL}/getMe`, () => HttpResponse.json({ ok: true, result: bot })),
+  http.post(`${TEST_TELEGRAM_API_BASE_URL}/setMyCommands`, () => HttpResponse.json({ ok: true })),
   http.post(`${TEST_TELEGRAM_API_BASE_URL}/setWebhook`, () => HttpResponse.json({ ok: true, result: true })),
 );

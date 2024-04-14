@@ -32,8 +32,10 @@
   "settings": {
     "backToChats": "Back to chats",
     "backToFeatures": "Back to features",
+    "changeChatSettings": "Change settings for your chats",
     "changesSaved": "Changes saved",
     "forbidden": "Unfortunately, this action is no longer available to you.",
+    "help": "Help",
     "invitation": "I see that you've added me to a new chat. Perhaps you want to immediately configure this chat? Don't forget to give me admin permissions so that all my features are available.",
     "modified": "Modified at {{DATE}} by {{USER}}",
     "refreshList": "Refresh the list",

@@ -168,7 +168,7 @@ export class VotebanService {
         select: { id: true },
       }),
     ]);
-    this.logger.log(`Voting started: ${voting.id}`);
+    this.logger.log(`Voteban started: ${voting.id}`);
   }
 
   /**
@@ -406,7 +406,7 @@ export class VotebanService {
     if (voteUsers.length >= chat.votebanLimit) {
       const candidateMessageId = "reply_to_message" in message ? message.reply_to_message?.message_id : undefined;
       const resultsMsg = isBan ? t("voteban:banResults", tOptions) : t("voteban:noBanResults", tOptions);
-      this.logger.log(`Voting completed: ${voting.id}`);
+      this.logger.log(`Voteban completed: ${voting.id}`);
       await Promise.all([
         this.prismaService.voteban.delete({
           select: { id: true },
