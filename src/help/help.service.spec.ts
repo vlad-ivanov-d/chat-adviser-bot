@@ -4,7 +4,7 @@ import { LanguageCode } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
 import { TelegrafModule } from "nestjs-telegraf";
 
-import { mockTextMessageCtx } from "__mocks__/telegraf-context";
+import { mockCommandCtx } from "__mocks__/telegraf-context";
 import { bot } from "fixtures/users";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -32,7 +32,7 @@ describe("HelpService", () => {
 
   it("answers to /help command in a supergroup chat", async () => {
     prismaService.upsertChatWithCache = jest.fn().mockReturnValueOnce({ language: LanguageCode.EN });
-    const ctx = mockTextMessageCtx();
+    const ctx = mockCommandCtx();
     const replySpy = jest.spyOn(ctx, "reply");
 
     await service.helpCommand(ctx);

@@ -573,6 +573,7 @@ export const votebanSenderChatWebhook = {
   message: {
     chat: supergroup,
     date: Date.now(),
+    entities: [{ length: 8, offset: 0, type: "bot_command" }],
     from: systemChannelBot,
     message_id: 2,
     message_thread_id: 1,
@@ -595,6 +596,21 @@ export const votebanWebhook = {
     message_thread_id: 1,
     reply_to_message: { chat: supergroup, date: Date.now(), from: user, message_id: 1, text: "Bad message" },
     text: "voteban",
+  },
+  update_id: 1,
+};
+
+/**
+ * Webhook which contains voteban command with a payload
+ */
+export const votebanWithPayloadWebhook = {
+  message: {
+    chat: supergroup,
+    date: Date.now(),
+    entities: [{ length: 8, offset: 0, type: "bot_command" }],
+    from: adminUser,
+    message_id: 1,
+    text: "/voteban text",
   },
   update_id: 1,
 };

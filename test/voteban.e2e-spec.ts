@@ -348,6 +348,24 @@ describe("VotebanModule (e2e)", () => {
     expect(sendMessagePayload).toBeUndefined();
   });
 
+  it("ignores voteban command if the command has payload", async () => {
+    await createDbSupergroupChat({ votebanLimit: 2 });
+    let sendMessagePayload;
+    server.use(
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+        sendMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_WEBHOOK_BASE_URL)
+      .post(TEST_WEBHOOK_PATH)
+      .send(fixtures.votebanWithPayloadWebhook);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload).toBeUndefined();
+  });
+
   it("rejects duplicate votes", async () => {
     await createDbSupergroupChat({ votebanLimit: 2 });
     const [, voteban] = await prisma.$transaction([
