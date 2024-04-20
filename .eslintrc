@@ -48,12 +48,10 @@
     "@typescript-eslint/member-ordering": "error",
     "@typescript-eslint/naming-convention": [
       "error",
-      { "format": ["UPPER_CASE", "strictCamelCase"], "selector": "default" },
+      { "format": ["StrictPascalCase", "UPPER_CASE", "strictCamelCase"], "selector": "default" },
       { "format": ["UPPER_CASE"], "selector": "enumMember" },
-      // Ignore properties because of i18next, prisma and telegraf typings.
       { "format": null, "selector": "property" },
       { "format": ["StrictPascalCase"], "selector": "typeLike" },
-      { "format": ["UPPER_CASE", "strictCamelCase"], "selector": "variableLike" },
       {
         "format": ["StrictPascalCase"],
         "prefix": ["can", "did", "has", "is", "should", "will"],
