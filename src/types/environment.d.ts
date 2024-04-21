@@ -5,6 +5,10 @@ declare namespace NodeJS {
      */
     BOT_TOKEN?: string;
     /**
+     * Connection URL for Loki
+     */
+    LOKI_URL?: string;
+    /**
      * Node environment
      */
     NODE_ENV?: "development" | "production" | "test";

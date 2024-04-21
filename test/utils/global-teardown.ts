@@ -9,7 +9,6 @@ let isEventAdded = false;
  * Jest global teardown use default export.
  * @param config Jest config
  */
-// eslint-disable-next-line import/no-default-export
 export default (config: Config): void => {
   const command = "docker compose -p chat-adviser-bot-test down -v";
   if (isEventAdded) {

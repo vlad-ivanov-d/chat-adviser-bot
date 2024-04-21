@@ -1,6 +1,7 @@
 import type { Config } from "jest";
 
 const config: Config = {
+  clearMocks: true,
   collectCoverageFrom: ["src/**"],
   coverageDirectory: "./coverage-e2e",
   coveragePathIgnorePatterns: [".spec.ts", "src/main.ts", "src/utils/logger.ts"],
@@ -19,6 +20,4 @@ const config: Config = {
   testMatch: ["<rootDir>/test/**/*.e2e-spec.ts"],
 };
 
-// Jest config should have default export
-// eslint-disable-next-line import/no-default-export
 export default config;

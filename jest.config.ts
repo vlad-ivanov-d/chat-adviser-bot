@@ -1,6 +1,7 @@
 import type { Config } from "jest";
 
 const config: Config = {
+  clearMocks: true,
   collectCoverageFrom: ["src/**"],
   coveragePathIgnorePatterns: [".spec.ts", "src/main.ts"],
   coverageReporters: [["json", { file: "../.nyc_output/coverage-final.json" }], "html", "text-summary"],
@@ -13,6 +14,4 @@ const config: Config = {
   testMatch: ["<rootDir>/src/**/*.spec.ts"],
 };
 
-// Jest config should have default export
-// eslint-disable-next-line import/no-default-export
 export default config;

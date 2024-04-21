@@ -3,8 +3,8 @@
 
 export const Scenes = { Stage: jest.fn() };
 
-export const Telegraf = jest.fn().mockReturnValue({
+export const Telegraf = jest.fn(() => ({
   launch: jest.fn(),
   telegram: { setMyCommands: jest.fn() },
   use: jest.fn(),
-});
+}));

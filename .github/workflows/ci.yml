@@ -45,6 +45,7 @@ jobs:
             Dockerfile
             compose.build.yml
             dist
+            grafana
             package-lock.json
             package.json
             prisma
@@ -103,17 +104,20 @@ jobs:
           name: app
       - name: Start the app in docker
         env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
           DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DATABASE_USER: ${{ secrets.DATABASE_USER }}
           DOCKER_HOST: ${{ secrets.DOCKER_HOST }}
+          GRAFANA_PORT: ${{ secrets.GRAFANA_PORT }}
+          LOKI_PORT: ${{ secrets.LOKI_PORT }}
+          LOKI_URL: ${{ secrets.LOKI_URL }}
           REDIS_HOST: ${{ secrets.REDIS_HOST }}
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
           REDIS_PORT: ${{ secrets.REDIS_PORT }}
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           WEBHOOK_DOMAIN: ${{ secrets.WEBHOOK_DOMAIN }}
           WEBHOOK_PATH: ${{ secrets.WEBHOOK_PATH }}
           WEBHOOK_PORT: ${{ secrets.WEBHOOK_PORT }}

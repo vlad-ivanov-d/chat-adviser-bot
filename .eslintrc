@@ -68,7 +68,6 @@
     "eqeqeq": "error",
     "guard-for-in": "error",
     "import/no-cycle": "error",
-    "import/no-default-export": "error",
     "import/no-deprecated": "error",
     "import/no-mutable-exports": "error",
     "import/no-named-as-default": "error",
