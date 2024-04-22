@@ -7,7 +7,11 @@ import type { App } from "supertest/types";
 import * as fixtures from "fixtures/settings";
 import { AppModule } from "src/app.module";
 
-import { TEST_TELEGRAM_API_BASE_URL, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./utils/constants";
+import {
+  TEST_TELEGRAM_API_BASE_URL,
+  TEST_TELEGRAM_WEBHOOK_BASE_URL,
+  TEST_TELEGRAM_WEBHOOK_PATH,
+} from "./utils/constants";
 import { createDbPrivateChat } from "./utils/database";
 import { server } from "./utils/server";
 
@@ -23,12 +27,16 @@ describe("SettingsModule (e2e)", () => {
   });
 
   it("handles an error if parameters are incorrect during chats rendering", async () => {
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbChatsErrorWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbChatsErrorWebhook);
     expect(response.status).toBe(200);
   });
 
   it("handles an error if parameters are incorrect during features rendering", async () => {
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbFeaturesErrorWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbFeaturesErrorWebhook);
     expect(response.status).toBe(200);
   });
 
@@ -41,8 +49,8 @@ describe("SettingsModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.myChatsWithPayloadWebhook);
 
     expect(response.status).toBe(200);
@@ -63,8 +71,12 @@ describe("SettingsModule (e2e)", () => {
     );
 
     // This event contains 2 separate updates
-    const response1 = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.groupCreatedWebhook1);
-    const response2 = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.groupCreatedWebhook2);
+    const response1 = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.groupCreatedWebhook1);
+    const response2 = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.groupCreatedWebhook2);
 
     expect(response1.status).toBe(200);
     expect(response2.status).toBe(200);
@@ -85,7 +97,9 @@ describe("SettingsModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.addedToNewChatWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.addedToNewChatWebhook);
 
     expect(response.status).toBe(200);
     expect(sendMessagePayload1).toEqual(fixtures.addedToNewChatSendMessagePayload1);
@@ -101,7 +115,9 @@ describe("SettingsModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbRefreshWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbRefreshWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ callback_query_id: "1", method: "answerCallbackQuery" });
@@ -117,8 +133,8 @@ describe("SettingsModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.myChatsInPrivateChatWebhook);
 
     expect(response.status).toBe(200);
@@ -134,7 +150,9 @@ describe("SettingsModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbFeaturesWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbFeaturesWebhook);
 
     expect(response.status).toBe(200);
     expect(editMessageTextPayload).toEqual(fixtures.featuresEditMessageTextPayload);
@@ -149,7 +167,9 @@ describe("SettingsModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbChatsWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbChatsWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ callback_query_id: "1", method: "answerCallbackQuery" });
@@ -165,8 +185,8 @@ describe("SettingsModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.anotherBotAddedToChatWebhook);
 
     expect(response.status).toBe(200);
@@ -182,8 +202,8 @@ describe("SettingsModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.myChatsInSupergroupWebhook);
 
     expect(response.status).toBe(200);

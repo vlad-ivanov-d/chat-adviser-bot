@@ -117,11 +117,11 @@ jobs:
           REDIS_PORT: ${{ secrets.REDIS_PORT }}
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          WEBHOOK_DOMAIN: ${{ secrets.WEBHOOK_DOMAIN }}
-          WEBHOOK_PATH: ${{ secrets.WEBHOOK_PATH }}
-          WEBHOOK_PORT: ${{ secrets.WEBHOOK_PORT }}
-          WEBHOOK_SECRET_TOKEN: ${{ secrets.WEBHOOK_SECRET_TOKEN }}
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_WEBHOOK_DOMAIN: ${{ secrets.TELEGRAM_WEBHOOK_DOMAIN }}
+          TELEGRAM_WEBHOOK_PATH: ${{ secrets.TELEGRAM_WEBHOOK_PATH }}
+          TELEGRAM_WEBHOOK_PORT: ${{ secrets.TELEGRAM_WEBHOOK_PORT }}
+          TELEGRAM_WEBHOOK_SECRET_TOKEN: ${{ secrets.TELEGRAM_WEBHOOK_SECRET_TOKEN }}
         run: |
           eval $(ssh-agent -s)
           echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null

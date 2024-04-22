@@ -1,10 +1,6 @@
 declare namespace NodeJS {
   interface ProcessEnv {
     /**
-     * Telegram bot API token
-     */
-    BOT_TOKEN?: string;
-    /**
      * Connection URL for Loki
      */
     LOKI_URL?: string;
@@ -25,20 +21,24 @@ declare namespace NodeJS {
      */
     REDIS_PORT?: string;
     /**
+     * Telegram bot API token
+     */
+    TELEGRAM_TOKEN?: string;
+    /**
      * Telegram bot webhook domain
      */
-    WEBHOOK_DOMAIN?: string;
+    TELEGRAM_WEBHOOK_DOMAIN?: string;
     /**
      * Telegram bot webhook path
      */
-    WEBHOOK_PATH?: string;
+    TELEGRAM_WEBHOOK_PATH?: string;
     /**
      * Telegram bot webhook port
      */
-    WEBHOOK_PORT?: string;
+    TELEGRAM_WEBHOOK_PORT?: string;
     /**
      * Secret token to be sent back in Telegram webhook header for security
      */
-    WEBHOOK_SECRET_TOKEN?: string;
+    TELEGRAM_WEBHOOK_SECRET_TOKEN?: string;
   }
 }

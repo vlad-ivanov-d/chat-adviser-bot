@@ -14,7 +14,7 @@ describe("HelpModule", () => {
     testingModule = await Test.createTestingModule({
       imports: [
         CacheModule.register({ isGlobal: true, store }),
-        TelegrafModule.forRoot({ launchOptions: false, token: process.env.BOT_TOKEN ?? "" }),
+        TelegrafModule.forRoot({ launchOptions: false, token: process.env.TELEGRAM_TOKEN ?? "" }),
         PrismaModule,
         HelpModule,
       ],

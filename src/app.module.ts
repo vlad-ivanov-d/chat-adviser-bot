@@ -26,16 +26,16 @@ import { WarningsModule } from "./warnings/warnings.module";
     ScheduleModule.forRoot(),
     TelegrafModule.forRoot({
       launchOptions: {
-        webhook: process.env.WEBHOOK_DOMAIN
+        webhook: process.env.TELEGRAM_WEBHOOK_DOMAIN
           ? {
-              domain: process.env.WEBHOOK_DOMAIN,
-              path: process.env.WEBHOOK_PATH,
-              port: process.env.WEBHOOK_PORT ? Number(process.env.WEBHOOK_PORT) : undefined,
-              secretToken: process.env.WEBHOOK_SECRET_TOKEN,
+              domain: process.env.TELEGRAM_WEBHOOK_DOMAIN,
+              path: process.env.TELEGRAM_WEBHOOK_PATH,
+              port: process.env.TELEGRAM_WEBHOOK_PORT ? Number(process.env.TELEGRAM_WEBHOOK_PORT) : undefined,
+              secretToken: process.env.TELEGRAM_WEBHOOK_SECRET_TOKEN,
             }
           : undefined,
       },
-      token: process.env.BOT_TOKEN ?? "",
+      token: process.env.TELEGRAM_TOKEN ?? "",
     }),
     ProfanityFilterModule,
     AddingBotsModule,

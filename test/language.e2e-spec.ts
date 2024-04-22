@@ -11,8 +11,8 @@ import { AppModule } from "src/app.module";
 import {
   TEST_ASYNC_DELAY,
   TEST_TELEGRAM_API_BASE_URL,
-  TEST_WEBHOOK_BASE_URL,
-  TEST_WEBHOOK_PATH,
+  TEST_TELEGRAM_WEBHOOK_BASE_URL,
+  TEST_TELEGRAM_WEBHOOK_PATH,
 } from "./utils/constants";
 import { createDbSupergroupChat } from "./utils/database";
 import { server } from "./utils/server";
@@ -30,13 +30,15 @@ describe("LanguageModule (e2e)", () => {
   });
 
   it("handles an error if chat id is incorrect during settings rendering", async () => {
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsErrorWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbSettingsErrorWebhook);
     expect(response.status).toBe(200);
   });
 
   it("handles an error if chat id is incorrect during settings saving", async () => {
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.cbSaveSettingsErrorWebhook);
     expect(response.status).toBe(200);
   });
@@ -51,7 +53,9 @@ describe("LanguageModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbSettingsWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ callback_query_id: "1", method: "answerCallbackQuery" });
@@ -68,7 +72,9 @@ describe("LanguageModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSaveSettingsWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbSaveSettingsWebhook);
 
     const expectedEditMessageTextPayload = fixtures.cbSaveSettingsEditMessageTextPayload();
     expect(response.status).toBe(200);
@@ -87,8 +93,8 @@ describe("LanguageModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.cbSaveIncorrectValueSettingsWebhook);
 
     const expectedEditMessageTextPayload = fixtures.cbSaveIncorrectValueSettingsEditMessageTextPayload();
@@ -110,7 +116,9 @@ describe("LanguageModule (e2e)", () => {
       ),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbSettingsWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSettingsNotAdminWebhookResponse);
@@ -131,7 +139,9 @@ describe("LanguageModule (e2e)", () => {
       ),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSaveSettingsWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbSaveSettingsWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSettingsNotAdminWebhookResponse);

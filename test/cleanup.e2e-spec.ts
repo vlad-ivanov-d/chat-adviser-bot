@@ -6,7 +6,7 @@ import type { App } from "supertest/types";
 import * as fixtures from "fixtures/cleanup";
 import { AppModule } from "src/app.module";
 
-import { TEST_ASYNC_DELAY, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./utils/constants";
+import { TEST_ASYNC_DELAY, TEST_TELEGRAM_WEBHOOK_BASE_URL, TEST_TELEGRAM_WEBHOOK_PATH } from "./utils/constants";
 import { createDbPrivateChat, createDbSupergroupChat, prisma } from "./utils/database";
 import { sleep } from "./utils/sleep";
 
@@ -36,8 +36,12 @@ describe("CleanupModule (e2e)", () => {
     await createDbSupergroupChat();
 
     // This event contains 2 separate updates
-    const response1 = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.kickedBotWebhook1);
-    const response2 = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.kickedBotWebhook2);
+    const response1 = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.kickedBotWebhook1);
+    const response2 = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.kickedBotWebhook2);
 
     const chats = await prisma.chat.findMany();
     expect(response1.status).toBe(200);

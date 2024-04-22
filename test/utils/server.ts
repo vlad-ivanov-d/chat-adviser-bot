@@ -68,7 +68,7 @@ const getChatResolver: HttpResponseResolver<PathParams, { chat_id: number }> = a
  * MSW server
  */
 export const server = setupServer(
-  ...(process.env.WEBHOOK_PATH ? [http.post(`**${process.env.WEBHOOK_PATH}`, passthrough)] : []),
+  ...(process.env.TELEGRAM_WEBHOOK_PATH ? [http.post(`**${process.env.TELEGRAM_WEBHOOK_PATH}`, passthrough)] : []),
   http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChat`, getChatResolver),
   http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, getChatAdministratorsResolver),
   http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatMember`, getChatMemberResolver),

@@ -14,8 +14,8 @@ import { AppModule } from "src/app.module";
 import {
   TEST_ASYNC_DELAY,
   TEST_TELEGRAM_API_BASE_URL,
-  TEST_WEBHOOK_BASE_URL,
-  TEST_WEBHOOK_PATH,
+  TEST_TELEGRAM_WEBHOOK_BASE_URL,
+  TEST_TELEGRAM_WEBHOOK_PATH,
 } from "./utils/constants";
 import { createDbSupergroupChat, createDbUser, prisma } from "./utils/database";
 import { server } from "./utils/server";
@@ -56,7 +56,9 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbNoBanWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbNoBanWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbVoteWebhookResponse);
@@ -67,7 +69,9 @@ describe("VotebanModule (e2e)", () => {
   it("answers if the voting has expired", async () => {
     await createDbSupergroupChat({ votebanLimit: 2 });
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbNoBanWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbNoBanWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbVoteExpiredWebhookResponse);
@@ -116,7 +120,9 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbBanWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbBanWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbVoteWebhookResponse);
@@ -209,7 +215,9 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbBanSenderChatWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbBanSenderChatWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbVoteWebhookResponse);
@@ -245,7 +253,9 @@ describe("VotebanModule (e2e)", () => {
       http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => new HttpResponse(null, { status: 400 })),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbNoBanWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbNoBanWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbVoteBotNotAdminWebhookResponse);
@@ -277,8 +287,8 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.cbBanAgainstAdminWebhook);
 
     expect(response.status).toBe(200);
@@ -311,7 +321,9 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbNoBanWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbNoBanWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbVoteWebhookResponse);
@@ -320,13 +332,15 @@ describe("VotebanModule (e2e)", () => {
   });
 
   it("handles an error if chat id is incorrect during settings rendering", async () => {
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsErrorWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbSettingsErrorWebhook);
     expect(response.status).toBe(200);
   });
 
   it("handles an error if chat id is incorrect during settings saving", async () => {
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.cbSaveSettingsErrorWebhook);
     expect(response.status).toBe(200);
   });
@@ -340,8 +354,8 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.votebanWithoutReplyWebhook);
 
     expect(response.status).toBe(200);
@@ -358,8 +372,8 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.votebanWithPayloadWebhook);
 
     expect(response.status).toBe(200);
@@ -387,7 +401,9 @@ describe("VotebanModule (e2e)", () => {
       select: { id: true },
     });
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbNoBanWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbNoBanWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbVoteDuplicatedWebhookResponse);
@@ -411,7 +427,9 @@ describe("VotebanModule (e2e)", () => {
     ]);
     server.use(http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatMember`, () => new HttpResponse(null, { status: 400 })));
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbNoBanWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbNoBanWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbNotChatMemberWebhookResponse);
@@ -427,7 +445,9 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbSettingsWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ callback_query_id: "1", method: "answerCallbackQuery" });
@@ -444,8 +464,8 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.cbUnsavedSettingsWebhook);
 
     expect(response.status).toBe(200);
@@ -463,7 +483,9 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSaveSettingsWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbSaveSettingsWebhook);
 
     const expectedEditMessageTextPayload = fixtures.cbSaveSettingsEditMessageTextPayload();
     expect(response.status).toBe(200);
@@ -485,7 +507,9 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.votebanWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.votebanWebhook);
 
     expect(response.status).toBe(200);
     expect(sendMessagePayload).toEqual(fixtures.votebanNoAdminPermsSendMessagePayload);
@@ -500,8 +524,8 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.votebanInPrivateChatWebhook);
 
     expect(response.status).toBe(200);
@@ -509,7 +533,9 @@ describe("VotebanModule (e2e)", () => {
   });
 
   it("should not accept votes from the chat from which it was kicked", async () => {
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbNoBanWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbNoBanWebhook);
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbVoteExpiredWebhookResponse);
   });
@@ -526,7 +552,9 @@ describe("VotebanModule (e2e)", () => {
       ),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSettingsWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbSettingsWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSettingsNotAdminWebhookResponse);
@@ -547,7 +575,9 @@ describe("VotebanModule (e2e)", () => {
       ),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.cbSaveSettingsWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.cbSaveSettingsWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(settingsFixtures.answerCbSettingsNotAdminWebhookResponse);
@@ -579,7 +609,9 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.votebanWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.votebanWebhook);
 
     expect(response.status).toBe(200);
     expect(sendMessagePayload).toEqual(fixtures.votebanAlreadyStartedSendMessagePayload);
@@ -595,8 +627,8 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.votebanAgainstBotWebhook);
 
     expect(response.status).toBe(200);
@@ -616,7 +648,9 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.votebanWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.votebanWebhook);
 
     expect(response.status).toBe(200);
     expect(sendMessagePayload).toEqual(fixtures.votebanAgainstAdminSendMessagePayload);
@@ -632,7 +666,9 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL).post(TEST_WEBHOOK_PATH).send(fixtures.votebanWebhook);
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.votebanWebhook);
 
     expect(response.status).toBe(200);
     expect(sendMessagePayload).toEqual(fixtures.votebanSendMessagePayload);
@@ -648,8 +684,8 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.votebanAgainstSenderChatWebhook);
 
     expect(response.status).toBe(200);
@@ -666,8 +702,8 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.votebanSenderChatWebhook);
 
     expect(response.status).toBe(200);
@@ -684,8 +720,8 @@ describe("VotebanModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.votebanWithoutReplyWebhook);
 
     expect(response.status).toBe(200);
