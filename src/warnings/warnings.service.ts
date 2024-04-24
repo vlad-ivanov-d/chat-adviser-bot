@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
-import { ChatSettingName, type Prisma } from "@prisma/client";
+import { ChatSettingName } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
 import { Ctx, Hears, On, Update } from "nestjs-telegraf";
 
@@ -53,7 +53,8 @@ export class WarningsService {
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   public async cleanup(): Promise<void> {
-    await this.deleteOutdatedWarnings();
+    const date = new Date(Date.now() - OUTDATED_WARNING_TIMEOUT);
+    await this.prismaService.warning.deleteMany({ where: { createdAt: { lt: date } } });
   }
 
   /**
@@ -149,8 +150,7 @@ export class WarningsService {
       await this.prismaService.upsertSenderChat(candidateSenderChat, ctx.from);
     }
     const createdAt = new Date();
-    const [, , warning, warnings] = await this.prismaService.$transaction([
-      this.deleteOutdatedWarnings(),
+    const [, warning, warnings] = await this.prismaService.$transaction([
       this.prismaService.upsertUser(candidate, ctx.from),
       this.prismaService.warning.upsert({
         create: {
@@ -169,7 +169,12 @@ export class WarningsService {
       }),
       this.prismaService.warning.findMany({
         select: { id: true },
-        where: { chatId: ctx.chat.id, senderChatId: candidateSenderChat?.id ?? null, userId: candidate.id },
+        where: {
+          chatId: ctx.chat.id,
+          createdAt: { gte: new Date(Date.now() - OUTDATED_WARNING_TIMEOUT) },
+          senderChatId: candidateSenderChat?.id ?? null,
+          userId: candidate.id,
+        },
       }),
     ]);
 
@@ -199,15 +204,6 @@ export class WarningsService {
         await ctx.reply(t("warnings:banned"), { parse_mode: "HTML", reply_parameters: { message_id: replyMessageId } });
       }
     }
-  }
-
-  /**
-   * Deletes outdated warnings
-   * @returns Prisma promise
-   */
-  private deleteOutdatedWarnings(): Prisma.PrismaPromise<Prisma.BatchPayload> {
-    const date = new Date(Date.now() - OUTDATED_WARNING_TIMEOUT);
-    return this.prismaService.warning.deleteMany({ where: { createdAt: { lt: date } } });
   }
 
   /**
