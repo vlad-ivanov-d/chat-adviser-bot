@@ -25,6 +25,7 @@ describe("Logger", () => {
     // Node.js maps "process.stdout" to "console._stdout"
     const consoleWithStdout: Console & { _stdout?: { write: (message: string) => void } } = console;
     const stdoutWriteSpy = jest.spyOn(consoleWithStdout._stdout ?? { write: jest.fn() }, "write");
+    stdoutWriteSpy.mockImplementation(jest.fn);
     const timestamp = format(new Date(), "MM/DD/YYYY, hh:mm:ss A");
 
     createLogger().log("Test message");

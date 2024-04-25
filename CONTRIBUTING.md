@@ -72,7 +72,7 @@ Execute the following command to run all load tests sequentially.
 npm run k6
 ```
 
-Pass a test file name to run only a specific test. The name must correspond to the file located in the `./k6` folder.
+Pass a test file name to run only a specific test. The name must correspond to the file located in the [k6](./k6) folder.
 
 ```text
 npm run k6 -- help.spec.ts
