@@ -58,7 +58,7 @@ npm run test:e2e
 
 ### Total Test Coverage
 
-Execute the following command to run unit and end-to-end tests with a code coverage check. Run it before each commit, this will also update the test badges in [README](./README.md#Test-Coverage).
+Execute the following command to run unit and end-to-end tests with a code coverage check. Run it before each commit, this will also update the test badges in [README](./README.md#test-coverage).
 
 ```text
 npm run test:total:cov
