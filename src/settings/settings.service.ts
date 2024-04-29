@@ -2,7 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ChatType } from "@prisma/client";
 import { formatInTimeZone } from "date-fns-tz";
 import i18next, { changeLanguage, t } from "i18next";
-import { Ctx, Hears, Next, On, Update } from "nestjs-telegraf";
+import { Command, Ctx, Next, On, Update } from "nestjs-telegraf";
 import type { InlineKeyboardButton, InlineKeyboardMarkup } from "telegraf/typings/core/types/typegram";
 
 import { AddingBotsAction } from "src/adding-bots/interfaces/action.interface";
@@ -14,7 +14,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { ProfanityFilterAction } from "src/profanity-filter/interfaces/action.interface";
 import { TimeZoneAction } from "src/time-zone/interfaces/action.interface";
 import { NextFunction } from "src/types/next-function";
-import { CallbackCtx, MessageCtx, type TextMessageCtx } from "src/types/telegraf-context";
+import { CallbackCtx, CommandCtx, MessageCtx } from "src/types/telegraf-context";
 import { getDateLocale } from "src/utils/dates";
 import {
   buildCbData,
@@ -66,16 +66,19 @@ export class SettingsService {
    * Shows settings message after /mychats command
    * @param ctx Text message context
    */
-  @Hears("/mychats")
-  public async myChatsCommand(@Ctx() ctx: TextMessageCtx): Promise<void> {
-    if (ctx.chat.type !== "private") {
-      const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.message.from);
-      await changeLanguage(language);
-      const msg = t("common:commandForPrivateChat", { BOT_LINK: `tg:user?id=${ctx.botInfo.id.toString()}` });
-      await ctx.reply(msg, { parse_mode: "HTML", reply_parameters: { message_id: ctx.message.message_id } });
+  @Command("mychats")
+  public async myChatsCommand(@Ctx() ctx: CommandCtx): Promise<void> {
+    if (ctx.payload) {
+      return; // Ignore commands with payload
+    }
+    if (ctx.chat.type === "private") {
+      await this.renderChats(ctx, 0);
       return;
     }
-    await this.renderChats(ctx, 0);
+    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.message.from);
+    await changeLanguage(language);
+    const msg = t("common:commandForPrivateChat", { BOT_LINK: `tg:user?id=${ctx.botInfo.id.toString()}` });
+    await ctx.reply(msg, { parse_mode: "HTML", reply_parameters: { message_id: ctx.message.message_id } });
   }
 
   /**

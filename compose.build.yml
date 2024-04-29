@@ -7,22 +7,23 @@ services:
       - cache
       - db
     environment:
-      BOT_TOKEN: ${BOT_TOKEN}
       DATABASE_URL: ${DATABASE_URL}
+      LOKI_URL: ${LOKI_URL}
       REDIS_HOST: ${REDIS_HOST:-cache}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_PORT: ${REDIS_PORT}
-      WEBHOOK_DOMAIN: ${WEBHOOK_DOMAIN}
-      WEBHOOK_PATH: ${WEBHOOK_PATH}
-      WEBHOOK_PORT: ${WEBHOOK_PORT}
-      WEBHOOK_SECRET_TOKEN: ${WEBHOOK_SECRET_TOKEN}
+      TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
+      TELEGRAM_WEBHOOK_DOMAIN: ${TELEGRAM_WEBHOOK_DOMAIN}
+      TELEGRAM_WEBHOOK_PATH: ${TELEGRAM_WEBHOOK_PATH}
+      TELEGRAM_WEBHOOK_PORT: ${TELEGRAM_WEBHOOK_PORT}
+      TELEGRAM_WEBHOOK_SECRET_TOKEN: ${TELEGRAM_WEBHOOK_SECRET_TOKEN}
     restart: unless-stopped
 
   cache:
     command: --requirepass ${REDIS_PASSWORD}
     image: redis:7.2.4-alpine
     ports:
-      - ${REDIS_PORT:-}:6379
+      - ${REDIS_PORT:-6379}:6379
     restart: unless-stopped
     volumes:
       - redisdata:/data
@@ -36,11 +37,30 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER}"]
     image: postgres:16.2-alpine
     ports:
-      - ${DATABASE_PORT:-}:5432
+      - ${DATABASE_PORT:-5432}:5432
     restart: unless-stopped
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  grafana:
+    environment:
+      LOKI_PORT: ${LOKI_PORT:-3100}
+    image: grafana/grafana:10.4.2
+    ports:
+      - ${GRAFANA_PORT:-3200}:3000
+    volumes:
+      - ./grafana:/etc/grafana/provisioning/
+      - grafanadata:/var/lib/grafana
+
+  loki:
+    image: grafana/loki:3.0.0
+    ports:
+      - ${LOKI_PORT:-3100}:3100
+    volumes:
+      - lokidata:/loki
+
 volumes:
+  grafanadata:
+  lokidata:
   pgdata:
   redisdata:

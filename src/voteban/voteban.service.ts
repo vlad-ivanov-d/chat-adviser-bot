@@ -2,14 +2,14 @@ import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { ChatSettingName, type User } from "@prisma/client";
 import { changeLanguage, t, type TOptions } from "i18next";
-import { Ctx, Hears, On, Update } from "nestjs-telegraf";
+import { Command, Ctx, Hears, On, Update } from "nestjs-telegraf";
 import type { User as TelegramUser } from "telegraf/typings/core/types/typegram";
 
 import { MAX_INT } from "src/prisma/prisma.constants";
 import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
 import { NextFunction } from "src/types/next-function";
-import { CallbackCtx, TextMessageCtx } from "src/types/telegraf-context";
+import { CallbackCtx, CommandCtx, TextMessageCtx } from "src/types/telegraf-context";
 import {
   buildCbData,
   getChatHtmlLink,
@@ -78,11 +78,11 @@ export class VotebanService {
    * but case-insensitive: "/voteban" or "voteban".
    * @param ctx Text message context
    */
-  @Hears(/^(\/)?voteban$/i)
-  public async votebanCommand(@Ctx() ctx: TextMessageCtx): Promise<void> {
-    if (ctx.message.chat.type === "private") {
-      await ctx.reply(t("common:commandNotForPrivateChats"));
-      return;
+  @Command("voteban")
+  @Hears(/^voteban$/i)
+  public async votebanCommand(@Ctx() ctx: CommandCtx | TextMessageCtx): Promise<void> {
+    if ("payload" in ctx && ctx.payload) {
+      return; // The command has payload, return.
     }
 
     const { from, message_id: messageId, sender_chat: senderChat, reply_to_message: replyToMessage } = ctx.message;
@@ -91,14 +91,15 @@ export class VotebanService {
 
     const [chat, isCandidateAdmin, isVotingStarted] = await Promise.all([
       this.prismaService.upsertChatWithCache(ctx.chat, from),
-      typeof candidate?.id === "number" && !candidateSenderChat
-        ? // Check seperately, because other bots are not included in admin list.
-          isChatAdmin(ctx.telegram, ctx.chat.id, candidate.id)
-        : candidateSenderChat?.id === ctx.chat.id,
-      this.checkIsVotingStarted(ctx.message),
+      this.checkIsCandidateAdmin(ctx),
+      this.checkIsVotingStarted(ctx),
     ]);
     await changeLanguage(chat.language);
 
+    if (ctx.message.chat.type === "private") {
+      await ctx.reply(t("common:commandNotForPrivateChats"));
+      return;
+    }
     if (!chat.votebanLimit) {
       return; // The feature is disabled, return.
     }
@@ -168,7 +169,7 @@ export class VotebanService {
         select: { id: true },
       }),
     ]);
-    this.logger.log(`Voting started: ${voting.id}`);
+    this.logger.log(`Voteban started: ${voting.id}`);
   }
 
   /**
@@ -216,19 +217,35 @@ export class VotebanService {
   }
 
   /**
+   * Checks if candidate is an admin
+   * @param ctx Command or text message context
+   * @returns True if the admin
+   */
+  private async checkIsCandidateAdmin(ctx: CommandCtx | TextMessageCtx): Promise<boolean> {
+    const candidate = ctx.message.reply_to_message?.from;
+    const candidateSenderChat = ctx.message.reply_to_message?.sender_chat;
+    const isCandidateAdmin =
+      typeof candidate?.id === "number" && !candidateSenderChat
+        ? // Check seperately, because other bots are not included in admin list.
+          await isChatAdmin(ctx.telegram, ctx.chat.id, candidate.id)
+        : candidateSenderChat?.id === ctx.chat.id;
+    return !!isCandidateAdmin;
+  }
+
+  /**
    * Checks if there is already a recently started voting against this message
-   * @param message Message from context
+   * @param ctx Command or text message context
    * @returns True if the same voting exists
    */
-  private async checkIsVotingStarted(message: TextMessageCtx["message"]): Promise<boolean> {
-    if (message.reply_to_message) {
-      const candidateMediaGroupId =
-        "media_group_id" in message.reply_to_message ? message.reply_to_message.media_group_id : null;
+  private async checkIsVotingStarted(ctx: CommandCtx | TextMessageCtx): Promise<boolean> {
+    const { reply_to_message: replyToMessage } = ctx.message;
+    if (replyToMessage) {
+      const candidateMediaGroupId = "media_group_id" in replyToMessage ? replyToMessage.media_group_id : null;
       const voting = await this.prismaService.voteban.findFirst({
         select: { id: true },
         where: {
-          OR: [{ candidateMediaGroupId }, { candidateMessageId: message.reply_to_message.message_id }],
-          chatId: message.chat.id,
+          OR: [{ candidateMediaGroupId }, { candidateMessageId: replyToMessage.message_id }],
+          chatId: ctx.chat.id,
           createdAt: { gt: new Date(Date.now() - VOTEBAN_DELAY) },
         },
       });
@@ -406,7 +423,7 @@ export class VotebanService {
     if (voteUsers.length >= chat.votebanLimit) {
       const candidateMessageId = "reply_to_message" in message ? message.reply_to_message?.message_id : undefined;
       const resultsMsg = isBan ? t("voteban:banResults", tOptions) : t("voteban:noBanResults", tOptions);
-      this.logger.log(`Voting completed: ${voting.id}`);
+      this.logger.log(`Voteban completed: ${voting.id}`);
       await Promise.all([
         this.prismaService.voteban.delete({
           select: { id: true },

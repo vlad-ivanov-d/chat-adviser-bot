@@ -6,7 +6,7 @@ import { adminUser, bot, user } from "fixtures/users";
 import { TEST_TELEGRAM_API_BASE_URL } from "test/utils/constants";
 
 /**
- * Resolves response for /banChatSenderChat and /deleteMessage endpoint.
+ * Resolves response for /banChatSenderChat and /deleteMessage endpoint
  * @returns HTTP response
  */
 const actionResolver: HttpResponseResolver = async () => {
@@ -15,7 +15,7 @@ const actionResolver: HttpResponseResolver = async () => {
 };
 
 /**
- * Resolves response for /getChatAdministrators endpoint.
+ * Resolves response for /getChatAdministrators endpoint
  * @param info Resolver info
  * @returns HTTP response
  */
@@ -35,7 +35,7 @@ const getChatAdministratorsResolver: HttpResponseResolver<PathParams, { chat_id:
 };
 
 /**
- * Resolves response for /getChatMember endpoint.
+ * Resolves response for /getChatMember endpoint
  * @param info Resolver info
  * @returns HTTP response
  */
@@ -49,7 +49,7 @@ const getChatMemberResolver: HttpResponseResolver<PathParams, { user_id: number 
 };
 
 /**
- * Resolves response for /getChatMembersCount endpoint.
+ * Resolves response for /getChatMembersCount endpoint
  * @param info Resolver info
  * @returns HTTP response
  */
@@ -60,7 +60,7 @@ const getChatMembersCountResolver: HttpResponseResolver<PathParams, { chat_id: n
 };
 
 /**
- * Resolves response for /getChat endpoint.
+ * Resolves response for /getChat endpoint
  * @param info Resolver info
  * @returns HTTP response
  */
@@ -77,7 +77,7 @@ const getChatResolver: HttpResponseResolver<PathParams, { chat_id: number }> = a
 };
 
 /**
- * Resolves response for /getMe endpoint.
+ * Resolves response for /getMe endpoint
  * @returns HTTP response
  */
 const getMeResolver: HttpResponseResolver = async () => {
@@ -86,7 +86,7 @@ const getMeResolver: HttpResponseResolver = async () => {
 };
 
 /**
- * Resolves response for /sendMessage endpoint.
+ * Resolves response for /sendMessage endpoint
  * @returns HTTP response
  */
 const sendMessageResolver: HttpResponseResolver = async () => {
@@ -95,7 +95,16 @@ const sendMessageResolver: HttpResponseResolver = async () => {
 };
 
 /**
- * Resolves response for /setWebhook endpoint.
+ * Resolves response for /setMyCommands endpoint
+ * @returns HTTP response
+ */
+const setMyCommands: HttpResponseResolver = async () => {
+  await delay();
+  return HttpResponse.json({ ok: true });
+};
+
+/**
+ * Resolves response for /setWebhook endpoint
  * @returns HTTP response
  */
 const setWebhookResolver: HttpResponseResolver = async () => {
@@ -107,7 +116,7 @@ const setWebhookResolver: HttpResponseResolver = async () => {
  * MSW server
  */
 export const server = setupServer(
-  ...(process.env.WEBHOOK_PATH ? [http.post(`**${process.env.WEBHOOK_PATH}`, passthrough)] : []),
+  ...(process.env.TELEGRAM_WEBHOOK_PATH ? [http.post(`**${process.env.TELEGRAM_WEBHOOK_PATH}`, passthrough)] : []),
   http.post(`${TEST_TELEGRAM_API_BASE_URL}/banChatSenderChat`, actionResolver),
   http.post(`${TEST_TELEGRAM_API_BASE_URL}/deleteMessage`, actionResolver),
   http.post(`${TEST_TELEGRAM_API_BASE_URL}/deleteMessages`, actionResolver),
@@ -117,5 +126,6 @@ export const server = setupServer(
   http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatMembersCount`, getChatMembersCountResolver),
   http.post(`${TEST_TELEGRAM_API_BASE_URL}/getMe`, getMeResolver),
   http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, sendMessageResolver),
+  http.post(`${TEST_TELEGRAM_API_BASE_URL}/setMyCommands`, setMyCommands),
   http.post(`${TEST_TELEGRAM_API_BASE_URL}/setWebhook`, setWebhookResolver),
 );

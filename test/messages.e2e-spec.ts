@@ -6,7 +6,7 @@ import type { App } from "supertest/types";
 import * as fixtures from "fixtures/messages";
 import { AppModule } from "src/app.module";
 
-import { TEST_ASYNC_DELAY, TEST_WEBHOOK_BASE_URL, TEST_WEBHOOK_PATH } from "./utils/constants";
+import { TEST_ASYNC_DELAY, TEST_TELEGRAM_WEBHOOK_BASE_URL, TEST_TELEGRAM_WEBHOOK_PATH } from "./utils/constants";
 import { createDbSupergroupChat, prisma } from "./utils/database";
 import { sleep } from "./utils/sleep";
 
@@ -34,11 +34,11 @@ describe("MessagesModule (e2e)", () => {
   });
 
   it("saves messages with media group id", async () => {
-    const response1 = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
+    const response1 = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.supergroupMessage1Webhook);
-    const response2 = await request(TEST_WEBHOOK_BASE_URL)
-      .post(TEST_WEBHOOK_PATH)
+    const response2 = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.supergroupMessage2Webhook);
 
     const savedMessages = await prisma.message.findMany();

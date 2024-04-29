@@ -8,7 +8,6 @@ let isEnvRunning = false;
  * Allows the use of a custom global setup module. The function will be triggered once before all test suites.
  * Jest global setup use default export.
  */
-// eslint-disable-next-line import/no-default-export
 export default (): void => {
   if (isEnvRunning) {
     return;
