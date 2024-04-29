@@ -13,7 +13,7 @@ export const store = async (): Promise<RedisStore> => {
       password: process.env.REDIS_PASSWORD,
       socket: {
         host: process.env.REDIS_HOST,
-        port: Number(process.env.REDIS_PORT ?? 6379),
+        port: process.env.REDIS_PORT ? Number(process.env.REDIS_PORT) : 6379,
       },
     }));
   return cache;
