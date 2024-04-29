@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.23.0 (xxxx-xx-xx)
+## 1.23.0 (2024-04-30)
 
 - Improvement: added a menu with commands for the bot
 
