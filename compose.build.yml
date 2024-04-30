@@ -18,6 +18,8 @@ services:
       TELEGRAM_WEBHOOK_PORT: ${TELEGRAM_WEBHOOK_PORT}
       TELEGRAM_WEBHOOK_SECRET_TOKEN: ${TELEGRAM_WEBHOOK_SECRET_TOKEN}
     restart: unless-stopped
+    volumes:
+      - grafanaprovisioning:/etc/grafana/provisioning
 
   cache:
     command: --requirepass ${REDIS_PASSWORD}
@@ -43,6 +45,9 @@ services:
       - pgdata:/var/lib/postgresql/data
 
   grafana:
+    depends_on:
+      - app
+      - loki
     environment:
       LOKI_PORT: ${LOKI_PORT:-3100}
     image: grafana/grafana:10.4.2
@@ -50,8 +55,8 @@ services:
       - ${GRAFANA_PORT:-3200}:3000
     restart: unless-stopped
     volumes:
-      - ./grafana:/etc/grafana/provisioning/
       - grafanadata:/var/lib/grafana
+      - grafanaprovisioning:/etc/grafana/provisioning
 
   loki:
     image: grafana/loki:3.0.0
@@ -63,6 +68,7 @@ services:
 
 volumes:
   grafanadata:
+  grafanaprovisioning:
   lokidata:
   pgdata:
   redisdata:

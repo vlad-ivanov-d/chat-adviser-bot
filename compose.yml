@@ -25,6 +25,8 @@ services:
       - pgdata:/var/lib/postgresql/data
 
   grafana:
+    depends_on:
+      - loki
     environment:
       LOKI_PORT: ${LOKI_PORT:-3100}
     image: grafana/grafana:10.4.2
@@ -32,7 +34,7 @@ services:
       - ${GRAFANA_PORT:-3200}:3000
     restart: unless-stopped
     volumes:
-      - ./grafana:/etc/grafana/provisioning/
+      - ./grafana/provisioning:/etc/grafana/provisioning
       - grafanadata:/var/lib/grafana
 
   loki:
