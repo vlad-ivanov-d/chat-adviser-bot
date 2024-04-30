@@ -48,6 +48,7 @@ services:
     image: grafana/grafana:10.4.2
     ports:
       - ${GRAFANA_PORT:-3200}:3000
+    restart: unless-stopped
     volumes:
       - ./grafana:/etc/grafana/provisioning/
       - grafanadata:/var/lib/grafana
@@ -56,6 +57,7 @@ services:
     image: grafana/loki:3.0.0
     ports:
       - ${LOKI_PORT:-3100}:3100
+    restart: unless-stopped
     volumes:
       - lokidata:/loki
 
