@@ -76,11 +76,6 @@ jobs:
         run: npm ci
       - name: Run unit and integration tests
         run: npm run test:cov
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: coverage
       - name: Run e2e tests
         run: npm run test:e2e:cov
       - name: Merge unit, integration and e2e test coverage
