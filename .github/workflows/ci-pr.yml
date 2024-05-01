@@ -64,11 +64,11 @@ jobs:
             ${{ runner.os }}-
       - name: Install dependencies
         run: npm ci
-      - name: Run unit tests
+      - name: Run unit and integration tests
         run: npm run test:cov
       - name: Run e2e tests
         run: npm run test:e2e:cov
-      - name: Merge unit and e2e test coverage
+      - name: Merge unit, integration and e2e test coverage
         run: npm run merge:cov
       - name: Check test coverage badges
         run: npm run make:badges -- --ci
