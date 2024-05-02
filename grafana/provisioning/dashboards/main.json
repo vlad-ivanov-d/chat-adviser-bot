@@ -348,7 +348,7 @@
       "type": "stat"
     }
   ],
-  "refresh": "1m",
+  "refresh": "5m",
   "schemaVersion": 39,
   "tags": [],
   "templating": {
