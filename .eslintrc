@@ -13,7 +13,7 @@
     "plugin:jsdoc/recommended-error",
     "plugin:promise/recommended",
     "plugin:security/recommended-legacy",
-    "plugin:sonarjs/recommended",
+    "plugin:sonarjs/recommended-legacy",
     "plugin:prettier/recommended"
   ],
   "parser": "@typescript-eslint/parser",
