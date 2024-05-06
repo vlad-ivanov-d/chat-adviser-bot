@@ -87,7 +87,7 @@
               },
               {
                 "id": "displayName",
-                "value": "Warn"
+                "value": "warn"
               }
             ]
           },
@@ -106,7 +106,7 @@
               },
               {
                 "id": "displayName",
-                "value": "Info"
+                "value": "info"
               }
             ]
           }
@@ -225,7 +225,7 @@
         {
           "datasource": "Loki",
           "editorMode": "builder",
-          "expr": "sum by(level) (count_over_time({service_name=\"bot\"} |= `The bot was added to` [$__auto]))",
+          "expr": "sum by(level) (count_over_time({level=~\"$level\"} |= `The bot was added to` [$__auto]))",
           "queryType": "range",
           "refId": "A"
         }
@@ -282,7 +282,7 @@
         {
           "datasource": "Loki",
           "editorMode": "builder",
-          "expr": "sum by(level) (count_over_time({service_name=\"bot\"} |= `The bot was kicked from` [$__auto]))",
+          "expr": "count_over_time({level=~\"$level\"} |= `The bot was kicked from` [$__auto])",
           "queryType": "range",
           "refId": "A"
         }
@@ -339,7 +339,7 @@
         {
           "datasource": "Loki",
           "editorMode": "builder",
-          "expr": "sum by(level) (count_over_time({service_name=\"bot\"} |= `A profanity was found in` [$__auto]))",
+          "expr": "count_over_time({level=~\"$level\"} |= `A profanity was found in` [$__auto])",
           "queryType": "range",
           "refId": "A"
         }
@@ -354,7 +354,6 @@
   "templating": {
     "list": [
       {
-        "allValue": "",
         "current": {
           "selected": true,
           "text": [
@@ -364,37 +363,25 @@
             "$__all"
           ]
         },
+        "datasource": "Loki",
+        "definition": "",
         "hide": 0,
         "includeAll": true,
         "label": "Level",
         "multi": true,
         "name": "level",
-        "options": [
-          {
-            "selected": true,
-            "text": "All",
-            "value": "$__all"
-          },
-          {
-            "selected": false,
-            "text": "Error",
-            "value": "error"
-          },
-          {
-            "selected": false,
-            "text": "Info",
-            "value": "info"
-          },
-          {
-            "selected": false,
-            "text": "Warn",
-            "value": "warn"
-          }
-        ],
-        "query": "Error : error, Info : info, Warn : warn",
-        "queryValue": "",
+        "options": [],
+        "query": {
+          "label": "level",
+          "refId": "LokiVariableQueryEditor-VariableQuery",
+          "stream": "",
+          "type": 1
+        },
+        "refresh": 2,
+        "regex": "",
         "skipUrlSync": false,
-        "type": "custom"
+        "sort": 1,
+        "type": "query"
       }
     ]
   },
