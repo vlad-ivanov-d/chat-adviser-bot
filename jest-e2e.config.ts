@@ -12,7 +12,6 @@ const config: Config = {
   globalSetup: "<rootDir>/test/utils/e2e-global-setup.ts",
   globalTeardown: "<rootDir>/test/utils/e2e-global-teardown.ts",
   maxWorkers: 1, // Use sequential tests to prevent conflicts in cache and database
-  modulePathIgnorePatterns: ["<rootDir>/__mocks__/"], // Disable built-in folder for mocks
   modulePaths: ["<rootDir>"],
   preset: "ts-jest",
   restoreMocks: true,
