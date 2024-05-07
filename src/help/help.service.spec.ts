@@ -4,11 +4,11 @@ import { LanguageCode } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
 import { TelegrafModule } from "nestjs-telegraf";
 
-import { mockCommandCtx } from "__mocks__/telegraf-context";
 import { bot } from "fixtures/users";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { PrismaService } from "src/prisma/prisma.service";
 import { store } from "src/utils/redis";
+import { mockCommandCtx } from "test/mocks/telegraf";
 
 import { HelpService } from "./help.service";
 
