@@ -56,14 +56,6 @@ Execute the following command to run end-to-end tests.
 npm run test:e2e
 ```
 
-### Total Test Coverage
-
-Execute the following command to run unit, integration and end-to-end tests with a code coverage check. Run it before each commit, this will also update the test badges in [README](./README.md#test-coverage).
-
-```text
-npm run test:total:cov
-```
-
 ### Load Tests
 
 Execute the following command to run all load tests sequentially.
@@ -76,6 +68,14 @@ Pass a test file name to run only a specific test. The name must correspond to t
 
 ```text
 npm run k6 -- help.spec.ts
+```
+
+### Total Test Coverage
+
+Execute the following command to run unit, integration, end-to-end and load tests with a code coverage check. Run it before each commit, this will also update the test badges in [README](./README.md#test-coverage).
+
+```text
+npm run test:total
 ```
 
 ## Development Server

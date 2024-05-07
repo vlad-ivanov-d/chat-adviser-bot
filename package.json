@@ -22,7 +22,7 @@
     "test:e2e": "jest --config jest-e2e.config.ts",
     "test:e2e:cov": "jest --config jest-e2e.config.ts --coverage",
     "test:e2e:watch": "jest --config jest-e2e.config.ts --watch",
-    "test:total:cov": "npm run test:cov && npm run test:e2e:cov && npm run merge:cov && npm run make:badges"
+    "test:total": "npm run test:cov && npm run test:e2e:cov && npm run k6 && npm run merge:cov && npm run make:badges"
   },
   "dependencies": {
     "@nestjs/cache-manager": "2.2.2",
@@ -53,11 +53,11 @@
     "@types/jest": "29.5.12",
     "@types/k6": "0.50.1",
     "@types/lodash.escaperegexp": "4.1.9",
-    "@types/node": "20.12.9",
+    "@types/node": "20.12.10",
     "@types/supertest": "6.0.2",
     "@typescript-eslint/eslint-plugin": "7.8.0",
     "@typescript-eslint/parser": "7.8.0",
-    "esbuild": "0.20.2",
+    "esbuild": "0.21.0",
     "eslint": "8.57.0",
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-import": "2.29.1",
