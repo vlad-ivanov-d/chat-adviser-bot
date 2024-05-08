@@ -1,5 +1,5 @@
 import { CacheModule } from "@nestjs/cache-manager";
-import { Module } from "@nestjs/common";
+import { Logger, Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
 import { TelegrafModule } from "nestjs-telegraf";
@@ -35,6 +35,16 @@ import { WarningsModule } from "./warnings/warnings.module";
             }
           : undefined,
       },
+      middlewares: [
+        async (ctx, next): Promise<void> => {
+          const startTimestamp = Date.now();
+          await next();
+          new Logger().log(
+            { labels: { request_time: Date.now() - startTimestamp }, message: "Update processing completed" },
+            "TelegrafMiddleware",
+          );
+        },
+      ],
       token: process.env.TELEGRAM_TOKEN ?? "",
     }),
     ProfanityFilterModule,

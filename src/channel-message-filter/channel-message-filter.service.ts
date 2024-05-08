@@ -69,6 +69,7 @@ export class ChannelMessageFilterService {
     if (channelMessageFilter === ChannelMessageFilterRule.FILTER) {
       // An expected error may happen when bot has no enough permissions
       await Promise.all([ctx.deleteMessage(messageId), ctx.banChatSenderChat(senderChat.id)]).catch(() => false);
+      this.logger.log("Message on behalf of a channel was deleted");
       return;
     }
 

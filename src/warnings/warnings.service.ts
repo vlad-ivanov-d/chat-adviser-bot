@@ -191,6 +191,8 @@ export class WarningsService {
       },
     );
 
+    this.logger.log("A warning was issued");
+
     if (warnings.length >= WARNINGS_LIMIT) {
       const [isChatMemberBanned, isSenderChatBanned] = await Promise.all([
         // An expected error may happen when bot has no enough permissions

@@ -1,6 +1,8 @@
 # Changelog
 
-## 1.24.0 (xxxx-xx-xx)
+## 1.24.0 (2024-05-08)
+
+- Other: internal improvements
 
 ## 1.23.0 (2024-04-30)
 
