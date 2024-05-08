@@ -5,12 +5,11 @@ const config: Config = {
   collectCoverageFrom: ["src/**"],
   coveragePathIgnorePatterns: [".spec.ts", "src/main.ts"],
   coverageReporters: [["json", { file: "../.nyc_output/coverage-final.json" }], "html", "text-summary"],
-  coverageThreshold: { global: { branches: 5, functions: 5, lines: 5, statements: 5 } },
-  globalSetup: "<rootDir>/test/utils/global-setup.ts",
-  globalTeardown: "<rootDir>/test/utils/global-teardown.ts",
+  coverageThreshold: { global: { branches: 6, functions: 6, lines: 6, statements: 6 } },
   modulePaths: ["<rootDir>"],
   preset: "ts-jest",
   restoreMocks: true,
+  setupFilesAfterEnv: ["<rootDir>/test/utils/setup.ts"],
   testMatch: ["<rootDir>/src/**/*.spec.ts"],
 };
 

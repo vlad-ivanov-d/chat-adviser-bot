@@ -40,9 +40,9 @@ Result will be in `./dist` folder.
 The tests were implemented using Jest and the MSW library for mocking the Telegram API. Use an environment variable
 `export DEBUG='telegraf:*'` to display in the console all running network requests to the Telegram API.
 
-### Unit Tests
+### Unit And Integration Tests
 
-Execute the following command to run unit tests.
+Execute the following command to run unit and integration tests.
 
 ```text
 npm run test
@@ -54,14 +54,6 @@ Execute the following command to run end-to-end tests.
 
 ```text
 npm run test:e2e
-```
-
-### Total Test Coverage
-
-Execute the following command to run unit and end-to-end tests with a code coverage check. Run it before each commit, this will also update the test badges in [README](./README.md#test-coverage).
-
-```text
-npm run test:total:cov
 ```
 
 ### Load Tests
@@ -76,6 +68,14 @@ Pass a test file name to run only a specific test. The name must correspond to t
 
 ```text
 npm run k6 -- help.spec.ts
+```
+
+### Total Test Coverage
+
+Execute the following command to run unit, integration, end-to-end and load tests with a code coverage check. Run it before each commit, this will also update the test badges in [README](./README.md#test-coverage).
+
+```text
+npm run test:total
 ```
 
 ## Development Server

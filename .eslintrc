@@ -13,13 +13,12 @@
     "plugin:jsdoc/recommended-error",
     "plugin:promise/recommended",
     "plugin:security/recommended-legacy",
-    "plugin:sonarjs/recommended",
+    "plugin:sonarjs/recommended-legacy",
     "plugin:prettier/recommended"
   ],
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "project": "tsconfig.json",
-    "sourceType": "module",
     "tsconfigRootDir": "."
   },
   "plugins": [
@@ -59,9 +58,11 @@
         "types": ["boolean"]
       }
     ],
-    "@typescript-eslint/no-extraneous-class": "off", // Disabled due to NestJS specifics
+    // Disabled due to NestJS specifics
+    "@typescript-eslint/no-extraneous-class": "off",
     "@typescript-eslint/no-import-type-side-effects": "error",
-    "@typescript-eslint/no-shadow":  ["error", { "builtinGlobals": true }],
+    // Allow Image as it's Next.js component
+    "@typescript-eslint/no-shadow":  ["error", { "allow": ["Image"], "builtinGlobals": true }],
     "@typescript-eslint/no-unsafe-enum-comparison": "off",
     "curly": "error",
     "default-case": "error",

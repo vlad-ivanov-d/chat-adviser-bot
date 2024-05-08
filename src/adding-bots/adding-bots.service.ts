@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { AddingBotsRule, ChatSettingName } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
 import { Ctx, InjectBot, Next, On, Update } from "nestjs-telegraf";
@@ -15,6 +15,8 @@ import { AddingBotsAction } from "./interfaces/action.interface";
 @Update()
 @Injectable()
 export class AddingBotsService {
+  private readonly logger = new Logger(AddingBotsService.name);
+
   /**
    * Creates service
    * @param bot Telegram bot instance
@@ -73,7 +75,7 @@ export class AddingBotsService {
     }
 
     try {
-      if (dbChat.addingBots === AddingBotsRule.RESTRICT) {
+      if (dbChat.addingBots === AddingBotsRule.BAN || dbChat.addingBots === AddingBotsRule.RESTRICT) {
         await Promise.all(
           newBots.map(async ({ id }) => {
             await ctx.banChatMember(id);
@@ -94,6 +96,10 @@ export class AddingBotsService {
     } catch {
       // An expected error may happen when bot has no enough permissions
     }
+
+    newBots.forEach(() => {
+      this.logger.log("A bot was removed from the chat");
+    });
 
     await next();
   }

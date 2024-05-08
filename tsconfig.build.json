@@ -5,7 +5,6 @@
     "test",
     "dist",
     "**/*spec.ts",
-    "__mocks__",
     "fixtures",
     "jest-e2e.config.ts",
     "jest.config.ts",

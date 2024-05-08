@@ -1,31 +1,36 @@
-import type { RedisStore } from "cache-manager-redis-yet";
+import dotenv from "dotenv";
+dotenv.config({ path: ".env.test" });
 
-import { store } from "src/utils/redis";
+jest.mock("cache-manager-redis-yet", () => ({
+  redisStore: jest.fn(() => ({
+    client: { quit: jest.fn() },
+    reset: jest.fn(),
+  })),
+}));
 
-import { cleanupDb, prisma } from "./database";
-import { server } from "./server";
+jest.mock("i18next", () => ({
+  changeLanguage: jest.fn(),
+  init: jest.fn(),
+  t: jest.fn((key: string) => key),
+}));
 
-let cache: RedisStore;
+jest.mock("telegraf", () => ({
+  Scenes: { Stage: jest.fn() },
+  Telegraf: jest.fn(() => ({
+    launch: jest.fn(),
+    telegram: { setMyCommands: jest.fn() },
+    use: jest.fn(),
+  })),
+}));
 
-beforeAll(async () => {
-  cache = await store();
-  server.listen({ onUnhandledRequest: "error" });
-});
-
-beforeEach(() => {
-  // Fix "The client is closed" issue: prevents the cache client quit after each test
-  jest.spyOn(cache.client, "quit").mockImplementation();
-});
-
-afterEach(async () => {
-  jest.useRealTimers();
-  server.resetHandlers();
-  await cleanupDb();
-});
-
-afterAll(async () => {
-  server.close();
-  // Restore mocks. One of them prevents cache client quit.
-  jest.restoreAllMocks();
-  await Promise.all([cache.client.quit(), prisma.$disconnect()]);
-});
+jest.mock("winston-loki", () =>
+  jest.fn(() => ({
+    _writableState: { objectMode: true },
+    emit: jest.fn(),
+    log: jest.fn(),
+    on: jest.fn(),
+    once: jest.fn(),
+    pipe: jest.fn(),
+    write: jest.fn(),
+  })),
+);

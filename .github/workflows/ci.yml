@@ -19,7 +19,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 20.12.2
+          node-version: 20.13.0
       - name: Cache node modules
         env:
           CACHE_NAME: cache-node-modules
@@ -58,7 +58,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 20.12.2
+          node-version: 20.13.0
       - name: Cache node modules
         env:
           CACHE_NAME: cache-node-modules
@@ -74,16 +74,16 @@ jobs:
             ${{ runner.os }}-
       - name: Install dependencies
         run: npm ci
-      - name: Run unit tests
+      - name: Run unit and integration tests
         run: npm run test:cov
       - name: Run e2e tests
         run: npm run test:e2e:cov
-      - name: Merge unit and e2e test coverage
+      - name: Run load tests
+        run: npm run k6
+      - name: Merge unit, integration and e2e test coverage
         run: npm run merge:cov
       - name: Check test coverage badges
         run: npm run make:badges -- --ci
-      - name: Run load tests
-        run: npm run k6
 
   deploy:
     environment: |-
@@ -97,7 +97,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 20.12.2
+          node-version: 20.13.0
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
