@@ -1,7 +1,7 @@
 /**
  * Chat cache timeout in milliseconds
  */
-export const CHAT_CACHE_TTL = 15 * 1000;
+export const CHAT_CACHE_TTL = 30 * 1000;
 
 /**
  * Chat members count cache timeout in milliseconds
