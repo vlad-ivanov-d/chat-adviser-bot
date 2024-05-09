@@ -109,6 +109,25 @@
                 "value": "info"
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "{level=\"error\"}"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "red",
+                  "mode": "fixed"
+                }
+              },
+              {
+                "id": "displayName",
+                "value": "error"
+              }
+            ]
           }
         ]
       },
@@ -808,7 +827,7 @@
     "list": [
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": [
             "All"
           ],

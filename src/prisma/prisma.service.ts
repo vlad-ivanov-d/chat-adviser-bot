@@ -1,5 +1,5 @@
 import { CACHE_MANAGER } from "@nestjs/cache-manager";
-import { Inject, Injectable, type OnModuleDestroy } from "@nestjs/common";
+import { Inject, Injectable, Logger, type OnModuleDestroy } from "@nestjs/common";
 import {
   AddingBotsRule,
   ChannelMessageFilterRule,
@@ -23,6 +23,8 @@ import { CHAT_CACHE_TTL, CHAT_MEMBERS_COUNT_CACHE_TTL } from "./prisma.constants
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleDestroy {
+  private readonly logger = new Logger(PrismaService.name);
+
   /**
    * Creates service
    * @param bot Telegram bot instance
@@ -218,7 +220,10 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
         ? [[], 2]
         : [
             // An expected error may happen if administrators are hidden
-            telegram.getChatAdministrators(chat.id).catch(() => []),
+            telegram.getChatAdministrators(chat.id).catch((e: unknown) => {
+              this.logger.error(e);
+              return [];
+            }),
             this.cacheManager.wrap(
               `chat-${chat.id.toString()}-members-count`,
               () => telegram.getChatMembersCount(chat.id),
