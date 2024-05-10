@@ -50,7 +50,7 @@ The bot can issue warnings to users by admin command. To do this, respond to the
 
 ### Production
 
-1. Provide environment variables. Copy `.env.sample` to `.env` and set correct values.
+1. Provide environment variables. Copy [.env.sample](./.env.sample) to `.env` and set correct values.
 2. Install dependencies
 
     ```text
@@ -77,7 +77,7 @@ The bot can issue warnings to users by admin command. To do this, respond to the
 
 ### Development
 
-1. Provide environment variables. Copy `.env.sample` to `.env` and set correct values.
+1. Provide environment variables. Copy [.env.sample](./.env.sample) to `.env` and set correct values.
 2. Install dependencies
 
     ```text

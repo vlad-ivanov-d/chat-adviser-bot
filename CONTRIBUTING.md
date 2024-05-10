@@ -25,7 +25,7 @@ npm ci
 
 ## Environment Variables
 
-Copy `.env.sample` to `.env` and provide correct environment variables
+Copy [.env.sample](./.env.sample) to `.env` and provide correct environment variables
 
 ## Build
 
