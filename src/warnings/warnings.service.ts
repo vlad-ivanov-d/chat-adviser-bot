@@ -85,7 +85,6 @@ export class WarningsService {
     if (!chat.hasWarnings) {
       return; // The feature is disabled, return.
     }
-    this.logger.log("The /warn command was used");
     if (!this.prismaService.isChatAdmin(chat, ctx.botInfo.id)) {
       await ctx.reply(t("common:needAdminPermissions"), { reply_parameters: { message_id: messageId } });
       return; // Bot is not an admin, return.
