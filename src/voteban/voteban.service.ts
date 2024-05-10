@@ -240,11 +240,14 @@ export class VotebanService {
   private async checkIsVotingStarted(ctx: CommandCtx | TextMessageCtx): Promise<boolean> {
     const { reply_to_message: replyToMessage } = ctx.message;
     if (replyToMessage) {
-      const candidateMediaGroupId = "media_group_id" in replyToMessage ? replyToMessage.media_group_id : null;
+      const candidateMediaGroupId = "media_group_id" in replyToMessage ? replyToMessage.media_group_id : undefined;
       const voting = await this.prismaService.voteban.findFirst({
         select: { id: true },
         where: {
-          OR: [{ candidateMediaGroupId }, { candidateMessageId: replyToMessage.message_id }],
+          OR: [
+            ...(candidateMediaGroupId ? [{ candidateMediaGroupId }] : []),
+            { candidateMessageId: replyToMessage.message_id },
+          ],
           chatId: ctx.chat.id,
           createdAt: { gt: new Date(Date.now() - VOTEBAN_DELAY) },
         },
