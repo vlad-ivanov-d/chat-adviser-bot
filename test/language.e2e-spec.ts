@@ -49,7 +49,7 @@ describe("LanguageModule (e2e)", () => {
     server.use(
       http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
-        return new HttpResponse(null, { status: 400 });
+        return HttpResponse.json({}, { status: 400 });
       }),
     );
 
