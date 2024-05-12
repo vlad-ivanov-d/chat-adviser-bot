@@ -250,7 +250,7 @@ describe("VotebanModule (e2e)", () => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => new HttpResponse(null, { status: 400 })),
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({}, { status: 400 })),
     );
 
     const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
