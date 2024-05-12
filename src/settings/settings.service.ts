@@ -332,12 +332,11 @@ export class SettingsService {
       ],
     };
 
-    if (cbQuery) {
-      await ctx.answerCbQuery();
-    }
-
     cbQuery
       ? await ctx.editMessageText(msg, { parse_mode: "HTML", reply_markup: replyMarkup })
       : await telegram.sendMessage(from.id, msg, { parse_mode: "HTML", reply_markup: replyMarkup });
+    if (cbQuery) {
+      await ctx.answerCbQuery();
+    }
   }
 }
