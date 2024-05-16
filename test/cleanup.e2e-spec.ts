@@ -25,7 +25,7 @@ describe("CleanupModule (e2e)", () => {
 
   it("cleanups unused private chats and users at midnight", async () => {
     await createDbPrivateChat();
-    await jest.advanceTimersByTimeAsync(24 * 60 * 60 * 1000); // 24h to run the daily cron job
+    jest.advanceTimersByTime(24 * 60 * 60 * 1000); // 24h to run the daily cron job
     await sleep(TEST_ASYNC_DELAY);
 
     const chats = await prisma.chat.findMany();
