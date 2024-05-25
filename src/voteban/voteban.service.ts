@@ -79,7 +79,7 @@ export class VotebanService {
    * @param ctx Text message context
    */
   @Command("voteban")
-  @Hears(/^voteban$/i)
+  @Hears(/^(\/)?voteban$/i)
   public async votebanCommand(@Ctx() ctx: CommandCtx | TextMessageCtx): Promise<void> {
     if ("payload" in ctx && ctx.payload) {
       return; // The command has payload, return.
