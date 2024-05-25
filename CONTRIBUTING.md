@@ -75,7 +75,7 @@ npm run k6 -- help.spec.ts
 Execute the following command to run unit, integration, end-to-end and load tests with a code coverage check. Run it before each commit, this will also update the test badges in [README](./README.md#test-coverage).
 
 ```text
-npm run test:total
+npm run test:all
 ```
 
 ## Development Server
