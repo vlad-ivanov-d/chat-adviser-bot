@@ -24,8 +24,9 @@ describe("Logger", () => {
   it("logs a message to console", async () => {
     // Node.js maps "process.stdout" to "console._stdout"
     const consoleWithStdout: Console & { _stdout?: { write: (message: string) => void } } = console;
-    const stdoutWriteSpy = jest.spyOn(consoleWithStdout._stdout ?? { write: jest.fn() }, "write");
-    stdoutWriteSpy.mockImplementation(jest.fn);
+    const stdoutWriteSpy = jest
+      .spyOn(consoleWithStdout._stdout ?? { write: jest.fn() }, "write")
+      .mockImplementation(jest.fn);
 
     createLogger().log("Test message");
 

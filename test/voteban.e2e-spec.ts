@@ -228,7 +228,7 @@ describe("VotebanModule (e2e)", () => {
     expect(sendMessagePayload).toEqual({ chat_id: 12, reply_parameters: { message_id: 4 }, text: "Voting completed" });
   });
 
-  it("cancels the voting if the bot is not an admin", async () => {
+  it("cancels the voting if cannot check the bot is an admin", async () => {
     await createDbSupergroupChat({ votebanLimit: 2 });
     await prisma.$transaction([
       createDbUser(user),
@@ -252,6 +252,7 @@ describe("VotebanModule (e2e)", () => {
       }),
       http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({}, { status: 400 })),
     );
+    const stderrWriteSpy = jest.spyOn(process.stderr, "write").mockImplementation(() => true);
 
     const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
       .post(TEST_TELEGRAM_WEBHOOK_PATH)
@@ -259,6 +260,7 @@ describe("VotebanModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbVoteBotNotAdminWebhookResponse);
+    expect(stderrWriteSpy).toHaveBeenCalledTimes(1);
     await sleep(TEST_ASYNC_DELAY);
     expect(editMessageTextPayload).toEqual(fixtures.cbCancelledBotNotAdminEditMessageTextPayload);
   });
@@ -332,17 +334,23 @@ describe("VotebanModule (e2e)", () => {
   });
 
   it("handles an error if chat id is incorrect during settings rendering", async () => {
+    const stderrWriteSpy = jest.spyOn(process.stderr, "write").mockImplementation(() => true);
+
     const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
       .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.cbSettingsErrorWebhook);
     expect(response.status).toBe(200);
+    expect(stderrWriteSpy).toHaveBeenCalledTimes(1);
   });
 
   it("handles an error if chat id is incorrect during settings saving", async () => {
+    const stderrWriteSpy = jest.spyOn(process.stderr, "write").mockImplementation(() => true);
+
     const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
       .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.cbSaveSettingsErrorWebhook);
     expect(response.status).toBe(200);
+    expect(stderrWriteSpy).toHaveBeenCalledTimes(1);
   });
 
   it("ignores voteban command if the feature is disabled", async () => {
