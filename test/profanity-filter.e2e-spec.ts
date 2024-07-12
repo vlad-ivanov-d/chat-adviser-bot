@@ -32,12 +32,10 @@ describe("ProfanityFilterModule (e2e)", () => {
   });
 
   it("filters messages in a new supergroup chat", async () => {
-    await prisma.$transaction([
-      createDbUser(adminUser),
-      prisma.profaneWord.create({
-        data: { authorId: adminUser.id, editorId: adminUser.id, language: LanguageCode.EN, word: "bad" },
-      }),
-    ]);
+    await createDbUser(adminUser);
+    await prisma.profaneWord.create({
+      data: { authorId: adminUser.id, editorId: adminUser.id, language: LanguageCode.EN, word: "bad" },
+    });
     const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
       .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.channelMessageWebhook);
@@ -107,12 +105,10 @@ describe("ProfanityFilterModule (e2e)", () => {
   });
 
   it("should not filter messages from the linked channel", async () => {
-    await prisma.$transaction([
-      createDbUser(adminUser),
-      prisma.profaneWord.create({
-        data: { authorId: adminUser.id, editorId: adminUser.id, language: LanguageCode.EN, word: "bad" },
-      }),
-    ]);
+    await createDbUser(adminUser);
+    await prisma.profaneWord.create({
+      data: { authorId: adminUser.id, editorId: adminUser.id, language: LanguageCode.EN, word: "bad" },
+    });
 
     const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
       .post(TEST_TELEGRAM_WEBHOOK_PATH)

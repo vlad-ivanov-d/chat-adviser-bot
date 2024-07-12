@@ -97,7 +97,7 @@ describe("TimeZoneModule (e2e)", () => {
   });
 
   it("renders specific page of settings if the time zone has already been selected", async () => {
-    await createDbSupergroupChat({ timeZone: "Europe/London" });
+    await createDbSupergroupChat(undefined, { timeZone: "Europe/London" });
     let editMessageTextPayload;
     server.use(
       http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {

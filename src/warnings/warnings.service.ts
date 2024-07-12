@@ -80,9 +80,9 @@ export class WarningsService {
         : undefined,
       this.prismaService.upsertChatWithCache(ctx.chat, from),
     ]);
-    await changeLanguage(chat.language);
+    await changeLanguage(chat.settings.language);
 
-    if (!chat.hasWarnings) {
+    if (!chat.settings.hasWarnings) {
       return; // The feature is disabled, return.
     }
     if (!this.prismaService.isChatAdmin(chat, ctx.botInfo.id)) {
@@ -219,21 +219,21 @@ export class WarningsService {
       return;
     }
 
-    const { language, timeZone } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
-    await changeLanguage(language);
+    const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(settings.language);
     const chat = await this.settingsService.resolveChat(ctx, chatId);
     if (!chat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
     const chatLink = getChatHtmlLink(chat);
-    const hasWarnings = this.sanitizeValue(chat.hasWarnings);
+    const hasWarnings = this.sanitizeValue(chat.settings.hasWarnings);
     const value = hasWarnings ? t("warnings:enabled") : t("warnings:disabled");
     const msg = t("warnings:set", { CHAT: chatLink, VALUE: value });
     const msgWithModifiedInfo = this.settingsService.withModifiedInfo(msg, {
       chat,
       settingName: ChatSettingName.HAS_WARNINGS,
-      timeZone,
+      timeZone: settings.timeZone,
     });
 
     await Promise.all([
@@ -280,8 +280,8 @@ export class WarningsService {
       return;
     }
 
-    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
-    await changeLanguage(language);
+    const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(settings.language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
@@ -290,7 +290,7 @@ export class WarningsService {
     const hasWarnings = this.sanitizeValue(value);
 
     await this.prismaService.$transaction([
-      this.prismaService.chat.update({ data: { hasWarnings }, select: { id: true }, where: { id: chatId } }),
+      this.prismaService.chatSettings.update({ data: { hasWarnings }, select: { id: true }, where: { id: chatId } }),
       this.prismaService.upsertChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.HAS_WARNINGS),
     ]);
     await this.prismaService.deleteChatCache(chatId);

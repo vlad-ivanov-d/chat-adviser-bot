@@ -64,7 +64,7 @@ export class AddingBotsService {
     }
 
     const dbChat = await this.prismaService.upsertChatWithCache(chat, from);
-    await changeLanguage(dbChat.language);
+    await changeLanguage(dbChat.settings.language);
 
     if (
       this.prismaService.isChatAdmin(dbChat, from.id, senderChat?.id) || // Current user is an admin
@@ -75,7 +75,7 @@ export class AddingBotsService {
     }
 
     try {
-      if (dbChat.addingBots === AddingBotsRule.BAN || dbChat.addingBots === AddingBotsRule.RESTRICT) {
+      if (dbChat.settings.addingBots === AddingBotsRule.BAN || dbChat.settings.addingBots === AddingBotsRule.RESTRICT) {
         await Promise.all(
           newBots.map(async ({ id }) => {
             await ctx.banChatMember(id);
@@ -83,12 +83,12 @@ export class AddingBotsService {
           }),
         );
       }
-      if (dbChat.addingBots === AddingBotsRule.BAN && senderChat) {
+      if (dbChat.settings.addingBots === AddingBotsRule.BAN && senderChat) {
         const msg = t("addingBots:userBanned", { USER: getChatHtmlLink(senderChat) });
         await ctx.banChatSenderChat(senderChat.id);
         await ctx.reply(msg, { parse_mode: "HTML" });
       }
-      if (dbChat.addingBots === AddingBotsRule.BAN && !senderChat) {
+      if (dbChat.settings.addingBots === AddingBotsRule.BAN && !senderChat) {
         const msg = t("addingBots:userBanned", { USER: getUserHtmlLink(from) });
         await ctx.banChatMember(from.id);
         await ctx.reply(msg, { parse_mode: "HTML" });
@@ -126,8 +126,8 @@ export class AddingBotsService {
       throw new Error("Chat is not defined to render adding bots settings.");
     }
 
-    const { language, timeZone } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
-    await changeLanguage(language);
+    const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(settings.language);
     const chat = await this.settingsService.resolveChat(ctx, chatId);
     if (!chat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
@@ -137,13 +137,13 @@ export class AddingBotsService {
     const banCbData = buildCbData({ action: AddingBotsAction.SAVE, chatId, value: AddingBotsRule.BAN });
     const restrictCbData = buildCbData({ action: AddingBotsAction.SAVE, chatId, value: AddingBotsRule.RESTRICT });
     const chatLink = getChatHtmlLink(chat);
-    const sanitizedValue = this.sanitizeValue(chat.addingBots);
+    const sanitizedValue = this.sanitizeValue(chat.settings.addingBots);
     const value = this.getOptions().find((o) => o.id === sanitizedValue)?.title ?? "";
     const msg = t("addingBots:set", { CHAT: chatLink, VALUE: value });
     const msgWithModifiedInfo = this.settingsService.withModifiedInfo(msg, {
       chat,
       settingName: ChatSettingName.ADDING_BOTS,
-      timeZone,
+      timeZone: settings.timeZone,
     });
 
     await Promise.all([
@@ -173,8 +173,8 @@ export class AddingBotsService {
       throw new Error("Chat is not defined to save adding bots settings.");
     }
 
-    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
-    await changeLanguage(language);
+    const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(settings.language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
@@ -183,7 +183,7 @@ export class AddingBotsService {
     const addingBots = this.sanitizeValue(value);
 
     await this.prismaService.$transaction([
-      this.prismaService.chat.update({ data: { addingBots }, select: { id: true }, where: { id: chatId } }),
+      this.prismaService.chatSettings.update({ data: { addingBots }, select: { id: true }, where: { id: chatId } }),
       this.prismaService.upsertChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.ADDING_BOTS),
     ]);
     await this.prismaService.deleteChatCache(chatId);

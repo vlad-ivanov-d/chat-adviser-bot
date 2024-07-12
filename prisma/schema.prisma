@@ -45,37 +45,53 @@ enum ProfanityFilterRule {
 }
 
 model Chat {
-  id                   Float                     @id
-  addingBots           AddingBotsRule?           @map("adding_bots")
-  admins               User[]                    @relation("ChatAdmins")
-  authorId             Float                     @map("author_id")
-  channelMessageFilter ChannelMessageFilterRule? @map("channel_message_filter")
-  createdAt            DateTime                  @default(now()) @map("created_at")
-  displayTitle         String                    @map("display_title")
-  editorId             Float                     @map("editor_id")
-  firstName            String?                   @map("first_name")
-  hasWarnings          Boolean?                  @map("has_warnings")
-  language             LanguageCode
-  lastName             String?                   @map("last_name")
-  membersCount         Int                       @map("members_count")
-  profanityFilter      ProfanityFilterRule?      @map("profanity_filter")
-  timeZone             String                    @map("time_zone")
-  title                String?
-  type                 ChatType
-  updatedAt            DateTime                  @updatedAt @map("updated_at")
-  username             String?
-  votebanLimit         Int?                      @map("voteban_limit")
+  id           Float    @id
+  admins       User[]   @relation("ChatAdmins")
+  authorId     Float    @map("author_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  displayTitle String   @map("display_title")
+  editorId     Float    @map("editor_id")
+  firstName    String?  @map("first_name")
+  lastName     String?  @map("last_name")
+  membersCount Int      @map("members_count")
+  settingsId   Float    @unique @map("settings_id")
+  title        String?
+  type         ChatType
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  username     String?
 
-  author              User                  @relation("ChatAuthor", fields: [authorId], references: [id])
-  chatSettingsHistory ChatSettingsHistory[]
-  editor              User                  @relation("ChatEditor", fields: [editorId], references: [id])
-  messages            Message[]
-  votebans            Voteban[]
-  warnings            Warning[]
+  author          User                  @relation("ChatAuthor", fields: [authorId], references: [id])
+  editor          User                  @relation("ChatEditor", fields: [editorId], references: [id])
+  messages        Message[]
+  settings        ChatSettings          @relation("ChatSettings", fields: [settingsId], onDelete: Cascade, references: [id])
+  settingsHistory ChatSettingsHistory[]
+  votebans        Voteban[]
+  warnings        Warning[]
 
   @@index([displayTitle])
   @@index([type])
   @@map("chats")
+}
+
+model ChatSettings {
+  id                   Float                     @id
+  addingBots           AddingBotsRule?           @map("adding_bots")
+  authorId             Float                     @map("author_id")
+  channelMessageFilter ChannelMessageFilterRule? @map("channel_message_filter")
+  createdAt            DateTime                  @default(now()) @map("created_at")
+  editorId             Float                     @map("editor_id")
+  hasWarnings          Boolean?                  @map("has_warnings")
+  language             LanguageCode
+  profanityFilter      ProfanityFilterRule?      @map("profanity_filter")
+  timeZone             String                    @map("time_zone")
+  updatedAt            DateTime                  @updatedAt @map("updated_at")
+  votebanLimit         Int?                      @map("voteban_limit")
+
+  author User   @relation("ChatSettingsAuthor", fields: [authorId], references: [id])
+  chats  Chat[] @relation("ChatSettings")
+  editor User   @relation("ChatSettingsEditor", fields: [editorId], references: [id])
+
+  @@map("chat_settings")
 }
 
 model ChatSettingsHistory {
@@ -168,6 +184,8 @@ model User {
   chatAdmins                 Chat[]                @relation("ChatAdmins")
   chatAuthors                Chat[]                @relation("ChatAuthor")
   chatEditors                Chat[]                @relation("ChatEditor")
+  chatSettingsAuthors        ChatSettings[]        @relation("ChatSettingsAuthor")
+  chatSettingsEditors        ChatSettings[]        @relation("ChatSettingsEditor")
   chatSettingsHistoryAuthors ChatSettingsHistory[] @relation("ChatSettingsHistoryAuthor")
   chatSettingsHistoryEditors ChatSettingsHistory[] @relation("ChatSettingsHistoryEditor")
   editor                     User                  @relation("UserEditor", fields: [editorId], references: [id])

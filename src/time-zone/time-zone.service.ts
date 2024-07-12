@@ -77,8 +77,8 @@ export class TimeZoneService {
       return;
     }
 
-    const { language, timeZone } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
-    await changeLanguage(language);
+    const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(settings.language);
     const chat = await this.settingsService.resolveChat(ctx, chatId);
     if (!chat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
@@ -86,15 +86,15 @@ export class TimeZoneService {
 
     const chatLink = getChatHtmlLink(chat);
     const timeZones = this.getAllTimeZones();
-    const valueIndex = timeZones.indexOf(chat.timeZone);
+    const valueIndex = timeZones.indexOf(chat.settings.timeZone);
     // Use provided skip or the index of the current value. Use 0 as the last fallback.
     const patchedSkip = skip ?? (valueIndex > -1 ? Math.floor(valueIndex / PAGE_SIZE) * PAGE_SIZE : 0);
-    const value = `${format(Date.now(), "O", { timeZone: chat.timeZone })} ${chat.timeZone}`;
+    const value = `${format(Date.now(), "O", { timeZone: chat.settings.timeZone })} ${chat.settings.timeZone}`;
     const msg = t("timeZone:select", { CHAT: chatLink, VALUE: value });
     const msgWithModifiedInfo = this.settingsService.withModifiedInfo(msg, {
       chat,
       settingName: ChatSettingName.TIME_ZONE,
-      timeZone,
+      timeZone: settings.timeZone,
     });
 
     await Promise.all([
@@ -134,8 +134,8 @@ export class TimeZoneService {
       return;
     }
 
-    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
-    await changeLanguage(language);
+    const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(settings.language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
@@ -144,7 +144,7 @@ export class TimeZoneService {
     const timeZone = value && Intl.supportedValuesOf("timeZone").includes(value) ? value : "Etc/UTC";
 
     await this.prismaService.$transaction([
-      this.prismaService.chat.update({ data: { timeZone }, select: { id: true }, where: { id: chatId } }),
+      this.prismaService.chatSettings.update({ data: { timeZone }, select: { id: true }, where: { id: chatId } }),
       this.prismaService.upsertChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.TIME_ZONE),
     ]);
     await this.prismaService.deleteChatCache(chatId);

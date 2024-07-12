@@ -85,20 +85,20 @@ export class LanguageService implements OnModuleInit {
       return;
     }
 
-    const { language, timeZone } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
-    await changeLanguage(language);
+    const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(settings.language);
     const chat = await this.settingsService.resolveChat(ctx, chatId);
     if (!chat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
     const chatLink = getChatHtmlLink(chat);
-    const value = this.getOptions().find((l) => l.code === chat.language)?.title;
+    const value = this.getOptions().find((l) => l.code === chat.settings.language)?.title;
     const msg = t("language:select", { CHAT: chatLink, VALUE: value });
     const msgWithModifiedInfo = this.settingsService.withModifiedInfo(msg, {
       chat,
       settingName: ChatSettingName.LANGUAGE,
-      timeZone,
+      timeZone: settings.timeZone,
     });
 
     await Promise.all([
@@ -129,8 +129,8 @@ export class LanguageService implements OnModuleInit {
       return;
     }
 
-    const { language: lng } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
-    await changeLanguage(lng);
+    const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(settings.language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
@@ -139,7 +139,7 @@ export class LanguageService implements OnModuleInit {
     const language = this.getOptions().find((l) => l.code === value)?.code ?? LanguageCode.EN;
 
     await this.prismaService.$transaction([
-      this.prismaService.chat.update({ data: { language }, select: { id: true }, where: { id: chatId } }),
+      this.prismaService.chatSettings.update({ data: { language }, select: { id: true }, where: { id: chatId } }),
       this.prismaService.upsertChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.LANGUAGE),
     ]);
     await this.prismaService.deleteChatCache(chatId);

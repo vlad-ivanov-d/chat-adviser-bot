@@ -22,7 +22,7 @@ import {
 
 import { VotebanAction } from "./interfaces/action.interface";
 import type { VotebanRenderSettingsOptions } from "./interfaces/settings-options.interface";
-import { EXPIRED_VOTEBAN_TIMEOUT, VOTEBAN_DELAY } from "./voteban.constants";
+import { EXPIRED_VOTEBAN_TIMEOUT, VOTEBAN_DELAY, VOTERS_LIST_TEXT_LIMIT } from "./voteban.constants";
 
 @Update()
 @Injectable()
@@ -94,13 +94,13 @@ export class VotebanService {
       this.checkIsCandidateAdmin(ctx),
       this.checkIsVotingStarted(ctx),
     ]);
-    await changeLanguage(chat.language);
+    await changeLanguage(chat.settings.language);
 
     if (ctx.message.chat.type === "private") {
       await ctx.reply(t("common:commandNotForPrivateChats"));
       return;
     }
-    if (!chat.votebanLimit) {
+    if (!chat.settings.votebanLimit) {
       return; // The feature is disabled, return.
     }
     this.logger.log("The /voteban command was used");
@@ -128,20 +128,23 @@ export class VotebanService {
     const authorLink = getUserOrChatHtmlLink(from, senderChat);
     const candidateLink = getUserOrChatHtmlLink(candidate, candidateSenderChat);
     // Do not accept vote from sender chat
-    const banButtonText = t("voteban:banWithCounter", { LIMIT: chat.votebanLimit, VOTES: senderChat ? 0 : 1 });
-    const noBanButtonText = t("voteban:noBanWithCounter", { LIMIT: chat.votebanLimit, VOTES: 0 });
+    const banButtonText = t("voteban:banWithCounter", { LIMIT: chat.settings.votebanLimit, VOTES: senderChat ? 0 : 1 });
+    const noBanButtonText = t("voteban:noBanWithCounter", { LIMIT: chat.settings.votebanLimit, VOTES: 0 });
 
     const [reply] = await Promise.all([
-      ctx.reply(t("voteban:question", { AUTHOR: authorLink, CANDIDATE: candidateLink, count: chat.votebanLimit }), {
-        parse_mode: "HTML",
-        reply_markup: {
-          inline_keyboard: [
-            [{ callback_data: VotebanAction.BAN, text: banButtonText }],
-            [{ callback_data: VotebanAction.NO_BAN, text: noBanButtonText }],
-          ],
+      ctx.reply(
+        t("voteban:question", { AUTHOR: authorLink, CANDIDATE: candidateLink, count: chat.settings.votebanLimit }),
+        {
+          parse_mode: "HTML",
+          reply_markup: {
+            inline_keyboard: [
+              [{ callback_data: VotebanAction.BAN, text: banButtonText }],
+              [{ callback_data: VotebanAction.NO_BAN, text: noBanButtonText }],
+            ],
+          },
+          reply_parameters: { allow_sending_without_reply: true, message_id: replyToMessage.message_id },
         },
-        reply_parameters: { allow_sending_without_reply: true, message_id: replyToMessage.message_id },
-      }),
+      ),
       this.prismaService.upsertUser(from, from),
     ]);
 
@@ -207,7 +210,7 @@ export class VotebanService {
         result += link;
         continue;
       }
-      if (`${result}, ${link}`.length <= 2000) {
+      if (`${result}, ${link}`.length <= VOTERS_LIST_TEXT_LIMIT) {
         result += `, ${link}`;
         continue;
       }
@@ -269,22 +272,22 @@ export class VotebanService {
       return;
     }
 
-    const { language, timeZone } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
-    await changeLanguage(language);
+    const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(settings.language);
     const chat = await this.settingsService.resolveChat(ctx, chatId);
     if (!chat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
     const chatLink = getChatHtmlLink(chat);
-    const { votebanLimit } = chat;
+    const { votebanLimit } = chat.settings;
     const newValue = this.sanitizeValue(typeof value === "undefined" || isNaN(value) ? votebanLimit : value);
     const tip = t("voteban:tip");
     const msg = t("voteban:setLimit", { CHAT: chatLink, TIP: tip, count: newValue });
     const msgWithModifiedInfo = this.settingsService.withModifiedInfo(msg, {
       chat,
       settingName: ChatSettingName.VOTEBAN_LIMIT,
-      timeZone,
+      timeZone: settings.timeZone,
     });
 
     await Promise.all([
@@ -352,8 +355,8 @@ export class VotebanService {
       return;
     }
 
-    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
-    await changeLanguage(language);
+    const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(settings.language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
@@ -361,7 +364,7 @@ export class VotebanService {
 
     const votebanLimit = this.sanitizeValue(value) || null;
     await this.prismaService.$transaction([
-      this.prismaService.chat.update({ data: { votebanLimit }, select: { id: true }, where: { id: chatId } }),
+      this.prismaService.chatSettings.update({ data: { votebanLimit }, select: { id: true }, where: { id: chatId } }),
       this.prismaService.upsertChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.VOTEBAN_LIMIT),
     ]);
     await this.prismaService.deleteChatCache(chatId);
@@ -394,7 +397,8 @@ export class VotebanService {
         where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
       }),
     ]);
-    await changeLanguage(chat.language);
+    const { language, votebanLimit } = chat.settings;
+    await changeLanguage(language);
 
     const { author, authorSenderChat, banVoters, candidate, candidateMediaGroupId, candidateSenderChat, noBanVoters } =
       voting;
@@ -404,9 +408,9 @@ export class VotebanService {
     const voteUsers = (isBan ? banVoters : noBanVoters).map((v) => v.author);
     const voteUserLinks = this.getUserLinks(voteUsers);
     const tOptions: TOptions = { AUTHOR: authorLink, CANDIDATE: candidateLink, USERS: voteUserLinks };
-    const questionMsg = t("voteban:question", { ...tOptions, count: chat.votebanLimit ?? 0 });
+    const questionMsg = t("voteban:question", { ...tOptions, count: votebanLimit ?? 0 });
 
-    if (!chat.votebanLimit) {
+    if (!votebanLimit) {
       const cancelledMsg = t("voteban:cancelledFeatureDisabled");
       await ctx.editMessageText([questionMsg, cancelledMsg].join("\n\n"), { parse_mode: "HTML" });
       return; // The feature is disabled, return.
@@ -417,20 +421,20 @@ export class VotebanService {
       return; // Bot is not an admin, return.
     }
     // Check it seperately, because other admin bots are not included in the chat admin list.
-    const isCandidateAdmin = await isChatAdmin(ctx.telegram, message.chat.id, candidate.id);
+    const isCandidateAdmin = await isChatAdmin(ctx.telegram, chat.id, candidate.id);
     if (isCandidateAdmin) {
       const cancelledMsg = t("voteban:cancelledVotingAgainstAdmin");
       await ctx.editMessageText([questionMsg, cancelledMsg].join("\n\n"), { parse_mode: "HTML" });
       return; // Candidate is an admin, return.
     }
-    if (voteUsers.length >= chat.votebanLimit) {
+    if (voteUsers.length >= votebanLimit) {
       const candidateMessageId = "reply_to_message" in message ? message.reply_to_message?.message_id : undefined;
       const resultsMsg = isBan ? t("voteban:banResults", tOptions) : t("voteban:noBanResults", tOptions);
       this.logger.log(`Voteban completed: ${voting.id}`);
       await Promise.all([
         this.prismaService.voteban.delete({
           select: { id: true },
-          where: { chatId_messageId: { chatId: message.chat.id, messageId: message.message_id } },
+          where: { chatId_messageId: { chatId: chat.id, messageId: message.message_id } },
         }),
         ctx.editMessageText([questionMsg, resultsMsg].join("\n\n———\n\n"), { parse_mode: "HTML" }),
         ctx.reply(t("voteban:completed"), { reply_parameters: { message_id: message.message_id } }),
@@ -442,8 +446,8 @@ export class VotebanService {
       return; // Voting completed, return.
     }
 
-    const banButtonText = t("voteban:banWithCounter", { LIMIT: chat.votebanLimit, VOTES: banVoters.length });
-    const noBanButtonText = t("voteban:noBanWithCounter", { LIMIT: chat.votebanLimit, VOTES: noBanVoters.length });
+    const banButtonText = t("voteban:banWithCounter", { LIMIT: votebanLimit, VOTES: banVoters.length });
+    const noBanButtonText = t("voteban:noBanWithCounter", { LIMIT: votebanLimit, VOTES: noBanVoters.length });
     await ctx.editMessageText(questionMsg, {
       parse_mode: "HTML",
       reply_markup: {
@@ -480,7 +484,7 @@ export class VotebanService {
 
     // Do not upsert chat if it's not found. It means that bot was removed from the chat.
     const chat = existedChat ? await this.prismaService.upsertChatWithCache(message.chat, from) : undefined;
-    const lng = chat?.language ?? this.prismaService.resolveLanguage(from.language_code);
+    const lng = chat?.settings.language ?? this.prismaService.resolveLanguage(from.language_code);
     await changeLanguage(lng);
     if (!chat || !voting) {
       await ctx.answerCbQuery(t("voteban:expired"), { show_alert: true });

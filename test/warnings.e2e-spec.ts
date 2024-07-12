@@ -35,19 +35,17 @@ describe("WarningsModule (e2e)", () => {
   });
 
   it("bans a user for 3 warnings", async () => {
-    await createDbSupergroupChat({ hasWarnings: true });
-    await prisma.$transaction([
-      createDbUser(user),
-      prisma.message.createMany({
-        data: [{ authorId: user.id, chatId: supergroup.id, editorId: user.id, mediaGroupId: "100", messageId: 2 }],
-      }),
-      prisma.warning.createMany({
-        data: [
-          { authorId: adminUser.id, chatId: supergroup.id, editorId: adminUser.id, messageId: 1, userId: user.id },
-          { authorId: adminUser.id, chatId: supergroup.id, editorId: adminUser.id, messageId: 2, userId: user.id },
-        ],
-      }),
-    ]);
+    await createDbSupergroupChat(undefined, { hasWarnings: true });
+    await createDbUser(user);
+    await prisma.message.createMany({
+      data: [{ authorId: user.id, chatId: supergroup.id, editorId: user.id, mediaGroupId: "100", messageId: 2 }],
+    });
+    await prisma.warning.createMany({
+      data: [
+        { authorId: adminUser.id, chatId: supergroup.id, editorId: adminUser.id, messageId: 1, userId: user.id },
+        { authorId: adminUser.id, chatId: supergroup.id, editorId: adminUser.id, messageId: 2, userId: user.id },
+      ],
+    });
     let banChatMemberPayload;
     let deleteMessagesPayload;
     let sendMessagePayload1: unknown;
@@ -86,40 +84,38 @@ describe("WarningsModule (e2e)", () => {
   });
 
   it("bans a sender chat for 3 warnings", async () => {
-    await createDbSupergroupChat({ hasWarnings: true });
-    await prisma.$transaction([
-      createDbUser(systemChannelBot),
-      prisma.senderChat.create({
-        data: {
+    await createDbSupergroupChat(undefined, { hasWarnings: true });
+    await createDbUser(systemChannelBot);
+    await prisma.senderChat.create({
+      data: {
+        authorId: adminUser.id,
+        editorId: adminUser.id,
+        id: channel.id,
+        title: channel.title,
+        type: ChatType.CHANNEL,
+        username: channel.username,
+      },
+    });
+    await prisma.warning.createMany({
+      data: [
+        {
           authorId: adminUser.id,
+          chatId: supergroup.id,
           editorId: adminUser.id,
-          id: channel.id,
-          title: channel.title,
-          type: ChatType.CHANNEL,
-          username: channel.username,
+          messageId: 1,
+          senderChatId: channel.id,
+          userId: systemChannelBot.id,
         },
-      }),
-      prisma.warning.createMany({
-        data: [
-          {
-            authorId: adminUser.id,
-            chatId: supergroup.id,
-            editorId: adminUser.id,
-            messageId: 1,
-            senderChatId: channel.id,
-            userId: systemChannelBot.id,
-          },
-          {
-            authorId: adminUser.id,
-            chatId: supergroup.id,
-            editorId: adminUser.id,
-            messageId: 2,
-            senderChatId: channel.id,
-            userId: systemChannelBot.id,
-          },
-        ],
-      }),
-    ]);
+        {
+          authorId: adminUser.id,
+          chatId: supergroup.id,
+          editorId: adminUser.id,
+          messageId: 2,
+          senderChatId: channel.id,
+          userId: systemChannelBot.id,
+        },
+      ],
+    });
     let banChatSenderChatPayload;
     let deleteMessagesPayload;
     let sendMessagePayload1: unknown;
@@ -317,16 +313,14 @@ describe("WarningsModule (e2e)", () => {
   });
 
   it("should not fail without ban and delete message permissions", async () => {
-    await createDbSupergroupChat({ hasWarnings: true });
-    await prisma.$transaction([
-      createDbUser(user),
-      prisma.warning.createMany({
-        data: [
-          { authorId: adminUser.id, chatId: supergroup.id, editorId: adminUser.id, messageId: 1, userId: user.id },
-          { authorId: adminUser.id, chatId: supergroup.id, editorId: adminUser.id, messageId: 2, userId: user.id },
-        ],
-      }),
-    ]);
+    await createDbSupergroupChat(undefined, { hasWarnings: true });
+    await createDbUser(user);
+    await prisma.warning.createMany({
+      data: [
+        { authorId: adminUser.id, chatId: supergroup.id, editorId: adminUser.id, messageId: 1, userId: user.id },
+        { authorId: adminUser.id, chatId: supergroup.id, editorId: adminUser.id, messageId: 2, userId: user.id },
+      ],
+    });
     let banChatMemberPayload;
     let deleteMessagesPayload;
     server.use(
@@ -412,16 +406,14 @@ describe("WarningsModule (e2e)", () => {
   });
 
   it("should not issue duplicate warnings", async () => {
-    await createDbSupergroupChat({ hasWarnings: true });
-    await prisma.$transaction([
-      createDbUser(user),
-      prisma.warning.createMany({
-        data: [
-          { authorId: adminUser.id, chatId: supergroup.id, editorId: adminUser.id, messageId: 2, userId: user.id },
-          { authorId: adminUser.id, chatId: supergroup.id, editorId: adminUser.id, messageId: 3, userId: user.id },
-        ],
-      }),
-    ]);
+    await createDbSupergroupChat(undefined, { hasWarnings: true });
+    await createDbUser(user);
+    await prisma.warning.createMany({
+      data: [
+        { authorId: adminUser.id, chatId: supergroup.id, editorId: adminUser.id, messageId: 2, userId: user.id },
+        { authorId: adminUser.id, chatId: supergroup.id, editorId: adminUser.id, messageId: 3, userId: user.id },
+      ],
+    });
     let deleteMessagesPayload;
     let sendMessagePayload: unknown;
     server.use(
