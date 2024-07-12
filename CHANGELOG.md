@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.26.0 (xxxx-xx-xx)
+
+- TODO
+
 ## 1.25.0 (2024-07-13)
 
 - Other: internal improvements
