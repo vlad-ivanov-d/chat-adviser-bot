@@ -2,6 +2,8 @@
 
 ## 1.25.0 (xxxx-xx-xx)
 
+- Other: internal improvements
+
 ## 1.24.0 (2024-05-08)
 
 - Other: internal improvements
