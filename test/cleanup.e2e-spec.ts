@@ -4,10 +4,11 @@ import request from "supertest";
 import type { App } from "supertest/types";
 
 import * as fixtures from "fixtures/cleanup";
+import { user } from "fixtures/users";
 import { AppModule } from "src/app.module";
 
 import { TEST_ASYNC_DELAY, TEST_TELEGRAM_WEBHOOK_BASE_URL, TEST_TELEGRAM_WEBHOOK_PATH } from "./utils/constants";
-import { createDbPrivateChat, createDbSupergroupChat, prisma } from "./utils/database";
+import { createDbSupergroupChat, createDbUser, prisma } from "./utils/database";
 import { sleep } from "./utils/sleep";
 
 describe("CleanupModule (e2e)", () => {
@@ -23,13 +24,13 @@ describe("CleanupModule (e2e)", () => {
     await app.init();
   });
 
-  it("cleanups unused private chats and users at midnight", async () => {
-    await createDbPrivateChat();
-    await jest.advanceTimersByTimeAsync(24 * 60 * 60 * 1000); // 24h to run the daily cron job
+  it("cleanups unused users at midnight", async () => {
+    await createDbUser(user);
+    jest.advanceTimersByTime(24 * 60 * 60 * 1000); // 24h to run the daily cron job
     await sleep(TEST_ASYNC_DELAY);
 
-    const chats = await prisma.chat.findMany();
-    expect(chats.length).toBe(0);
+    const users = await prisma.user.findMany({ select: { id: true } });
+    expect(users.length).toBe(0);
   });
 
   it("deletes the chat in database if the bot was kicked", async () => {

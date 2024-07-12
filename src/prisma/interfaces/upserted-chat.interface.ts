@@ -1,4 +1,4 @@
-import type { Chat, ChatSettingsHistory, User } from "@prisma/client";
+import type { Chat, ChatSettings, ChatSettingsHistory, User } from "@prisma/client";
 
 export interface UpsertedChat extends Chat {
   /**
@@ -6,7 +6,11 @@ export interface UpsertedChat extends Chat {
    */
   admins: User[];
   /**
+   * Chat settings
+   */
+  settings: ChatSettings;
+  /**
    * Chat settings history
    */
-  chatSettingsHistory: (ChatSettingsHistory & { editor: User })[];
+  settingsHistory: (ChatSettingsHistory & { editor: User })[];
 }

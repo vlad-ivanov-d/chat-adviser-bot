@@ -215,12 +215,12 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
    */
   private async upsertChat(chat: Chat, editor: TelegramUser): Promise<UpsertedChat> {
     const { botInfo, telegram } = this.bot;
-    const [admins, membersCount] = await Promise.all(
+    const [admins, membersCount] =
       chat.type === "private"
         ? [[], 2]
-        : [
-            // An expected error may happen if administrators are hidden
+        : await Promise.all([
             telegram.getChatAdministrators(chat.id).catch((e: unknown) => {
+              // An expected error may happen if administrators are hidden
               this.logger.error(e);
               return [];
             }),
@@ -229,11 +229,16 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
               () => telegram.getChatMembersCount(chat.id),
               CHAT_MEMBERS_COUNT_CACHE_TTL,
             ),
-          ],
+          ]);
+
+    await this.$transaction(
+      [editor, ...admins.map((a) => a.user)]
+        .filter((u, i, arr) => arr.findIndex((au) => au.id === u.id) === i) // Trim duplicates
+        .map((u) => this.upsertUser(u, editor)),
     );
 
     const adminIds = admins.map((a) => ({ id: a.user.id }));
-    const isGroupChat = chat.type === "group" || chat.type === "supergroup";
+    const isChatWithBot = !!botInfo && chat.id === editor.id;
     const update = {
       admins: { set: adminIds },
       displayTitle: getChatDisplayTitle(chat),
@@ -245,40 +250,48 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
       type: this.resolveChatType(chat.type),
       username: "username" in chat ? chat.username ?? null : null,
     };
-
-    const transaction = await this.$transaction([
-      ...[editor, ...admins.map((a) => a.user)]
-        .filter((u, i, arr) => arr.findIndex((au) => au.id === u.id) === i) // Trim duplicates
-        .map((u) => this.upsertUser(u, editor)),
-      this.chat.upsert({
-        create: {
-          ...update,
-          addingBots: isGroupChat ? AddingBotsRule.RESTRICT : undefined,
-          admins: { connect: adminIds },
-          authorId: editor.id,
-          channelMessageFilter: isGroupChat ? ChannelMessageFilterRule.FILTER : undefined,
-          hasWarnings: isGroupChat || undefined,
-          id: chat.id,
-          language: this.resolveLanguage(editor.language_code),
-          profanityFilter: isGroupChat ? ProfanityFilterRule.FILTER : undefined,
-          timeZone: this.resolveTimeZone(editor.language_code),
-        },
-        include: { admins: true, chatSettingsHistory: { include: { editor: true } } },
-        update,
-        where: { id: chat.id },
-      }),
-    ]);
-
-    const dbChat = transaction[transaction.length - 1];
-    if (!("admins" in dbChat)) {
-      throw new Error("Something went wrong during chat upsertion.");
-    }
-
-    return {
-      ...dbChat,
-      // Patch display title and username for the chat with the bot
-      ...(botInfo &&
-        chat.id === editor.id && { displayTitle: getUserDisplayName(botInfo, "full"), username: botInfo.username }),
+    const upsertArgs = {
+      create: { ...update, admins: { connect: adminIds }, authorId: editor.id, id: chat.id, settingsId: chat.id },
+      include: { admins: true, settings: true, settingsHistory: { include: { editor: true } } },
+      update,
+      where: { id: chat.id },
     };
+
+    const settings = await this.chatSettings.findUnique({ select: { id: true }, where: { id: chat.id } });
+    const [, upsertedChat] = settings
+      ? await Promise.all([undefined, this.chat.upsert(upsertArgs)])
+      : await this.$transaction([this.upsertChatSettings(chat, editor), this.chat.upsert(upsertArgs)]);
+    return {
+      ...upsertedChat,
+      // Patch display title and username for the chat with the bot
+      displayTitle: isChatWithBot ? getUserDisplayName(botInfo, "full") : upsertedChat.displayTitle,
+      username: isChatWithBot ? botInfo.username : upsertedChat.username,
+    };
+  }
+
+  /**
+   * Upserts chat settings
+   * @param chat Telegram chat
+   * @param editor Telegram user who makes upsert
+   * @returns Chat settings
+   */
+  private upsertChatSettings(chat: Chat, editor: TelegramUser): Prisma.Prisma__ChatSettingsClient<{ id: number }> {
+    const isGroupChat = chat.type === "group" || chat.type === "supergroup";
+    return this.chatSettings.upsert({
+      create: {
+        addingBots: isGroupChat ? AddingBotsRule.RESTRICT : undefined,
+        authorId: editor.id,
+        channelMessageFilter: isGroupChat ? ChannelMessageFilterRule.FILTER : undefined,
+        editorId: editor.id,
+        hasWarnings: isGroupChat || undefined,
+        id: chat.id,
+        language: this.resolveLanguage(editor.language_code),
+        profanityFilter: isGroupChat ? ProfanityFilterRule.FILTER : undefined,
+        timeZone: this.resolveTimeZone(editor.language_code),
+      },
+      select: { id: true },
+      update: { editorId: editor.id },
+      where: { id: chat.id },
+    });
   }
 }

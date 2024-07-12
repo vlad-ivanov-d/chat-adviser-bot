@@ -27,17 +27,23 @@ describe("SettingsModule (e2e)", () => {
   });
 
   it("handles an error if parameters are incorrect during chats rendering", async () => {
+    const stderrWriteSpy = jest.spyOn(process.stderr, "write").mockImplementation(() => true);
+
     const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
       .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.cbChatsErrorWebhook);
     expect(response.status).toBe(200);
+    expect(stderrWriteSpy).toHaveBeenCalledTimes(1);
   });
 
   it("handles an error if parameters are incorrect during features rendering", async () => {
+    const stderrWriteSpy = jest.spyOn(process.stderr, "write").mockImplementation(() => true);
+
     const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
       .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.cbFeaturesErrorWebhook);
     expect(response.status).toBe(200);
+    expect(stderrWriteSpy).toHaveBeenCalledTimes(1);
   });
 
   it("ignores /mychats command if the command has payload", async () => {
@@ -111,7 +117,7 @@ describe("SettingsModule (e2e)", () => {
     server.use(
       http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
-        return new HttpResponse(null, { status: 400 });
+        return HttpResponse.json({}, { status: 400 });
       }),
     );
 

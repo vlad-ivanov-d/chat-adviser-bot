@@ -74,7 +74,7 @@ export class ProfanityFilterService {
 
     const dbChat = await this.prismaService.upsertChatWithCache(chat, from);
     if (
-      !dbChat.profanityFilter || // Filter is disabled
+      !dbChat.settings.profanityFilter || // Filter is disabled
       this.prismaService.isChatAdmin(dbChat, from.id, senderChat?.id) || // Current user is an admin
       !this.prismaService.isChatAdmin(dbChat, ctx.botInfo.id) // Bot is not an admin
     ) {
@@ -249,8 +249,8 @@ export class ProfanityFilterService {
       return;
     }
 
-    const { language, timeZone } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
-    await changeLanguage(language);
+    const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(settings.language);
     const chat = await this.settingsService.resolveChat(ctx, chatId);
     if (!chat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
@@ -259,12 +259,12 @@ export class ProfanityFilterService {
     const chatLink = getChatHtmlLink(chat);
     const disableCbData = buildCbData({ action: ProfanityFilterAction.SAVE, chatId });
     const filterCbData = buildCbData({ action: ProfanityFilterAction.SAVE, chatId, value: ProfanityFilterRule.FILTER });
-    const value = this.getOptions().find((o) => o.id === chat.profanityFilter)?.title ?? "";
+    const value = this.getOptions().find((o) => o.id === chat.settings.profanityFilter)?.title ?? "";
     const msg = t("profanityFilter:set", { CHAT: chatLink, VALUE: value });
     const msgWithModifiedInfo = this.settingsService.withModifiedInfo(msg, {
       chat,
       settingName: ChatSettingName.PROFANITY_FILTER,
-      timeZone,
+      timeZone: settings.timeZone,
     });
 
     await Promise.all([
@@ -303,8 +303,8 @@ export class ProfanityFilterService {
       return;
     }
 
-    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
-    await changeLanguage(language);
+    const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(settings.language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
@@ -313,7 +313,11 @@ export class ProfanityFilterService {
     const profanityFilter = this.sanitizeValue(value);
 
     await this.prismaService.$transaction([
-      this.prismaService.chat.update({ data: { profanityFilter }, select: { id: true }, where: { id: chatId } }),
+      this.prismaService.chatSettings.update({
+        data: { profanityFilter },
+        select: { id: true },
+        where: { id: chatId },
+      }),
       this.prismaService.upsertChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.PROFANITY_FILTER),
     ]);
     await this.prismaService.deleteChatCache(chatId);

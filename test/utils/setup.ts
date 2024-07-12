@@ -17,6 +17,7 @@ jest.mock("i18next", () => ({
 jest.mock("telegraf", () => ({
   Scenes: { Stage: jest.fn() },
   Telegraf: jest.fn(() => ({
+    catch: jest.fn(),
     launch: jest.fn(),
     telegram: { setMyCommands: jest.fn() },
     use: jest.fn(),

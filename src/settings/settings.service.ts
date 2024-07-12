@@ -75,8 +75,8 @@ export class SettingsService {
       await this.renderChats(ctx, 0);
       return;
     }
-    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.message.from);
-    await changeLanguage(language);
+    const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.message.from);
+    await changeLanguage(settings.language);
     const msg = t("common:commandForPrivateChat", { BOT_LINK: `tg:user?id=${ctx.botInfo.id.toString()}` });
     await ctx.reply(msg, { parse_mode: "HTML", reply_parameters: { message_id: ctx.message.message_id } });
   }
@@ -102,13 +102,16 @@ export class SettingsService {
 
     const [chat, userChat] = await Promise.all([
       this.prismaService.upsertChatWithCache(ctx.chat, message.from),
-      this.prismaService.chat.findUnique({ select: { id: true, language: true }, where: { id: message.from.id } }),
+      this.prismaService.chat.findUnique({
+        select: { id: true, settings: { select: { language: true } } },
+        where: { id: message.from.id },
+      }),
     ]);
 
     const isUserAdmin = this.prismaService.isChatAdmin(chat, message.from.id, message.sender_chat?.id);
 
     if (isUserAdmin && userChat) {
-      await changeLanguage(userChat.language);
+      await changeLanguage(userChat.settings.language);
       await ctx.telegram.sendMessage(userChat.id, t("settings:invitation"));
       await this.renderFeatures(ctx, chat.id);
       this.logger.log("An invitation has been sent to the administrator to complete the settings");
@@ -160,7 +163,7 @@ export class SettingsService {
         // Chat was deleted, remove it from the cache and database.
         await Promise.all([
           this.prismaService.deleteChatCache(chatId),
-          this.prismaService.chat.deleteMany({ where: { id: chatId } }),
+          this.prismaService.chatSettings.deleteMany({ where: { id: chatId } }),
         ]);
       }
     }
@@ -178,7 +181,7 @@ export class SettingsService {
    */
   public withModifiedInfo(text: string, options: WithModifiedOptions): string {
     const { chat, settingName, timeZone } = options;
-    const historyItem = chat.chatSettingsHistory.find((h) => h.settingName === settingName);
+    const historyItem = chat.settingsHistory.find((h) => h.settingName === settingName);
     const locale = getDateLocale(i18next.language);
     return [
       text,
@@ -220,7 +223,7 @@ export class SettingsService {
       ]),
       this.prismaService.upsertChatWithCache(ctx.chat, from),
     ]);
-    await changeLanguage(dbChat.language);
+    await changeLanguage(dbChat.settings.language);
 
     if (skip === 0) {
       chats.unshift(dbChat);
@@ -264,7 +267,7 @@ export class SettingsService {
     if (!destDbChat) {
       throw new Error("Target chat is not defined to render features.");
     }
-    await changeLanguage(destDbChat.language);
+    await changeLanguage(destDbChat.settings.language);
     const dbChat = await this.resolveChat(ctx, chatId);
     if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.

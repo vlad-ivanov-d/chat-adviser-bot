@@ -1,6 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
-import { ChatType } from "@prisma/client";
 import { On, Update } from "nestjs-telegraf";
 
 import { PrismaService } from "src/prisma/prisma.service";
@@ -30,7 +29,7 @@ export class CleanupService {
       this.logger.log(`The bot was kicked from a ${ctx.chat.type} chat`);
       await Promise.all([
         this.prismaService.deleteChatCache(ctx.chat.id),
-        this.prismaService.chat.deleteMany({ where: { id: ctx.chat.id } }),
+        this.prismaService.chatSettings.deleteMany({ where: { id: ctx.chat.id } }),
       ]);
     }
     await next();
@@ -41,74 +40,55 @@ export class CleanupService {
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   public async cleanup(): Promise<void> {
-    await this.checkUnusedPrivateChats();
-    const [deletedSenderChats, deletedUsers] = await this.prismaService.$transaction([
-      this.prismaService.senderChat.deleteMany({
-        where: {
-          AND: [
-            { votebanAuthorSenderChats: { none: {} } },
-            { votebanCandidateSenderChats: { none: {} } },
-            { warningSenderChats: { none: {} } },
-          ],
-        },
-      }),
-      this.prismaService.user.deleteMany({
-        where: {
-          AND: [
-            { chatAdmins: { none: {} } },
-            { chatAuthors: { none: {} } },
-            { chatEditors: { none: {} } },
-            { chatSettingsHistoryAuthors: { none: {} } },
-            { chatSettingsHistoryEditors: { none: {} } },
-            { messageAuthors: { none: {} } },
-            { messageEditors: { none: {} } },
-            { profaneWordAuthors: { none: {} } },
-            { profaneWordEditors: { none: {} } },
-            { senderChatAuthors: { none: {} } },
-            { senderChatEditors: { none: {} } },
-            { userAuthors: { none: {} } },
-            { userEditors: { none: {} } },
-            { votebanAuthors: { none: {} } },
-            { votebanBanVoterAuthors: { none: {} } },
-            { votebanBanVoterEditors: { none: {} } },
-            { votebanCandidates: { none: {} } },
-            { votebanEditors: { none: {} } },
-            { votebanNoBanVoterAuthors: { none: {} } },
-            { votebanNoBanVoterEditors: { none: {} } },
-            { warningAuthors: { none: {} } },
-            { warningEditors: { none: {} } },
-            { warningUsers: { none: {} } },
-          ],
-        },
-      }),
-    ]);
+    const deletedSenderChats = await this.prismaService.senderChat.deleteMany({
+      where: {
+        AND: [
+          { votebanAuthorSenderChats: { none: {} } },
+          { votebanCandidateSenderChats: { none: {} } },
+          { warningSenderChats: { none: {} } },
+        ],
+      },
+    });
+    const deletedUsers = await this.prismaService.user.deleteMany({
+      where: {
+        AND: [
+          { chatAdmins: { none: {} } },
+          { chatAuthors: { none: {} } },
+          { chatEditors: { none: {} } },
+          { chatSettingsAuthors: { none: {} } },
+          { chatSettingsEditors: { none: {} } },
+          { chatSettingsHistoryAuthors: { none: {} } },
+          { chatSettingsHistoryEditors: { none: {} } },
+          { messageAuthors: { none: {} } },
+          { messageEditors: { none: {} } },
+          { profaneWordAuthors: { none: {} } },
+          { profaneWordEditors: { none: {} } },
+          { senderChatAuthors: { none: {} } },
+          { senderChatEditors: { none: {} } },
+          { userAuthors: { none: {} } },
+          { userEditors: { none: {} } },
+          { votebanAuthors: { none: {} } },
+          { votebanBanVoterAuthors: { none: {} } },
+          { votebanBanVoterEditors: { none: {} } },
+          { votebanCandidates: { none: {} } },
+          { votebanEditors: { none: {} } },
+          { votebanNoBanVoterAuthors: { none: {} } },
+          { votebanNoBanVoterEditors: { none: {} } },
+          { warningAuthors: { none: {} } },
+          { warningEditors: { none: {} } },
+          { warningUsers: { none: {} } },
+        ],
+      },
+    });
     this.logger.log(`Number of deleted unused sender chats: ${deletedSenderChats.count.toString()}`);
     this.logger.log(`Number of deleted unused users: ${deletedUsers.count.toString()}`);
-    await this.checkUnusedUsers();
+    await this.deleteUnusedUsers();
   }
 
   /**
-   * Removes private chats where there is no activity
+   * Deletes users which are authors and editors only for themselves
    */
-  private async checkUnusedPrivateChats(): Promise<void> {
-    const chatsToCheck = await this.prismaService.chat.findMany({
-      select: { createdAt: true, id: true, updatedAt: true },
-      where: { chatSettingsHistory: { none: {} }, type: ChatType.PRIVATE },
-    });
-    const unusedChats = chatsToCheck.filter((c) => {
-      // It's possible that there will be a small difference in milliseconds. Check that it's less than 1000 ms.
-      return Math.abs(c.updatedAt.getTime() - c.createdAt.getTime()) < 1000;
-    });
-    if (unusedChats.length > 0) {
-      await this.prismaService.chat.deleteMany({ where: { id: { in: unusedChats.map((c) => c.id) } } });
-    }
-    this.logger.log(`Number of deleted unused private chats: ${unusedChats.length.toString()}`);
-  }
-
-  /**
-   * Removes users which are authors and editors only for themselves
-   */
-  private async checkUnusedUsers(): Promise<void> {
+  private async deleteUnusedUsers(): Promise<void> {
     const usersToCheck = await this.prismaService.user.findMany({
       select: { id: true, userAuthors: { select: { id: true } }, userEditors: { select: { id: true } } },
       where: {
@@ -116,6 +96,8 @@ export class CleanupService {
           { chatAdmins: { none: {} } },
           { chatAuthors: { none: {} } },
           { chatEditors: { none: {} } },
+          { chatSettingsAuthors: { none: {} } },
+          { chatSettingsEditors: { none: {} } },
           { chatSettingsHistoryAuthors: { none: {} } },
           { chatSettingsHistoryEditors: { none: {} } },
           { messageAuthors: { none: {} } },
@@ -140,8 +122,7 @@ export class CleanupService {
     });
     const unusedUsers = usersToCheck.filter(
       ({ id, userAuthors, userEditors }) =>
-        (userAuthors.length === 0 || (userAuthors.length === 1 && userAuthors[0].id === id)) &&
-        (userEditors.length === 0 || (userEditors.length === 1 && userEditors[0].id === id)),
+        userAuthors.length === 1 && userEditors.length === 1 && userAuthors[0].id === id && userEditors[0].id === id,
     );
     if (unusedUsers.length > 0) {
       await this.prismaService.user.deleteMany({ where: { id: { in: unusedUsers.map((u) => u.id) } } });

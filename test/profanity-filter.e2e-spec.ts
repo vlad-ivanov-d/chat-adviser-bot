@@ -32,12 +32,10 @@ describe("ProfanityFilterModule (e2e)", () => {
   });
 
   it("filters messages in a new supergroup chat", async () => {
-    await prisma.$transaction([
-      createDbUser(adminUser),
-      prisma.profaneWord.create({
-        data: { authorId: adminUser.id, editorId: adminUser.id, language: LanguageCode.EN, word: "bad" },
-      }),
-    ]);
+    await createDbUser(adminUser);
+    await prisma.profaneWord.create({
+      data: { authorId: adminUser.id, editorId: adminUser.id, language: LanguageCode.EN, word: "bad" },
+    });
     const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
       .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.channelMessageWebhook);
@@ -47,17 +45,23 @@ describe("ProfanityFilterModule (e2e)", () => {
   });
 
   it("handles an error if chat id is incorrect during settings rendering", async () => {
+    const stderrWriteSpy = jest.spyOn(process.stderr, "write").mockImplementation(() => true);
+
     const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
       .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.cbSettingsErrorWebhook);
     expect(response.status).toBe(200);
+    expect(stderrWriteSpy).toHaveBeenCalledTimes(1);
   });
 
   it("handles an error if chat id is incorrect during settings saving", async () => {
+    const stderrWriteSpy = jest.spyOn(process.stderr, "write").mockImplementation(() => true);
+
     const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
       .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.cbSaveSettingsErrorWebhook);
     expect(response.status).toBe(200);
+    expect(stderrWriteSpy).toHaveBeenCalledTimes(1);
   });
 
   it("renders settings", async () => {
@@ -66,7 +70,7 @@ describe("ProfanityFilterModule (e2e)", () => {
     server.use(
       http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
-        return new HttpResponse(null, { status: 400 });
+        return HttpResponse.json({}, { status: 400 });
       }),
     );
 
@@ -101,12 +105,10 @@ describe("ProfanityFilterModule (e2e)", () => {
   });
 
   it("should not filter messages from the linked channel", async () => {
-    await prisma.$transaction([
-      createDbUser(adminUser),
-      prisma.profaneWord.create({
-        data: { authorId: adminUser.id, editorId: adminUser.id, language: LanguageCode.EN, word: "bad" },
-      }),
-    ]);
+    await createDbUser(adminUser);
+    await prisma.profaneWord.create({
+      data: { authorId: adminUser.id, editorId: adminUser.id, language: LanguageCode.EN, word: "bad" },
+    });
 
     const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
       .post(TEST_TELEGRAM_WEBHOOK_PATH)

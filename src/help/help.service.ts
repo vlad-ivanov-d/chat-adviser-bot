@@ -22,8 +22,8 @@ export class HelpService {
   @Start()
   public async helpCommand(@Ctx() ctx: CommandCtx): Promise<void> {
     if (!ctx.payload) {
-      const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.message.from);
-      await changeLanguage(language);
+      const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.message.from);
+      await changeLanguage(settings.language);
       await ctx.reply(t("common:help", { BOT_LINK: `tg:user?id=${ctx.botInfo.id.toString()}` }), {
         parse_mode: "HTML",
         ...(ctx.chat.type !== "private" && { reply_parameters: { message_id: ctx.message.message_id } }),

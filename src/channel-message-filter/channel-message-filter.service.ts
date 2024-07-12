@@ -65,8 +65,8 @@ export class ChannelMessageFilterService {
       return;
     }
 
-    const { channelMessageFilter } = await this.prismaService.upsertChatWithCache(chat, from);
-    if (channelMessageFilter === ChannelMessageFilterRule.FILTER) {
+    const { settings } = await this.prismaService.upsertChatWithCache(chat, from);
+    if (settings.channelMessageFilter === ChannelMessageFilterRule.FILTER) {
       // An expected error may happen when bot has no enough permissions
       await Promise.all([ctx.deleteMessage(messageId), ctx.banChatSenderChat(senderChat.id)]).catch(() => false);
       this.logger.log("Message on behalf of a channel was deleted");
@@ -88,8 +88,8 @@ export class ChannelMessageFilterService {
       return;
     }
 
-    const { language, timeZone } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
-    await changeLanguage(language);
+    const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(settings.language);
     const chat = await this.settingsService.resolveChat(ctx, chatId);
     if (!chat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
@@ -102,7 +102,7 @@ export class ChannelMessageFilterService {
       chatId,
       value: ChannelMessageFilterRule.FILTER,
     });
-    const sanitizedValue = this.sanitizeValue(chat.channelMessageFilter);
+    const sanitizedValue = this.sanitizeValue(chat.settings.channelMessageFilter);
     const value =
       sanitizedValue === ChannelMessageFilterRule.FILTER
         ? t("channelMessageFilter:filterEnabled")
@@ -111,7 +111,7 @@ export class ChannelMessageFilterService {
     const msgWithModifiedInfo = this.settingsService.withModifiedInfo(msg, {
       chat,
       settingName: ChatSettingName.CHANNEL_MESSAGE_FILTER,
-      timeZone,
+      timeZone: settings.timeZone,
     });
 
     await Promise.all([
@@ -150,8 +150,8 @@ export class ChannelMessageFilterService {
       return;
     }
 
-    const { language } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
-    await changeLanguage(language);
+    const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(settings.language);
     const dbChat = await this.settingsService.resolveChat(ctx, chatId);
     if (!dbChat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
@@ -160,7 +160,11 @@ export class ChannelMessageFilterService {
     const channelMessageFilter = this.sanitizeValue(value);
 
     await this.prismaService.$transaction([
-      this.prismaService.chat.update({ data: { channelMessageFilter }, select: { id: true }, where: { id: chatId } }),
+      this.prismaService.chatSettings.update({
+        data: { channelMessageFilter },
+        select: { id: true },
+        where: { id: chatId },
+      }),
       this.prismaService.upsertChatSettingsHistory(
         chatId,
         ctx.callbackQuery.from.id,

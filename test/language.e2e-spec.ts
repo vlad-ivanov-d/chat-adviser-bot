@@ -30,17 +30,23 @@ describe("LanguageModule (e2e)", () => {
   });
 
   it("handles an error if chat id is incorrect during settings rendering", async () => {
+    const stderrWriteSpy = jest.spyOn(process.stderr, "write").mockImplementation(() => true);
+
     const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
       .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.cbSettingsErrorWebhook);
     expect(response.status).toBe(200);
+    expect(stderrWriteSpy).toHaveBeenCalledTimes(1);
   });
 
   it("handles an error if chat id is incorrect during settings saving", async () => {
+    const stderrWriteSpy = jest.spyOn(process.stderr, "write").mockImplementation(() => true);
+
     const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
       .post(TEST_TELEGRAM_WEBHOOK_PATH)
       .send(fixtures.cbSaveSettingsErrorWebhook);
     expect(response.status).toBe(200);
+    expect(stderrWriteSpy).toHaveBeenCalledTimes(1);
   });
 
   it("renders settings", async () => {
@@ -49,7 +55,7 @@ describe("LanguageModule (e2e)", () => {
     server.use(
       http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
-        return new HttpResponse(null, { status: 400 });
+        return HttpResponse.json({}, { status: 400 });
       }),
     );
 

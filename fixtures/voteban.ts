@@ -113,7 +113,7 @@ export const cbBanSenderChatEditMessageTextPayload = {
     `<a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a> offers to ban ` +
     `@${channel.username ?? ""}. This requires 45 votes.\n\nDo you want to ban @${channel.username ?? ""}?` +
     "\n\n———\n\nDecided: <b>ban</b>.\n\nVoted for ban: " +
-    Array.from(Array(44))
+    Array.from(Array(39))
       .map((v, i) => `<a href="tg:user?id=${(i + 1000).toString()}">@${user.username ?? ""}${i.toString()}</a>`)
       .join(", ") +
     " and others.",
