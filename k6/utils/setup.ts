@@ -17,7 +17,6 @@ import { server } from "./server";
 /**
  * Runs the test file
  * @param fileName File name of the test, which is located in dist folder.
- * @returns Promise
  */
 const runTest = async (fileName: string): Promise<void> => {
   for (const distFileName of readdirSync("k6/dist")) {
@@ -63,8 +62,7 @@ const runTest = async (fileName: string): Promise<void> => {
 };
 
 /**
- * Setup the app
- * @returns Nest application
+ * Setups tests
  */
 const setup = async (): Promise<void> => {
   // Build test files
