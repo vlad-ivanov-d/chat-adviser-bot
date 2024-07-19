@@ -191,7 +191,7 @@ export class ProfanityFilterService {
     return {
       ...this.getForwardRelatedStringsToFilter(message),
       senderChatTitle: senderChat && "title" in senderChat ? senderChat.title : "",
-      senderChatUsername: senderChat && "username" in senderChat ? senderChat.username ?? "" : "",
+      senderChatUsername: senderChat && "username" in senderChat ? (senderChat.username ?? "") : "",
       text: this.getMessageText(message),
       userFullName: getUserFullName(from),
       username: from.username ?? "",

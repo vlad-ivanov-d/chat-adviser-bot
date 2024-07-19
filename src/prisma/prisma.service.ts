@@ -125,10 +125,10 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
     const update = {
       editorId: editor.id,
       firstName: "first_name" in chat ? chat.first_name : null,
-      lastName: "last_name" in chat ? chat.last_name ?? null : null,
+      lastName: "last_name" in chat ? (chat.last_name ?? null) : null,
       title: "title" in chat ? chat.title : null,
       type: this.resolveChatType(chat.type),
-      username: "username" in chat ? chat.username ?? null : null,
+      username: "username" in chat ? (chat.username ?? null) : null,
     };
     const [, senderChat] = await this.$transaction([
       this.upsertUser(editor, editor),
@@ -244,11 +244,11 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
       displayTitle: getChatDisplayTitle(chat),
       editorId: editor.id,
       firstName: "first_name" in chat ? chat.first_name : null,
-      lastName: "last_name" in chat ? chat.last_name ?? null : null,
+      lastName: "last_name" in chat ? (chat.last_name ?? null) : null,
       membersCount,
       title: "title" in chat ? chat.title : null,
       type: this.resolveChatType(chat.type),
-      username: "username" in chat ? chat.username ?? null : null,
+      username: "username" in chat ? (chat.username ?? null) : null,
     };
     const upsertArgs = {
       create: { ...update, admins: { connect: adminIds }, authorId: editor.id, id: chat.id, settingsId: chat.id },
