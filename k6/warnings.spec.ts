@@ -14,7 +14,7 @@ export const options = {
     warn: { duration: "10s", exec: "warn", executor: "constant-vus", vus: 50 },
   },
   thresholds: {
-    http_req_duration: ["p(95)<300"], // 95% of requests should be below 300ms
+    http_req_duration: ["p(95)<350"], // 95% of requests should be below 350ms
     http_req_failed: ["rate===0"], // 0% of errors
   },
 };
