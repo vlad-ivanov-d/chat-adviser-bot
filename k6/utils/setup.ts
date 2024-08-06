@@ -69,9 +69,10 @@ const setup = async (): Promise<void> => {
   rmSync("k6/dist", { force: true, recursive: true });
   await build({
     bundle: true,
-    entryPoints: readdirSync("k6")
-      .filter((name) => name.endsWith(".spec.ts"))
-      .map((name) => path.resolve("k6", name)),
+    entryPoints: readdirSync("k6").reduce<string[]>(
+      (result, name) => (name.endsWith(".spec.ts") ? [...result, path.resolve("k6", name)] : result),
+      [],
+    ),
     external: ["k6"],
     outdir: "k6/dist",
     platform: "node",
@@ -83,8 +84,7 @@ const setup = async (): Promise<void> => {
   execSync("docker compose -p chat-adviser-bot-test up --remove-orphans --wait -d");
   execSync("npx prisma migrate deploy");
   const moduleFixture = await Test.createTestingModule({ imports: [AppModule] }).compile();
-  const app = moduleFixture.createNestApplication();
-  await app.init();
+  const app = await moduleFixture.createNestApplication().init();
   const cache = await store();
 
   // Run tests
