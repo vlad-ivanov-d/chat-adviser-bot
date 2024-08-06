@@ -3,7 +3,7 @@ name: "chat-adviser-bot"
 services:
   cache:
     command: --requirepass ${REDIS_PASSWORD}
-    image: redis:7.2.5-alpine
+    image: redis:7.4.0-alpine
     ports:
       - ${REDIS_PORT:-6379}:6379
     restart: unless-stopped
