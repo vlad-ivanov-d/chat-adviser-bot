@@ -4,6 +4,21 @@ import { privateChat, supergroup } from "./chats";
 import { adminUser, bot } from "./users";
 
 /**
+ * Webhook which contains /help command with a payload
+ */
+export const helpWithPayloadWebhook = {
+  message: {
+    chat: supergroup,
+    date: Date.now(),
+    entities: [{ length: 5, offset: 0, type: "bot_command" }],
+    from: adminUser,
+    message_id: 1,
+    text: "/help text",
+  },
+  update_id: 1,
+};
+
+/**
  * Payload for send message request. It should be sent as a result of /start command processing in a private chat.
  */
 export const privateStartSendMessagePayload1 = {

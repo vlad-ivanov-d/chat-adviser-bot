@@ -399,18 +399,3 @@ export const myChatsInSupergroupWebhook = {
   },
   update_id: 1,
 };
-
-/**
- * Webhook which contains /mychats command with a payload
- */
-export const myChatsWithPayloadWebhook = {
-  message: {
-    chat: supergroup,
-    date: Date.now(),
-    entities: [{ length: 8, offset: 0, type: "bot_command" }],
-    from: adminUser,
-    message_id: 1,
-    text: "/mychats text",
-  },
-  update_id: 1,
-};

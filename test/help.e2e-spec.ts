@@ -62,4 +62,21 @@ describe("HelpModule (e2e)", () => {
     expect(sendMessagePayload1).toEqual(fixtures.privateStartSendMessagePayload1);
     expect(sendMessagePayload2).toEqual(fixtures.privateStartSendMessagePayload2);
   });
+
+  it("ignores /help command if it has payload", async () => {
+    let sendMessagePayload;
+    server.use(
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+        sendMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.helpWithPayloadWebhook);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload).toBeUndefined();
+  });
 });
