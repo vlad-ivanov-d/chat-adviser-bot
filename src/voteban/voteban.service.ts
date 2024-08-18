@@ -5,6 +5,7 @@ import { changeLanguage, t, type TOptions } from "i18next";
 import { Command, Ctx, Hears, On, Update } from "nestjs-telegraf";
 import type { User as TelegramUser } from "telegraf/typings/core/types/typegram";
 
+import { CommandWithoutPayload } from "src/decorators/command-without-payload";
 import { MAX_INT } from "src/prisma/prisma.constants";
 import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
@@ -80,11 +81,8 @@ export class VotebanService {
    */
   @Command("voteban")
   @Hears(/^(\/)?voteban$/i)
+  @CommandWithoutPayload()
   public async votebanCommand(@Ctx() ctx: CommandCtx | TextMessageCtx): Promise<void> {
-    if ("payload" in ctx && ctx.payload) {
-      return; // The command has payload, return.
-    }
-
     const { from, message_id: messageId, sender_chat: senderChat, reply_to_message: replyToMessage } = ctx.message;
     const candidate = replyToMessage?.from;
     const candidateSenderChat = replyToMessage?.sender_chat;

@@ -2,7 +2,7 @@
 
 ## 1.26.0 (xxxx-xx-xx)
 
-- TODO
+- Improvement: now the bot offers to set up chats immediately after the /start command
 
 ## 1.25.0 (2024-07-13)
 

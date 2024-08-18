@@ -12,8 +12,7 @@ import { adminUser, bot, systemChannelBot } from "./users";
 const chatsText =
   "Below is a list of chats that are available to me, and where you are an administrator. " +
   "Select the chat for which you want to change the settings.\n\nIf the list doesn't contain the chat you need, " +
-  "try writing any message in it and clicking the <b>↻ Refresh the list</b> button " +
-  "(the last button in this message).";
+  "try clicking the <b>↻ Refresh the list</b> button (the last button in this message).";
 const refreshListText = "↻ Refresh the list";
 
 /**
