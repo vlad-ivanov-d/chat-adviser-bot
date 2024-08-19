@@ -1,10 +1,10 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-action.json
 
-name: Continuous Integration
+name: CI
 
 on:
-  push:
-    branches: [dev, main]
+  pull_request:
+    branches: ["*"]
 
 concurrency:
   cancel-in-progress: true
@@ -19,7 +19,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 20.15.1
+          node-version: 20.16.0
       - name: Cache node modules
         env:
           CACHE_NAME: cache-node-modules
@@ -37,18 +37,6 @@ jobs:
         run: npm ci
       - name: Build sources
         run: npm run build
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: app
-          path: |
-            Dockerfile
-            compose.build.yml
-            dist
-            grafana
-            package-lock.json
-            package.json
-            prisma
 
   test:
     runs-on: ubuntu-latest
@@ -58,7 +46,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 20.15.1
+          node-version: 20.16.0
       - name: Cache node modules
         env:
           CACHE_NAME: cache-node-modules
@@ -83,50 +71,4 @@ jobs:
       - name: Merge unit, integration and e2e test coverage
         run: npm run merge:cov
       - name: Check test coverage badges
-        run: npm run make:badges -- --ci
-
-  deploy:
-    environment: |-
-      ${{
-        github.ref_name == 'main' && 'production'
-      }}
-    if: github.ref_name == 'main'
-    needs: [build, test]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.15.1
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: app
-      - name: Start the app in docker
-        env:
-          DATABASE_PASSWORD: ${{ secrets.DATABASE_PASSWORD }}
-          DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DATABASE_USER: ${{ secrets.DATABASE_USER }}
-          DOCKER_HOST: ${{ secrets.DOCKER_HOST }}
-          GRAFANA_PORT: ${{ secrets.GRAFANA_PORT }}
-          LOKI_PORT: ${{ secrets.LOKI_PORT }}
-          LOKI_URL: ${{ secrets.LOKI_URL }}
-          REDIS_HOST: ${{ secrets.REDIS_HOST }}
-          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
-          REDIS_PORT: ${{ secrets.REDIS_PORT }}
-          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_WEBHOOK_DOMAIN: ${{ secrets.TELEGRAM_WEBHOOK_DOMAIN }}
-          TELEGRAM_WEBHOOK_PATH: ${{ secrets.TELEGRAM_WEBHOOK_PATH }}
-          TELEGRAM_WEBHOOK_PORT: ${{ secrets.TELEGRAM_WEBHOOK_PORT }}
-          TELEGRAM_WEBHOOK_SECRET_TOKEN: ${{ secrets.TELEGRAM_WEBHOOK_SECRET_TOKEN }}
-        run: |
-          eval $(ssh-agent -s)
-          echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-          npm run start:prod:docker
+        run: npm run make:badges -- --ci --exitCode=1

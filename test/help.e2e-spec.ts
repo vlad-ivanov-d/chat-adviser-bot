@@ -39,6 +39,44 @@ describe("HelpModule (e2e)", () => {
       .send(fixtures.supergroupHelpWebhook);
 
     expect(response.status).toBe(200);
-    expect(sendMessagePayload).toEqual(fixtures.supergroupSendMessagePayload);
+    expect(sendMessagePayload).toEqual(fixtures.supergroupHelpSendMessagePayload);
+  });
+
+  it("answers to /start command in a private chat", async () => {
+    let sendMessagePayload1: unknown;
+    let sendMessagePayload2: unknown;
+    server.use(
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+        const body = await info.request.json();
+        sendMessagePayload2 = sendMessagePayload1 ? body : undefined;
+        sendMessagePayload1 = sendMessagePayload1 ?? body;
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.privateStartWebhook);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload1).toEqual(fixtures.privateStartSendMessagePayload1);
+    expect(sendMessagePayload2).toEqual(fixtures.privateStartSendMessagePayload2);
+  });
+
+  it("ignores /help command if it has payload", async () => {
+    let sendMessagePayload;
+    server.use(
+      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+        sendMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
+      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+      .send(fixtures.helpWithPayloadWebhook);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload).toBeUndefined();
   });
 });

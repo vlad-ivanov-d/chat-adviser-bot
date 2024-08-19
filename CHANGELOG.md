@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.26.0 (2024-08-19)
+
+- Improvement: now the bot offers to set up chats immediately after the /start command
+
 ## 1.25.0 (2024-07-13)
 
 - Other: internal improvements

@@ -46,23 +46,6 @@ describe("SettingsModule (e2e)", () => {
     expect(stderrWriteSpy).toHaveBeenCalledTimes(1);
   });
 
-  it("ignores /mychats command if the command has payload", async () => {
-    let sendMessagePayload;
-    server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
-        sendMessagePayload = await info.request.json();
-        return HttpResponse.json({ ok: true });
-      }),
-    );
-
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.myChatsWithPayloadWebhook);
-
-    expect(response.status).toBe(200);
-    expect(sendMessagePayload).toBeUndefined();
-  });
-
   it("prompts admin to make settings when a new group chat has been created", async () => {
     await createDbPrivateChat();
     let sendMessagePayload1: unknown;

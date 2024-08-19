@@ -39,8 +39,8 @@ export const createDbPrivateChat = async (chat?: Partial<Chat>, settings?: Parti
       displayTitle: getChatDisplayTitle({
         ...privateChat,
         first_name: chat?.firstName ?? privateChat.first_name,
-        last_name: typeof chat?.lastName === "undefined" ? privateChat.last_name : chat.lastName ?? undefined,
-        username: typeof chat?.username === "undefined" ? privateChat.username : chat.username ?? undefined,
+        last_name: typeof chat?.lastName === "undefined" ? privateChat.last_name : (chat.lastName ?? undefined),
+        username: typeof chat?.username === "undefined" ? privateChat.username : (chat.username ?? undefined),
       }),
       editorId: chat?.editorId ?? adminUser.id,
       id: chat?.id ?? privateChat.id,
@@ -87,7 +87,7 @@ export const createDbSupergroupChat = async (chat?: Partial<Chat>, settings?: Pa
       displayTitle: getChatDisplayTitle({
         ...supergroup,
         title: chat?.title ?? supergroup.title,
-        username: typeof chat?.username === "undefined" ? supergroup.username : chat.username ?? undefined,
+        username: typeof chat?.username === "undefined" ? supergroup.username : (chat.username ?? undefined),
       }),
       editorId: adminUser.id,
       id: chat?.id ?? supergroup.id,

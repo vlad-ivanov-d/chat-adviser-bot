@@ -42,7 +42,7 @@
     "save": "Save",
     "selectChat": "Below is a list of chats that are available to me, and where you are an administrator. Select the chat for which you want to change the settings.",
     "selectFeature": "Select the feature you want to configure for the {{CHAT}} chat. The list of features depends on the type of chat (channel, group, etc.).",
-    "updateInfoHint": "If the list doesn't contain the chat you need, try writing any message in it and clicking the <b>↻ Refresh the list</b> button (the last button in this message)."
+    "updateInfoHint": "If the list doesn't contain the chat you need, try clicking the <b>↻ Refresh the list</b> button (the last button in this message)."
   },
   "profanityFilter": {
     "disable": "Disable",

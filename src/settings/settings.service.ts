@@ -8,6 +8,7 @@ import type { InlineKeyboardButton, InlineKeyboardMarkup } from "telegraf/typing
 import { AddingBotsAction } from "src/adding-bots/interfaces/action.interface";
 import { DATE_FORMAT, PAGE_SIZE } from "src/app.constants";
 import { ChannelMessageFilterAction } from "src/channel-message-filter/interfaces/action.interface";
+import { CommandWithoutPayload } from "src/decorators/command-without-payload";
 import { LanguageAction } from "src/language/interfaces/action.interface";
 import type { UpsertedChat } from "src/prisma/interfaces/upserted-chat.interface";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -67,10 +68,8 @@ export class SettingsService {
    * @param ctx Text message context
    */
   @Command("mychats")
+  @CommandWithoutPayload()
   public async myChatsCommand(@Ctx() ctx: CommandCtx): Promise<void> {
-    if (ctx.payload) {
-      return; // Ignore commands with payload
-    }
     if (ctx.chat.type === "private") {
       await this.renderChats(ctx, 0);
       return;
@@ -143,6 +142,57 @@ export class SettingsService {
   }
 
   /**
+   * Renders chats
+   * @param ctx Callback or message context
+   * @param skip Skip count
+   * @param shouldAnswerCallback Answer callback query will be sent if true
+   */
+  public async renderChats(ctx: CallbackCtx | MessageCtx, skip = 0, shouldAnswerCallback?: boolean): Promise<void> {
+    const { from } = typeof ctx.callbackQuery === "undefined" ? ctx.update.message : ctx.callbackQuery;
+    const take = skip === 0 ? PAGE_SIZE - 1 : PAGE_SIZE;
+    if (!ctx.chat || isNaN(skip)) {
+      this.logger.error("Incorrect parameters to render chats");
+      return;
+    }
+
+    const [[chats, count], dbChat] = await Promise.all([
+      this.prismaService.$transaction([
+        this.prismaService.chat.findMany({
+          orderBy: { displayTitle: "asc" },
+          select: { displayTitle: true, id: true },
+          skip,
+          take,
+          where: { admins: { some: { id: from.id } } },
+        }),
+        this.prismaService.chat.count({ where: { admins: { some: { id: from.id } } } }),
+      ]),
+      this.prismaService.upsertChatWithCache(ctx.chat, from),
+    ]);
+    await changeLanguage(dbChat.settings.language);
+
+    if (skip === 0) {
+      chats.unshift(dbChat);
+    }
+    const replyMarkup: InlineKeyboardMarkup = {
+      inline_keyboard: [
+        ...chats.map((c) => [
+          { callback_data: buildCbData({ action: SettingsAction.FEATURES, chatId: c.id }), text: c.displayTitle },
+        ]),
+        getPagination({ action: SettingsAction.CHATS, count, skip, take }),
+        [{ callback_data: buildCbData({ action: SettingsAction.REFRESH }), text: `↻ ${t("settings:refreshList")}` }],
+      ],
+    };
+    const msg = [t("settings:selectChat"), t("settings:updateInfoHint")].join("\n\n");
+    await (typeof ctx.callbackQuery === "undefined"
+      ? ctx.reply(msg, { parse_mode: "HTML", reply_markup: replyMarkup })
+      : Promise.all([
+          shouldAnswerCallback && ctx.answerCbQuery(),
+          // An expected error may happen if the message won't change during edit
+          ctx.editMessageText(msg, { parse_mode: "HTML", reply_markup: replyMarkup }).catch(() => undefined),
+        ]));
+  }
+
+  /**
    * Upserts chat by id and validates admin permissions for current user.
    * Redirects to chat list with alert if there is no enough permissions.
    * @param ctx Callback or message context
@@ -194,57 +244,6 @@ export class SettingsService {
     ]
       .filter((p) => p)
       .join("\n");
-  }
-
-  /**
-   * Renders chats
-   * @param ctx Callback or message context
-   * @param skip Skip count
-   * @param shouldAnswerCallback Answer callback query will be sent if true
-   */
-  private async renderChats(ctx: CallbackCtx | MessageCtx, skip = 0, shouldAnswerCallback?: boolean): Promise<void> {
-    const { from } = typeof ctx.callbackQuery === "undefined" ? ctx.update.message : ctx.callbackQuery;
-    const take = skip === 0 ? PAGE_SIZE - 1 : PAGE_SIZE;
-    if (!ctx.chat || isNaN(skip)) {
-      this.logger.error("Incorrect parameters to render chats");
-      return;
-    }
-
-    const [[chats, count], dbChat] = await Promise.all([
-      this.prismaService.$transaction([
-        this.prismaService.chat.findMany({
-          orderBy: { displayTitle: "asc" },
-          select: { displayTitle: true, id: true },
-          skip,
-          take,
-          where: { admins: { some: { id: from.id } } },
-        }),
-        this.prismaService.chat.count({ where: { admins: { some: { id: from.id } } } }),
-      ]),
-      this.prismaService.upsertChatWithCache(ctx.chat, from),
-    ]);
-    await changeLanguage(dbChat.settings.language);
-
-    if (skip === 0) {
-      chats.unshift(dbChat);
-    }
-    const replyMarkup: InlineKeyboardMarkup = {
-      inline_keyboard: [
-        ...chats.map((c) => [
-          { callback_data: buildCbData({ action: SettingsAction.FEATURES, chatId: c.id }), text: c.displayTitle },
-        ]),
-        getPagination({ action: SettingsAction.CHATS, count, skip, take }),
-        [{ callback_data: buildCbData({ action: SettingsAction.REFRESH }), text: `↻ ${t("settings:refreshList")}` }],
-      ],
-    };
-    const msg = [t("settings:selectChat"), t("settings:updateInfoHint")].join("\n\n");
-    await (typeof ctx.callbackQuery === "undefined"
-      ? ctx.reply(msg, { parse_mode: "HTML", reply_markup: replyMarkup })
-      : Promise.all([
-          shouldAnswerCallback && ctx.answerCbQuery(),
-          // An expected error may happen if the message won't change during edit
-          ctx.editMessageText(msg, { parse_mode: "HTML", reply_markup: replyMarkup }).catch(() => undefined),
-        ]));
   }
 
   /**

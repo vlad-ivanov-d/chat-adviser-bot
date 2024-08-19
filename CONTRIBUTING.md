@@ -88,6 +88,8 @@ The command starts the local development server, compiles and reloads changes.
 
 ## Git Flow
 
+`dev` branch is used as a starting point for development. All new changes (feature branches, bug fixes, etc.) should be merged into this branch via Pull Request. Then `dev` is merged into `main` after stabilization. Changes will be automatically deployed to production after merging to the `main` branch.
+
 - `dev` and `main` branches are protected
 - Pull Requests are used to merging changes to the protected branches
 - Pull Requests are used to code review

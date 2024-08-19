@@ -134,14 +134,14 @@ export const getChatDisplayTitle = (chat: Chat | SenderChat): string => {
     case "supergroup":
     case ChatType.CHANNEL:
     case ChatType.SUPERGROUP:
-      return chat.username ? `@${chat.username}` : chat.title ?? "";
+      return chat.username ? `@${chat.username}` : (chat.title ?? "");
     case "private":
     case ChatType.PRIVATE: {
       const privateChatAsUser: User = {
-        first_name: "firstName" in chat ? chat.firstName ?? "" : chat.first_name,
+        first_name: "firstName" in chat ? (chat.firstName ?? "") : chat.first_name,
         id: chat.id,
         is_bot: false,
-        last_name: "lastName" in chat ? chat.lastName ?? "" : chat.last_name,
+        last_name: "lastName" in chat ? (chat.lastName ?? "") : chat.last_name,
         username: chat.username ?? undefined,
       };
       return getUserDisplayName(privateChatAsUser, "full");

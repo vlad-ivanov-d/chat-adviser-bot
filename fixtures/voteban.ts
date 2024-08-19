@@ -601,21 +601,6 @@ export const votebanWebhook = {
 };
 
 /**
- * Webhook which contains voteban command with a payload
- */
-export const votebanWithPayloadWebhook = {
-  message: {
-    chat: supergroup,
-    date: Date.now(),
-    entities: [{ length: 8, offset: 0, type: "bot_command" }],
-    from: adminUser,
-    message_id: 1,
-    text: "/voteban text",
-  },
-  update_id: 1,
-};
-
-/**
  * Payload for send message request. It should be sent as a result of voteban command without a reply processing
  * in a supergroup chat.
  */
