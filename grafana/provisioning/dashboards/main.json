@@ -153,8 +153,8 @@
       "targets": [
         {
           "datasource": "Loki",
-          "editorMode": "builder",
-          "expr": "sum by(level) (count_over_time({service_name=\"bot\", level=~\"$level\"} [5m]))",
+          "editorMode": "code",
+          "expr": "sum by(level) (count_over_time({service_name=\"bot\", level=~\"$level\"} |~ ${type:pipe} [5m]))",
           "queryType": "range",
           "refId": "A"
         }
@@ -184,8 +184,8 @@
       "targets": [
         {
           "datasource": "Loki",
-          "editorMode": "builder",
-          "expr": "{service_name=\"bot\", level=~\"$level\"}",
+          "editorMode": "code",
+          "expr": "{service_name=\"bot\", level=~\"$level\"} |~ ${type:pipe}",
           "queryType": "range",
           "refId": "A"
         }
@@ -251,7 +251,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.1.2",
+      "pluginVersion": "11.1.4",
       "targets": [
         {
           "datasource": "Loki",
@@ -261,7 +261,7 @@
           "refId": "A"
         }
       ],
-      "title": "New Chats",
+      "title": "New Non-Private Chats",
       "type": "stat"
     },
     {
@@ -309,7 +309,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.1.2",
+      "pluginVersion": "11.1.4",
       "targets": [
         {
           "datasource": "Loki",
@@ -367,7 +367,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.1.2",
+      "pluginVersion": "11.1.4",
       "targets": [
         {
           "datasource": "Loki",
@@ -429,7 +429,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.1.2",
+      "pluginVersion": "11.1.4",
       "targets": [
         {
           "datasource": "Loki",
@@ -487,7 +487,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.1.2",
+      "pluginVersion": "11.1.4",
       "targets": [
         {
           "datasource": "Loki",
@@ -545,7 +545,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.1.2",
+      "pluginVersion": "11.1.4",
       "targets": [
         {
           "datasource": "Loki",
@@ -603,7 +603,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.1.2",
+      "pluginVersion": "11.1.4",
       "targets": [
         {
           "datasource": "Loki",
@@ -675,7 +675,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.1.2",
+      "pluginVersion": "11.1.4",
       "targets": [
         {
           "datasource": "Loki",
@@ -863,6 +863,66 @@
         "skipUrlSync": false,
         "sort": 1,
         "type": "query"
+      },
+      {
+        "allValue": "\"\"",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "description": "Based on features",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Type",
+        "multi": false,
+        "name": "type",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "Filtered channel messages",
+            "value": "\"Message on behalf of a channel was deleted\""
+          },
+          {
+            "selected": false,
+            "text": "New non-private chats",
+            "value": "\"The bot was added to\""
+          },
+          {
+            "selected": false,
+            "text": "Profanity",
+            "value": "\"A profanity was found\""
+          },
+          {
+            "selected": false,
+            "text": "Removed bots",
+            "value": "\"A bot was removed from the chat\""
+          },
+          {
+            "selected": false,
+            "text": "Removed chats",
+            "value": "\"The bot was kicked from\""
+          },
+          {
+            "selected": false,
+            "text": "Votebans",
+            "value": "\"Voteban started\""
+          },
+          {
+            "selected": false,
+            "text": "Warnings",
+            "value": "\"A warning was issued\""
+          }
+        ],
+        "query": "Filtered channel messages : \"Message on behalf of a channel was deleted\", New non-private chats : \"The bot was added to\", Profanity : \"A profanity was found\", Removed bots : \"A bot was removed from the chat\", Removed chats : \"The bot was kicked from\", Votebans : \"Voteban started\", Warnings : \"A warning was issued\"",
+        "queryValue": "",
+        "skipUrlSync": false,
+        "type": "custom"
       }
     ]
   },
@@ -873,6 +933,6 @@
   "timepicker": {},
   "timezone": "browser",
   "title": "Main",
-  "version": 90,
+  "version": 93,
   "weekStart": ""
 }
