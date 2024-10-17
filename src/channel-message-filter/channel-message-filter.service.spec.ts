@@ -15,7 +15,7 @@ describe("ChannelMessageFilterService", () => {
     const testingModule = await Test.createTestingModule({
       imports: [
         CacheModule.register({ isGlobal: true, store }),
-        TelegrafModule.forRoot({ launchOptions: false, token: process.env.TELEGRAM_TOKEN ?? "" }),
+        TelegrafModule.forRoot({ launchOptions: false, token: process.env.TG_TOKEN ?? "" }),
         PrismaModule,
         SettingsModule,
       ],

@@ -10,9 +10,9 @@ import { AppModule } from "src/app.module";
 
 import {
   TEST_ASYNC_DELAY,
-  TEST_TELEGRAM_API_BASE_URL,
-  TEST_TELEGRAM_WEBHOOK_BASE_URL,
-  TEST_TELEGRAM_WEBHOOK_PATH,
+  TEST_TG_API_BASE_URL,
+  TEST_TG_WEBHOOK_BASE_URL,
+  TEST_TG_WEBHOOK_PATH,
 } from "./utils/constants";
 import { createDbSupergroupChat } from "./utils/database";
 import { server } from "./utils/server";
@@ -32,14 +32,14 @@ describe("ChannelMessageFilterModule (e2e)", () => {
   it("filters messages in a new supergroup chat", async () => {
     let banChatSenderChatPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/banChatSenderChat`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/banChatSenderChat`, async (info) => {
         banChatSenderChatPayload = await info.request.json();
         return HttpResponse.json({}, { status: 400 });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.channelMessageWebhook);
 
     expect(response.status).toBe(200);
@@ -50,8 +50,8 @@ describe("ChannelMessageFilterModule (e2e)", () => {
   it("handles an error if chat id is incorrect during settings rendering", async () => {
     const stderrWriteSpy = jest.spyOn(process.stderr, "write").mockImplementation(() => true);
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSettingsErrorWebhook);
     expect(response.status).toBe(200);
     expect(stderrWriteSpy).toHaveBeenCalledTimes(1);
@@ -60,8 +60,8 @@ describe("ChannelMessageFilterModule (e2e)", () => {
   it("handles an error if chat id is incorrect during settings saving", async () => {
     const stderrWriteSpy = jest.spyOn(process.stderr, "write").mockImplementation(() => true);
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSaveSettingsErrorWebhook);
     expect(response.status).toBe(200);
     expect(stderrWriteSpy).toHaveBeenCalledTimes(1);
@@ -71,14 +71,14 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({}, { status: 400 });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSettingsWebhook);
 
     expect(response.status).toBe(200);
@@ -90,14 +90,14 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSaveSettingsWebhook);
 
     const expectedEditMessageTextPayload = fixtures.cbSaveSettingsEditMessageTextPayload();
@@ -110,14 +110,14 @@ describe("ChannelMessageFilterModule (e2e)", () => {
   it("should not filter messages from the linked channel", async () => {
     let banChatSenderChatPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/banChatSenderChat`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/banChatSenderChat`, async (info) => {
         banChatSenderChatPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.autoForwardChannelMessageWebhook);
 
     expect(response.status).toBe(200);
@@ -129,14 +129,14 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     await createDbSupergroupChat();
     let banChatSenderChatPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/banChatSenderChat`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/banChatSenderChat`, async (info) => {
         banChatSenderChatPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.channelMessageWebhook);
 
     expect(response.status).toBe(200);
@@ -147,17 +147,15 @@ describe("ChannelMessageFilterModule (e2e)", () => {
   it("should not render settings if the user is not an admin", async () => {
     let editMessageTextPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
-        HttpResponse.json({ ok: true, result: [] }),
-      ),
+      http.post(`${TEST_TG_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSettingsWebhook);
 
     expect(response.status).toBe(200);
@@ -170,17 +168,15 @@ describe("ChannelMessageFilterModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
-        HttpResponse.json({ ok: true, result: [] }),
-      ),
+      http.post(`${TEST_TG_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSaveSettingsWebhook);
 
     expect(response.status).toBe(200);

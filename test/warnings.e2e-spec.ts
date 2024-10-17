@@ -13,9 +13,9 @@ import { AppModule } from "src/app.module";
 
 import {
   TEST_ASYNC_DELAY,
-  TEST_TELEGRAM_API_BASE_URL,
-  TEST_TELEGRAM_WEBHOOK_BASE_URL,
-  TEST_TELEGRAM_WEBHOOK_PATH,
+  TEST_TG_API_BASE_URL,
+  TEST_TG_WEBHOOK_BASE_URL,
+  TEST_TG_WEBHOOK_PATH,
 } from "./utils/constants";
 import { createDbSupergroupChat, createDbUser, prisma } from "./utils/database";
 import { server } from "./utils/server";
@@ -51,15 +51,15 @@ describe("WarningsModule (e2e)", () => {
     let sendMessagePayload1: unknown;
     let sendMessagePayload2: unknown;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/banChatMember`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/banChatMember`, async (info) => {
         banChatMemberPayload = await info.request.json();
         return HttpResponse.json({ ok: true, result: true });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/deleteMessages`, async (info) => {
         deleteMessagesPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         const body = await info.request.json();
         sendMessagePayload2 = sendMessagePayload1 ? body : undefined;
         sendMessagePayload1 = sendMessagePayload1 ?? body;
@@ -67,8 +67,8 @@ describe("WarningsModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.warnMediaGroupWebhook);
 
     expect(response.status).toBe(200);
@@ -121,15 +121,15 @@ describe("WarningsModule (e2e)", () => {
     let sendMessagePayload1: unknown;
     let sendMessagePayload2: unknown;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/banChatSenderChat`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/banChatSenderChat`, async (info) => {
         banChatSenderChatPayload = await info.request.json();
         return HttpResponse.json({}, { status: 400 });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/deleteMessages`, async (info) => {
         deleteMessagesPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         const body = await info.request.json();
         sendMessagePayload2 = sendMessagePayload1 ? body : undefined;
         sendMessagePayload1 = sendMessagePayload1 ?? body;
@@ -137,8 +137,8 @@ describe("WarningsModule (e2e)", () => {
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.warnSenderChatWebhook);
 
     expect(response.status).toBe(200);
@@ -156,8 +156,8 @@ describe("WarningsModule (e2e)", () => {
   it("handles an error if chat id is incorrect during settings rendering", async () => {
     const stderrWriteSpy = jest.spyOn(process.stderr, "write").mockImplementation(() => true);
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSettingsErrorWebhook);
     expect(response.status).toBe(200);
     expect(stderrWriteSpy).toHaveBeenCalledTimes(1);
@@ -166,8 +166,8 @@ describe("WarningsModule (e2e)", () => {
   it("handles an error if chat id is incorrect during settings saving", async () => {
     const stderrWriteSpy = jest.spyOn(process.stderr, "write").mockImplementation(() => true);
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSaveSettingsErrorWebhook);
     expect(response.status).toBe(200);
     expect(stderrWriteSpy).toHaveBeenCalledTimes(1);
@@ -176,8 +176,8 @@ describe("WarningsModule (e2e)", () => {
   it("ignores /warn command if the feature is disabled", async () => {
     await createDbSupergroupChat();
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.warnWithoutReplyWebhook);
 
     expect(response.status).toBe(200);
@@ -185,9 +185,7 @@ describe("WarningsModule (e2e)", () => {
   });
 
   it("ignores unknown callback", async () => {
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.cbUnknownWebhook);
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL).post(TEST_TG_WEBHOOK_PATH).send(fixtures.cbUnknownWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({});
@@ -197,14 +195,14 @@ describe("WarningsModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({}, { status: 400 });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSettingsWebhook);
 
     expect(response.status).toBe(200);
@@ -216,14 +214,14 @@ describe("WarningsModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSaveSettingsWebhook);
 
     const expectedEditMessageTextPayload = fixtures.cbSaveSettingsEditMessageTextPayload();
@@ -237,14 +235,14 @@ describe("WarningsModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSaveIncorrectValueSettingsWebhook);
 
     const expectedEditMessageTextPayload = fixtures.cbSaveIncorrectValueSettingsEditMessageTextPayload();
@@ -257,14 +255,14 @@ describe("WarningsModule (e2e)", () => {
   it("says /warn command is not for a private chat", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.warnInPrivateChatWebhook);
 
     expect(response.status).toBe(200);
@@ -274,19 +272,15 @@ describe("WarningsModule (e2e)", () => {
   it("says if the bot has no admin permissions", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
-        HttpResponse.json({ ok: true, result: [] }),
-      ),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatMember`, () => HttpResponse.json({}, { status: 400 })),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
+      http.post(`${TEST_TG_API_BASE_URL}/getChatMember`, () => HttpResponse.json({}, { status: 400 })),
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.warnWebhook);
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL).post(TEST_TG_WEBHOOK_PATH).send(fixtures.warnWebhook);
 
     expect(response.status).toBe(200);
     expect(sendMessagePayload).toEqual(fixtures.warnBotHasNoAdminPermsSendMessagePayload);
@@ -295,18 +289,16 @@ describe("WarningsModule (e2e)", () => {
   it("says if the user has no admin permissions", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
+      http.post(`${TEST_TG_API_BASE_URL}/getChatAdministrators`, () =>
         HttpResponse.json({ ok: true, result: [{ is_anonymous: false, status: "administrator", user: bot }] }),
       ),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.warnWebhook);
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL).post(TEST_TG_WEBHOOK_PATH).send(fixtures.warnWebhook);
 
     expect(response.status).toBe(200);
     expect(sendMessagePayload).toEqual(fixtures.warnUserHasNoAdminPermsSendMessagePayload);
@@ -324,22 +316,20 @@ describe("WarningsModule (e2e)", () => {
     let banChatMemberPayload;
     let deleteMessagesPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/banChatMember`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/banChatMember`, async (info) => {
         banChatMemberPayload = await info.request.json();
         return HttpResponse.json({}, { status: 400 });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/deleteMessages`, async (info) => {
         deleteMessagesPayload = await info.request.json();
         return HttpResponse.json({}, { status: 400 });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, () =>
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, () =>
         HttpResponse.json({ ok: true, result: { message_id: 5 } }),
       ),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.warnWebhook);
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL).post(TEST_TG_WEBHOOK_PATH).send(fixtures.warnWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ chat_id: supergroup.id, message_id: 4, method: "deleteMessage" });
@@ -354,18 +344,16 @@ describe("WarningsModule (e2e)", () => {
   it("should not issue a warning against the admin", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatMember`, () =>
+      http.post(`${TEST_TG_API_BASE_URL}/getChatMember`, () =>
         HttpResponse.json({ ok: true, result: { is_anonymous: false, status: "administrator", user } }),
       ),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.warnWebhook);
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL).post(TEST_TG_WEBHOOK_PATH).send(fixtures.warnWebhook);
 
     expect(response.status).toBe(200);
     expect(sendMessagePayload).toEqual(fixtures.warnAgainstAdminSendMessagePayload);
@@ -374,14 +362,14 @@ describe("WarningsModule (e2e)", () => {
   it("should not issue a warning against the bot itself", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.warnAgainstBotWebhook);
 
     expect(response.status).toBe(200);
@@ -391,14 +379,14 @@ describe("WarningsModule (e2e)", () => {
   it("should not issue a warning against the linked channel", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.warnAgainstLinkedChannelWebhook);
 
     expect(response.status).toBe(200);
@@ -417,19 +405,17 @@ describe("WarningsModule (e2e)", () => {
     let deleteMessagesPayload;
     let sendMessagePayload: unknown;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/deleteMessages`, async (info) => {
         deleteMessagesPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true, result: { message_id: 5 } });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.warnWebhook);
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL).post(TEST_TG_WEBHOOK_PATH).send(fixtures.warnWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ chat_id: supergroup.id, message_id: 4, method: "deleteMessage" });
@@ -444,17 +430,15 @@ describe("WarningsModule (e2e)", () => {
   it("should not render settings if the user is not an admin", async () => {
     let editMessageTextPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
-        HttpResponse.json({ ok: true, result: [] }),
-      ),
+      http.post(`${TEST_TG_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSettingsWebhook);
 
     expect(response.status).toBe(200);
@@ -467,17 +451,15 @@ describe("WarningsModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
-        HttpResponse.json({ ok: true, result: [] }),
-      ),
+      http.post(`${TEST_TG_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSaveSettingsWebhook);
 
     expect(response.status).toBe(200);
@@ -489,14 +471,14 @@ describe("WarningsModule (e2e)", () => {
   it("tells how to use the /warn command correctly", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.warnWithoutReplyWebhook);
 
     expect(response.status).toBe(200);

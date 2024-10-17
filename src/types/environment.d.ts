@@ -21,24 +21,32 @@ declare namespace NodeJS {
      */
     REDIS_PORT?: string;
     /**
+     * Telegram client API hash
+     */
+    TG_CLIENT_API_HASH?: string;
+    /**
+     * Telegram client API ID
+     */
+    TG_CLIENT_API_ID?: string;
+    /**
      * Telegram bot API token
      */
-    TELEGRAM_TOKEN?: string;
+    TG_TOKEN?: string;
     /**
      * Telegram bot webhook domain
      */
-    TELEGRAM_WEBHOOK_DOMAIN?: string;
+    TG_WEBHOOK_DOMAIN?: string;
     /**
      * Telegram bot webhook path
      */
-    TELEGRAM_WEBHOOK_PATH?: string;
+    TG_WEBHOOK_PATH?: string;
     /**
      * Telegram bot webhook port
      */
-    TELEGRAM_WEBHOOK_PORT?: string;
+    TG_WEBHOOK_PORT?: string;
     /**
      * Secret token to be sent back in Telegram webhook header for security
      */
-    TELEGRAM_WEBHOOK_SECRET_TOKEN?: string;
+    TG_WEBHOOK_SECRET_TOKEN?: string;
   }
 }

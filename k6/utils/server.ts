@@ -3,7 +3,7 @@ import { setupServer } from "msw/node";
 
 import { group, privateChat, supergroup } from "fixtures/chats";
 import { adminUser, bot, user } from "fixtures/users";
-import { TEST_TELEGRAM_API_BASE_URL } from "test/utils/constants";
+import { TEST_TG_API_BASE_URL } from "test/utils/constants";
 
 /**
  * Resolves response for /banChatSenderChat and /deleteMessage endpoint
@@ -116,16 +116,16 @@ const setWebhookResolver: HttpResponseResolver = async () => {
  * MSW server
  */
 export const server = setupServer(
-  ...(process.env.TELEGRAM_WEBHOOK_PATH ? [http.post(`**${process.env.TELEGRAM_WEBHOOK_PATH}`, passthrough)] : []),
-  http.post(`${TEST_TELEGRAM_API_BASE_URL}/banChatSenderChat`, actionResolver),
-  http.post(`${TEST_TELEGRAM_API_BASE_URL}/deleteMessage`, actionResolver),
-  http.post(`${TEST_TELEGRAM_API_BASE_URL}/deleteMessages`, actionResolver),
-  http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChat`, getChatResolver),
-  http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, getChatAdministratorsResolver),
-  http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatMember`, getChatMemberResolver),
-  http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatMembersCount`, getChatMembersCountResolver),
-  http.post(`${TEST_TELEGRAM_API_BASE_URL}/getMe`, getMeResolver),
-  http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, sendMessageResolver),
-  http.post(`${TEST_TELEGRAM_API_BASE_URL}/setMyCommands`, setMyCommands),
-  http.post(`${TEST_TELEGRAM_API_BASE_URL}/setWebhook`, setWebhookResolver),
+  ...(process.env.TG_WEBHOOK_PATH ? [http.post(`**${process.env.TG_WEBHOOK_PATH}`, passthrough)] : []),
+  http.post(`${TEST_TG_API_BASE_URL}/banChatSenderChat`, actionResolver),
+  http.post(`${TEST_TG_API_BASE_URL}/deleteMessage`, actionResolver),
+  http.post(`${TEST_TG_API_BASE_URL}/deleteMessages`, actionResolver),
+  http.post(`${TEST_TG_API_BASE_URL}/getChat`, getChatResolver),
+  http.post(`${TEST_TG_API_BASE_URL}/getChatAdministrators`, getChatAdministratorsResolver),
+  http.post(`${TEST_TG_API_BASE_URL}/getChatMember`, getChatMemberResolver),
+  http.post(`${TEST_TG_API_BASE_URL}/getChatMembersCount`, getChatMembersCountResolver),
+  http.post(`${TEST_TG_API_BASE_URL}/getMe`, getMeResolver),
+  http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, sendMessageResolver),
+  http.post(`${TEST_TG_API_BASE_URL}/setMyCommands`, setMyCommands),
+  http.post(`${TEST_TG_API_BASE_URL}/setWebhook`, setWebhookResolver),
 );

@@ -97,7 +97,7 @@ export const cbBanEditMessageTextPayload = {
     `<a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a> offers to ban ` +
     `<a href="tg:user?id=${user.id.toString()}">@${user.username ?? ""}</a>. This requires 2 votes.\n\n` +
     `Do you want to ban <a href="tg:user?id=${user.id.toString()}">@${user.username ?? ""}</a>?` +
-    "\n\n———\n\nDecided: <b>ban</b>.\n\n" +
+    "\n\n- - -\n\nDecided: <b>ban</b>.\n\n" +
     `Voted for ban: <a href="tg:user?id=${user.id.toString()}">@${user.username ?? ""}</a>, ` +
     `<a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>.`,
 };
@@ -112,7 +112,7 @@ export const cbBanSenderChatEditMessageTextPayload = {
   text:
     `<a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a> offers to ban ` +
     `@${channel.username ?? ""}. This requires 45 votes.\n\nDo you want to ban @${channel.username ?? ""}?` +
-    "\n\n———\n\nDecided: <b>ban</b>.\n\nVoted for ban: " +
+    "\n\n- - -\n\nDecided: <b>ban</b>.\n\nVoted for ban: " +
     Array.from(Array(39))
       .map((v, i) => `<a href="tg:user?id=${(i + 1000).toString()}">@${user.username ?? ""}${i.toString()}</a>`)
       .join(", ") +

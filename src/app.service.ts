@@ -17,8 +17,8 @@ export class AppService implements OnApplicationBootstrap, OnApplicationShutdown
    * @param cacheManager Cache manager
    */
   public constructor(
-    @InjectBot() private bot: Telegraf,
-    @Inject(CACHE_MANAGER) private cacheManager: CacheManager<RedisStore | Store>,
+    @InjectBot() private readonly bot: Telegraf,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: CacheManager<RedisStore | Store>,
   ) {}
 
   /**
@@ -27,7 +27,23 @@ export class AppService implements OnApplicationBootstrap, OnApplicationShutdown
   public async onApplicationBootstrap(): Promise<void> {
     // Clear storage before launch to prevent data mismatch errors when updating app version
     await this.cacheManager.reset();
-    // Set my commands
+    await this.setMyCommands();
+  }
+
+  /**
+   * Called after connections close (app.close() resolves).
+   */
+  public async onApplicationShutdown(): Promise<void> {
+    // Close cache store client
+    if ("client" in this.cacheManager.store) {
+      await this.cacheManager.store.client.quit();
+    }
+  }
+
+  /**
+   * Sets my commands for the bot
+   */
+  private async setMyCommands(): Promise<void> {
     await Promise.all([
       this.bot.telegram.setMyCommands(
         [
@@ -44,14 +60,5 @@ export class AppService implements OnApplicationBootstrap, OnApplicationShutdown
         { language_code: TelegramLanguage.RU, scope: { type: "all_private_chats" } },
       ),
     ]);
-  }
-
-  /**
-   * Called after connections close (app.close() resolves).
-   */
-  public async onApplicationShutdown(): Promise<void> {
-    if ("client" in this.cacheManager.store) {
-      await this.cacheManager.store.client.quit();
-    }
   }
 }

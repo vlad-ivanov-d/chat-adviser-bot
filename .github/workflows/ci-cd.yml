@@ -5,6 +5,7 @@ name: CI/CD
 on:
   push:
     branches: [dev, main]
+  workflow_dispatch:
 
 concurrency:
   cancel-in-progress: true
@@ -84,6 +85,7 @@ jobs:
         run: npm run merge:cov
       - name: Check test coverage badges silently
         run: npm run make:badges -- --ci
+    timeout-minutes: 15
 
   deploy:
     environment: |-
@@ -108,6 +110,8 @@ jobs:
           DATABASE_PORT: ${{ secrets.DATABASE_PORT }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DATABASE_USER: ${{ secrets.DATABASE_USER }}
+          # Should be in the following format: ssh://[server_username]@[server_ip]:[server_ssh_port]
+          # Example: ssh://root@1.1.1.1:22
           DOCKER_HOST: ${{ secrets.DOCKER_HOST }}
           GRAFANA_PORT: ${{ secrets.GRAFANA_PORT }}
           LOKI_PORT: ${{ secrets.LOKI_PORT }}
@@ -115,13 +119,17 @@ jobs:
           REDIS_HOST: ${{ secrets.REDIS_HOST }}
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
           REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          # Get this variable via command: ssh-keyscan -p [server_ssh_port] [server_ip]
+          # Example: ssh-keyscan -p 22 1.1.1.1
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_WEBHOOK_DOMAIN: ${{ secrets.TELEGRAM_WEBHOOK_DOMAIN }}
-          TELEGRAM_WEBHOOK_PATH: ${{ secrets.TELEGRAM_WEBHOOK_PATH }}
-          TELEGRAM_WEBHOOK_PORT: ${{ secrets.TELEGRAM_WEBHOOK_PORT }}
-          TELEGRAM_WEBHOOK_SECRET_TOKEN: ${{ secrets.TELEGRAM_WEBHOOK_SECRET_TOKEN }}
+          TG_CLIENT_API_HASH: ${{ secrets.TG_CLIENT_API_HASH }}
+          TG_CLIENT_API_ID: ${{ secrets.TG_CLIENT_API_ID }}
+          TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          TG_WEBHOOK_DOMAIN: ${{ secrets.TG_WEBHOOK_DOMAIN }}
+          TG_WEBHOOK_PATH: ${{ secrets.TG_WEBHOOK_PATH }}
+          TG_WEBHOOK_PORT: ${{ secrets.TG_WEBHOOK_PORT }}
+          TG_WEBHOOK_SECRET_TOKEN: ${{ secrets.TG_WEBHOOK_SECRET_TOKEN }}
         run: |
           eval $(ssh-agent -s)
           echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null

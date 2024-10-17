@@ -2,7 +2,8 @@
 
 ## 1.27.0 (xxxx-xx-xx)
 
-- TODO
+- Improvement: the profanity filter has become more accurate
+- Other: internal improvements
 
 ## 1.26.0 (2024-08-19)
 
