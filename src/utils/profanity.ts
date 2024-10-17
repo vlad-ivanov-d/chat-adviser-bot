@@ -163,7 +163,7 @@ export class Profanity {
   private removeDuplicateChars(text: string): string {
     let result = "";
     for (const char of text) {
-      if (result[result.length] !== char) {
+      if (!result.endsWith(char)) {
         result += char;
       }
     }
