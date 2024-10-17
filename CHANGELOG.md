@@ -3,6 +3,7 @@
 ## 1.27.0 (2024-10-17)
 
 - Improvement: the profanity filter has become more accurate
+- Improvement: better text format in the settings
 - Other: internal improvements
 
 ## 1.26.0 (2024-08-19)

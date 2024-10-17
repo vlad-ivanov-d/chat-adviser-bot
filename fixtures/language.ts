@@ -51,7 +51,7 @@ export const cbSettingsEditMessageTextPayload = {
   },
   text:
     "<b>Language</b>\n" +
-    "I can communicate in different languages so that chat users can understand me.\n\n" +
+    "I can communicate in different languages so that chat users can understand me.\n\n- - -\n\n" +
     "Select a language for @test_supergroup chat.\n\nCurrent language: <b>English</b>",
 };
 
@@ -63,7 +63,7 @@ export const cbSettingsEditMessageTextPayload = {
 export const cbSaveIncorrectValueSettingsEditMessageTextPayload = (): unknown => ({
   ...cbSettingsEditMessageTextPayload,
   text:
-    "<b>Language</b>\nI can communicate in different languages so that chat users can understand me.\n\n" +
+    "<b>Language</b>\nI can communicate in different languages so that chat users can understand me.\n\n- - -\n\n" +
     "Select a language for @test_supergroup chat.\n\nCurrent language: <b>English</b>\n" +
     `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
     `by <a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>`,
@@ -77,7 +77,7 @@ export const cbSaveIncorrectValueSettingsEditMessageTextPayload = (): unknown =>
 export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
   ...cbSettingsEditMessageTextPayload,
   text:
-    "<b>Language</b>\nI can communicate in different languages so that chat users can understand me.\n\n" +
+    "<b>Language</b>\nI can communicate in different languages so that chat users can understand me.\n\n- - -\n\n" +
     "Select a language for @test_supergroup chat.\n\nCurrent language: <b>Русский</b>\n" +
     `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
     `by <a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>`,

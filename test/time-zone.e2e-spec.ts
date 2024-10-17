@@ -1,16 +1,12 @@
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
-import { formatInTimeZone } from "date-fns-tz";
 import { http, HttpResponse } from "msw";
 import request from "supertest";
 import type { App } from "supertest/types";
 
-import { privateChat, supergroup } from "fixtures/chats";
 import * as settingsFixtures from "fixtures/settings";
 import * as fixtures from "fixtures/time-zone";
 import { AppModule } from "src/app.module";
-import { SettingsAction } from "src/settings/interfaces/action.interface";
-import { TimeZoneAction } from "src/time-zone/interfaces/action.interface";
 
 import {
   TEST_ASYNC_DELAY,
@@ -69,31 +65,7 @@ describe("TimeZoneModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ callback_query_id: "1", method: "answerCallbackQuery" });
-    expect(editMessageTextPayload).toEqual({
-      chat_id: privateChat.id,
-      message_id: 1,
-      parse_mode: "HTML",
-      reply_markup: {
-        inline_keyboard: [
-          expect.arrayContaining([]),
-          expect.arrayContaining([]),
-          expect.arrayContaining([]),
-          expect.arrayContaining([]),
-          expect.arrayContaining([]),
-          [{ callback_data: `${TimeZoneAction.SETTINGS}?cId=${supergroup.id.toString()}&s=5`, text: "»" }],
-          [
-            {
-              callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}`,
-              text: fixtures.backToFeaturesText,
-            },
-          ],
-        ],
-      },
-      text:
-        "<b>Time Zone</b>\n" +
-        "I can work in different time zones and display dates in the appropriate format.\n\n" +
-        `Select a time zone for @${supergroup.username ?? ""} chat.\n\nCurrent time zone: <b>GMT+0 UTC</b>`,
-    });
+    expect(editMessageTextPayload).toEqual(fixtures.cbSettingsEditMessageTextPayload);
   });
 
   it("renders specific page of settings if the time zone has already been selected", async () => {
@@ -112,33 +84,7 @@ describe("TimeZoneModule (e2e)", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ callback_query_id: "1", method: "answerCallbackQuery" });
-    expect(editMessageTextPayload).toEqual({
-      chat_id: privateChat.id,
-      message_id: 1,
-      parse_mode: "HTML",
-      reply_markup: {
-        // Necessary for expectations
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        inline_keyboard: expect.arrayContaining([
-          [
-            expect.objectContaining({
-              callback_data: `${TimeZoneAction.SAVE}?cId=${supergroup.id.toString()}&v=Europe%2FLondon`,
-            }),
-          ],
-          [expect.objectContaining({ text: "«" }), expect.objectContaining({ text: "»" })],
-          [
-            {
-              callback_data: `${SettingsAction.FEATURES}?cId=${supergroup.id.toString()}`,
-              text: fixtures.backToFeaturesText,
-            },
-          ],
-        ]),
-      },
-      text:
-        "<b>Time Zone</b>\nI can work in different time zones and display dates in the appropriate format.\n\n" +
-        `Select a time zone for @${supergroup.username ?? ""} chat.\n\nCurrent time zone: ` +
-        `<b>${formatInTimeZone(new Date(), "Europe/London", "zzz")} Europe/London</b>`,
-    });
+    expect(editMessageTextPayload).toEqual(fixtures.cbSettingsPageEditMessageTextPayload);
   });
 
   it("saves settings", async () => {

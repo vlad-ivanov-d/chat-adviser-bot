@@ -64,7 +64,7 @@ export const cbSettingsEditMessageTextPayload = {
     "<b>Warnings</b>\nI can issue warnings to users by admin command. To do this, respond to the user's message with " +
     "the appropriate command. In this case, the user's message will be deleted. Each warning is valid for " +
     `90 days, then it is automatically removed. If ${WARNINGS_LIMIT.toString()} warnings are received, the user will ` +
-    `be banned.\n\n/warn - issue a warning\n\nEnable warnings in @${supergroup.username ?? ""} chat?\n\n` +
+    `be banned.\n\n/warn - issue a warning\n\n- - -\n\nEnable warnings in @${supergroup.username ?? ""} chat?\n\n` +
     "Current value: <b>disabled</b>",
 };
 
@@ -107,7 +107,7 @@ export const cbSaveIncorrectValueSettingsEditMessageTextPayload = (): unknown =>
     "<b>Warnings</b>\nI can issue warnings to users by admin command. To do this, respond to the user's message " +
     "with the appropriate command. In this case, the user's message will be deleted. Each warning is valid for " +
     "90 days, then it is automatically removed. If 3 warnings are received, the user will be banned.\n\n" +
-    `/warn - issue a warning\n\nEnable warnings in @${supergroup.username ?? ""} chat?\n\n` +
+    `/warn - issue a warning\n\n- - -\n\nEnable warnings in @${supergroup.username ?? ""} chat?\n\n` +
     "Current value: <b>disabled</b>\n" +
     `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
     `by <a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>`,
@@ -124,7 +124,7 @@ export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
     "<b>Warnings</b>\nI can issue warnings to users by admin command. To do this, respond to the user's message " +
     "with the appropriate command. In this case, the user's message will be deleted. Each warning is valid for " +
     "90 days, then it is automatically removed. If 3 warnings are received, the user will be banned.\n\n" +
-    `/warn - issue a warning\n\nEnable warnings in @${supergroup.username ?? ""} chat?\n\n` +
+    `/warn - issue a warning\n\n- - -\n\nEnable warnings in @${supergroup.username ?? ""} chat?\n\n` +
     "Current value: <b>enabled</b>\n" +
     `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
     `by <a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>`,

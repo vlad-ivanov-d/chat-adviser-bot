@@ -284,7 +284,8 @@ export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
     "administrators are offline. Messages sent more than 48 hours ago won't be deleted according to Telegram rules.\n" +
     "\n/voteban - start voting (can be used without the slash)\n\n<b>Tip:</b> Don't set your vote limit too low. " +
     "Otherwise, a user who has several accounts will be able to single-handedly collect the required number of votes " +
-    `and ban other chat members.\n\nSet the vote limit for making a decision in @${supergroup.username ?? ""} chat. ` +
+    "and ban other chat members.\n\n- - -\n\n" +
+    `Set the vote limit for making a decision in @${supergroup.username ?? ""} chat. ` +
     "If set a value less than 2, the feature will be disabled.\n\nCurrent value: <b>3</b>\n" +
     `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
     `by <a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>`,
@@ -359,8 +360,8 @@ export const cbSettingsEditMessageTextPayload = {
     "when administrators are offline. Messages sent more than 48 hours ago won't be deleted according to " +
     "Telegram rules.\n\n/voteban - start voting (can be used without the slash)\n\n<b>Tip:</b> " +
     "Don't set your vote limit too low. Otherwise, a user who has several accounts will be able to single-handedly " +
-    "collect the required number of votes and ban other chat members.\n\nSet the vote limit for making a decision " +
-    `in @${supergroup.username ?? ""} chat. If set a value less than 2, the feature will be disabled.\n\n` +
+    "collect the required number of votes and ban other chat members.\n\n- - -\n\nSet the vote limit for making a " +
+    `decision in @${supergroup.username ?? ""} chat. If set a value less than 2, the feature will be disabled.\n\n` +
     "Current state: <b>disabled</b>",
 };
 
@@ -419,8 +420,8 @@ export const cbUnsavedSettingsEditMessageTextPayload = {
     "when administrators are offline. Messages sent more than 48 hours ago won't be deleted according to " +
     "Telegram rules.\n\n/voteban - start voting (can be used without the slash)\n\n<b>Tip:</b> " +
     "Don't set your vote limit too low. Otherwise, a user who has several accounts will be able to single-handedly " +
-    "collect the required number of votes and ban other chat members.\n\nSet the vote limit for making a decision " +
-    `in @${supergroup.username ?? ""} chat. If set a value less than 2, the feature will be disabled.\n\n` +
+    "collect the required number of votes and ban other chat members.\n\n- - -\n\nSet the vote limit for making a " +
+    `decision in @${supergroup.username ?? ""} chat. If set a value less than 2, the feature will be disabled.\n\n` +
     "Current value: <b>3</b>",
 };
 
