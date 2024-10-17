@@ -62,7 +62,7 @@ export const cbSettingsEditMessageTextPayload = {
   },
   text:
     "<b>Profanity Filter</b>\nI can filter profanity in chat, including usernames. " +
-    "The filter won't be applied to messages from administrators.\n\n" +
+    "The filter won't be applied to messages from administrators.\n\n- - -\n\n" +
     `Enable profanity filter in @${supergroup.username ?? ""} chat?\n\n` +
     "Current value: <b>disabled</b>",
 };
@@ -104,7 +104,7 @@ export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
   ...cbSettingsEditMessageTextPayload,
   text:
     "<b>Profanity Filter</b>\nI can filter profanity in chat, including usernames. " +
-    "The filter won't be applied to messages from administrators.\n\n" +
+    "The filter won't be applied to messages from administrators.\n\n- - -\n\n" +
     `Enable profanity filter in @${supergroup.username ?? ""} chat?\n\n` +
     "Current value: <b>enabled</b>\n" +
     `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +

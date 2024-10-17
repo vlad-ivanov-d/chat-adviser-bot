@@ -19,7 +19,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 20.16.0
+          node-version: 20.18.0
       - name: Cache node modules
         env:
           CACHE_NAME: cache-node-modules
@@ -46,7 +46,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v4
         with:
-          node-version: 20.16.0
+          node-version: 20.18.0
       - name: Cache node modules
         env:
           CACHE_NAME: cache-node-modules
@@ -72,3 +72,4 @@ jobs:
         run: npm run merge:cov
       - name: Check test coverage badges
         run: npm run make:badges -- --ci --exitCode=1
+    timeout-minutes: 15

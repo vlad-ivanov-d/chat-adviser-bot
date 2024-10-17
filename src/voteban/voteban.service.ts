@@ -191,7 +191,7 @@ export class VotebanService {
     );
     const isDeleted = deleteIds.length > 0 ? await ctx.deleteMessages(deleteIds).catch(() => false) : false;
     if (isDeleted) {
-      await this.prismaService.message.deleteMany({ where: { messageId: { in: deleteIds } } });
+      await this.prismaService.message.deleteMany({ where: { chatId: ctx.chat?.id, messageId: { in: deleteIds } } });
     }
   }
 
@@ -434,7 +434,7 @@ export class VotebanService {
           select: { id: true },
           where: { chatId_messageId: { chatId: chat.id, messageId: message.message_id } },
         }),
-        ctx.editMessageText([questionMsg, resultsMsg].join("\n\n———\n\n"), { parse_mode: "HTML" }),
+        ctx.editMessageText([questionMsg, resultsMsg].join("\n\n- - -\n\n"), { parse_mode: "HTML" }),
         ctx.reply(t("voteban:completed"), { reply_parameters: { message_id: message.message_id } }),
         isBan && this.deleteMessages(ctx, candidateMessageId, candidateMediaGroupId),
         // An expected error may happen if there are no enough permissions

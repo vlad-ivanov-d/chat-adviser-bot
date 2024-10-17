@@ -13,9 +13,9 @@ import { AppModule } from "src/app.module";
 
 import {
   TEST_ASYNC_DELAY,
-  TEST_TELEGRAM_API_BASE_URL,
-  TEST_TELEGRAM_WEBHOOK_BASE_URL,
-  TEST_TELEGRAM_WEBHOOK_PATH,
+  TEST_TG_API_BASE_URL,
+  TEST_TG_WEBHOOK_BASE_URL,
+  TEST_TG_WEBHOOK_PATH,
 } from "./utils/constants";
 import { createDbSupergroupChat, createDbUser, prisma } from "./utils/database";
 import { server } from "./utils/server";
@@ -48,15 +48,13 @@ describe("VotebanModule (e2e)", () => {
     });
     let editMessageTextPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.cbNoBanWebhook);
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL).post(TEST_TG_WEBHOOK_PATH).send(fixtures.cbNoBanWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbVoteWebhookResponse);
@@ -67,9 +65,7 @@ describe("VotebanModule (e2e)", () => {
   it("answers if the voting has expired", async () => {
     await createDbSupergroupChat(undefined, { votebanLimit: 2 });
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.cbNoBanWebhook);
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL).post(TEST_TG_WEBHOOK_PATH).send(fixtures.cbNoBanWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbVoteExpiredWebhookResponse);
@@ -98,27 +94,25 @@ describe("VotebanModule (e2e)", () => {
     let editMessageTextPayload;
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/banChatMember`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/banChatMember`, async (info) => {
         banChatMemberPayload = await info.request.json();
         return HttpResponse.json({}, { status: 400 });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/deleteMessages`, async (info) => {
         deleteMessagesPayload = await info.request.json();
         return HttpResponse.json({}, { status: 400 });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.cbBanWebhook);
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL).post(TEST_TG_WEBHOOK_PATH).send(fixtures.cbBanWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbVoteWebhookResponse);
@@ -191,26 +185,26 @@ describe("VotebanModule (e2e)", () => {
     let editMessageTextPayload;
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/banChatSenderChat`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/banChatSenderChat`, async (info) => {
         banChatSenderChatPayload = await info.request.json();
         return HttpResponse.json({}, { status: 400 });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/deleteMessages`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/deleteMessages`, async (info) => {
         deleteMessagesPayload = await info.request.json();
         return HttpResponse.json({ ok: true, result: true });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({}, { status: 400 });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbBanSenderChatWebhook);
 
     expect(response.status).toBe(200);
@@ -238,17 +232,15 @@ describe("VotebanModule (e2e)", () => {
     });
     let editMessageTextPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({}, { status: 400 })),
+      http.post(`${TEST_TG_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({}, { status: 400 })),
     );
     const stderrWriteSpy = jest.spyOn(process.stderr, "write").mockImplementation(() => true);
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.cbNoBanWebhook);
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL).post(TEST_TG_WEBHOOK_PATH).send(fixtures.cbNoBanWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbVoteBotNotAdminWebhookResponse);
@@ -273,14 +265,14 @@ describe("VotebanModule (e2e)", () => {
     });
     let editMessageTextPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbBanAgainstAdminWebhook);
 
     expect(response.status).toBe(200);
@@ -305,15 +297,13 @@ describe("VotebanModule (e2e)", () => {
     });
     let editMessageTextPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.cbNoBanWebhook);
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL).post(TEST_TG_WEBHOOK_PATH).send(fixtures.cbNoBanWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbVoteWebhookResponse);
@@ -324,8 +314,8 @@ describe("VotebanModule (e2e)", () => {
   it("handles an error if chat id is incorrect during settings rendering", async () => {
     const stderrWriteSpy = jest.spyOn(process.stderr, "write").mockImplementation(() => true);
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSettingsErrorWebhook);
     expect(response.status).toBe(200);
     expect(stderrWriteSpy).toHaveBeenCalledTimes(1);
@@ -334,8 +324,8 @@ describe("VotebanModule (e2e)", () => {
   it("handles an error if chat id is incorrect during settings saving", async () => {
     const stderrWriteSpy = jest.spyOn(process.stderr, "write").mockImplementation(() => true);
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSaveSettingsErrorWebhook);
     expect(response.status).toBe(200);
     expect(stderrWriteSpy).toHaveBeenCalledTimes(1);
@@ -344,14 +334,14 @@ describe("VotebanModule (e2e)", () => {
   it("ignores voteban command if the feature is disabled", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.votebanWithoutReplyWebhook);
 
     expect(response.status).toBe(200);
@@ -377,9 +367,7 @@ describe("VotebanModule (e2e)", () => {
       select: { id: true },
     });
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.cbNoBanWebhook);
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL).post(TEST_TG_WEBHOOK_PATH).send(fixtures.cbNoBanWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbVoteDuplicatedWebhookResponse);
@@ -399,11 +387,9 @@ describe("VotebanModule (e2e)", () => {
       },
       select: { id: true },
     });
-    server.use(http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatMember`, () => HttpResponse.json({}, { status: 400 })));
+    server.use(http.post(`${TEST_TG_API_BASE_URL}/getChatMember`, () => HttpResponse.json({}, { status: 400 })));
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.cbNoBanWebhook);
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL).post(TEST_TG_WEBHOOK_PATH).send(fixtures.cbNoBanWebhook);
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbNotChatMemberWebhookResponse);
@@ -413,14 +399,14 @@ describe("VotebanModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({}, { status: 400 });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSettingsWebhook);
 
     expect(response.status).toBe(200);
@@ -432,14 +418,14 @@ describe("VotebanModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({}, { status: 400 });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbUnsavedSettingsWebhook);
 
     expect(response.status).toBe(200);
@@ -451,14 +437,14 @@ describe("VotebanModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSaveSettingsWebhook);
 
     const expectedEditMessageTextPayload = fixtures.cbSaveSettingsEditMessageTextPayload();
@@ -472,18 +458,14 @@ describe("VotebanModule (e2e)", () => {
     await createDbSupergroupChat(undefined, { votebanLimit: 2 });
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
-        HttpResponse.json({ ok: true, result: [] }),
-      ),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.votebanWebhook);
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL).post(TEST_TG_WEBHOOK_PATH).send(fixtures.votebanWebhook);
 
     expect(response.status).toBe(200);
     expect(sendMessagePayload).toEqual(fixtures.votebanNoAdminPermsSendMessagePayload);
@@ -492,14 +474,14 @@ describe("VotebanModule (e2e)", () => {
   it("says voteban command is not for a private chat", async () => {
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.votebanInPrivateChatWebhook);
 
     expect(response.status).toBe(200);
@@ -507,9 +489,7 @@ describe("VotebanModule (e2e)", () => {
   });
 
   it("should not accept votes from the chat from which it was kicked", async () => {
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.cbNoBanWebhook);
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL).post(TEST_TG_WEBHOOK_PATH).send(fixtures.cbNoBanWebhook);
     expect(response.status).toBe(200);
     expect(response.body).toEqual(fixtures.answerCbVoteExpiredWebhookResponse);
   });
@@ -517,17 +497,15 @@ describe("VotebanModule (e2e)", () => {
   it("should not render settings if the user is not an admin", async () => {
     let editMessageTextPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
-        HttpResponse.json({ ok: true, result: [] }),
-      ),
+      http.post(`${TEST_TG_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSettingsWebhook);
 
     expect(response.status).toBe(200);
@@ -540,17 +518,15 @@ describe("VotebanModule (e2e)", () => {
     await createDbSupergroupChat();
     let editMessageTextPayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/editMessageText`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/editMessageText`, async (info) => {
         editMessageTextPayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatAdministrators`, () =>
-        HttpResponse.json({ ok: true, result: [] }),
-      ),
+      http.post(`${TEST_TG_API_BASE_URL}/getChatAdministrators`, () => HttpResponse.json({ ok: true, result: [] })),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.cbSaveSettingsWebhook);
 
     expect(response.status).toBe(200);
@@ -575,15 +551,13 @@ describe("VotebanModule (e2e)", () => {
     });
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.votebanWebhook);
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL).post(TEST_TG_WEBHOOK_PATH).send(fixtures.votebanWebhook);
 
     expect(response.status).toBe(200);
     expect(sendMessagePayload).toEqual(fixtures.votebanAlreadyStartedSendMessagePayload);
@@ -593,14 +567,14 @@ describe("VotebanModule (e2e)", () => {
     await createDbSupergroupChat(undefined, { votebanLimit: 2 });
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.votebanAgainstBotWebhook);
 
     expect(response.status).toBe(200);
@@ -611,18 +585,16 @@ describe("VotebanModule (e2e)", () => {
     await createDbSupergroupChat(undefined, { votebanLimit: 2 });
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/getChatMember`, () =>
+      http.post(`${TEST_TG_API_BASE_URL}/getChatMember`, () =>
         HttpResponse.json({ ok: true, result: { is_anonymous: false, status: "administrator", user } }),
       ),
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.votebanWebhook);
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL).post(TEST_TG_WEBHOOK_PATH).send(fixtures.votebanWebhook);
 
     expect(response.status).toBe(200);
     expect(sendMessagePayload).toEqual(fixtures.votebanAgainstAdminSendMessagePayload);
@@ -632,15 +604,13 @@ describe("VotebanModule (e2e)", () => {
     await createDbSupergroupChat(undefined, { votebanLimit: 2 });
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true, result: { message_id: 3 } });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
-      .send(fixtures.votebanWebhook);
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL).post(TEST_TG_WEBHOOK_PATH).send(fixtures.votebanWebhook);
 
     expect(response.status).toBe(200);
     expect(sendMessagePayload).toEqual(fixtures.votebanSendMessagePayload);
@@ -650,14 +620,14 @@ describe("VotebanModule (e2e)", () => {
     await createDbSupergroupChat(undefined, { votebanLimit: 2 });
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true, result: { message_id: 3 } });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.votebanAgainstSenderChatWebhook);
 
     expect(response.status).toBe(200);
@@ -668,14 +638,14 @@ describe("VotebanModule (e2e)", () => {
     await createDbSupergroupChat(undefined, { votebanLimit: 2 });
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true, result: { message_id: 3 } });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.votebanSenderChatWebhook);
 
     expect(response.status).toBe(200);
@@ -686,14 +656,14 @@ describe("VotebanModule (e2e)", () => {
     await createDbSupergroupChat(undefined, { votebanLimit: 2 });
     let sendMessagePayload;
     server.use(
-      http.post(`${TEST_TELEGRAM_API_BASE_URL}/sendMessage`, async (info) => {
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
         sendMessagePayload = await info.request.json();
         return HttpResponse.json({ ok: true });
       }),
     );
 
-    const response = await request(TEST_TELEGRAM_WEBHOOK_BASE_URL)
-      .post(TEST_TELEGRAM_WEBHOOK_PATH)
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
       .send(fixtures.votebanWithoutReplyWebhook);
 
     expect(response.status).toBe(200);

@@ -32,7 +32,7 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
    */
   public constructor(
     @InjectBot() private readonly bot: Telegraf,
-    @Inject(CACHE_MANAGER) private cacheManager: CacheManager,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: CacheManager,
   ) {
     super();
   }
@@ -226,7 +226,12 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
             }),
             this.cacheManager.wrap(
               `chat-${chat.id.toString()}-members-count`,
-              () => telegram.getChatMembersCount(chat.id),
+              () =>
+                telegram.getChatMembersCount(chat.id).catch((e: unknown) => {
+                  // Sometimes error happens with this request, so don't throw the error since it's not very important.
+                  this.logger.error(e);
+                  return undefined;
+                }),
               CHAT_MEMBERS_COUNT_CACHE_TTL,
             ),
           ]);
@@ -237,10 +242,9 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
         .map((u) => this.upsertUser(u, editor)),
     );
 
-    const adminIds = admins.map((a) => ({ id: a.user.id }));
     const isChatWithBot = !!botInfo && chat.id === editor.id;
     const update = {
-      admins: { set: adminIds },
+      admins: { set: admins.map((a) => ({ id: a.user.id })) },
       displayTitle: getChatDisplayTitle(chat),
       editorId: editor.id,
       firstName: "first_name" in chat ? chat.first_name : null,
@@ -251,7 +255,14 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
       username: "username" in chat ? (chat.username ?? null) : null,
     };
     const upsertArgs = {
-      create: { ...update, admins: { connect: adminIds }, authorId: editor.id, id: chat.id, settingsId: chat.id },
+      create: {
+        ...update,
+        admins: { connect: admins.map((a) => ({ id: a.user.id })) },
+        authorId: editor.id,
+        id: chat.id,
+        membersCount: membersCount ?? 0,
+        settingsId: chat.id,
+      },
       include: { admins: true, settings: true, settingsHistory: { include: { editor: true } } },
       update,
       where: { id: chat.id },

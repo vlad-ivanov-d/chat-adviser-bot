@@ -71,8 +71,8 @@ export const cbSettingsEditMessageTextPayload = {
     "forwarded messages) in group chats. Users who have their own Telegram channels can write in public chats on " +
     "behalf of the channels. In this way, they can make advertising for themselves or simply anonymize messages " +
     "without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel and " +
-    `write on its behalf.\n\nEnable message filter on behalf of channels in @${supergroup.username ?? ""} chat?\n\n` +
-    "Current value: <b>filter disabled</b>",
+    `write on its behalf.\n\n- - -\n\nEnable message filter on behalf of channels in @${supergroup.username ?? ""} ` +
+    "chat?\n\nCurrent value: <b>filter disabled</b>",
 };
 
 /**
@@ -115,8 +115,8 @@ export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
     "forwarded messages) in group chats. Users who have their own Telegram channels can write in public chats on " +
     "behalf of the channels. In this way, they can make advertising for themselves or simply anonymize messages " +
     "without fear of ban. Even if the administrator bans a chat channel, the user can create a new channel and " +
-    `write on its behalf.\n\nEnable message filter on behalf of channels in @${supergroup.username ?? ""} chat?\n\n` +
-    "Current value: <b>filter enabled</b>\n" +
+    `write on its behalf.\n\n- - -\n\nEnable message filter on behalf of channels in @${supergroup.username ?? ""} ` +
+    "chat?\n\nCurrent value: <b>filter enabled</b>\n" +
     `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
     `by <a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>`,
 });

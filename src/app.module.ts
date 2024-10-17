@@ -1,5 +1,5 @@
 import { CacheModule } from "@nestjs/cache-manager";
-import { Logger, Module } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
 import { TelegrafModule } from "nestjs-telegraf";
@@ -11,6 +11,7 @@ import { CleanupModule } from "./cleanup/cleanup.module";
 import { HelpModule } from "./help/help.module";
 import { LanguageModule } from "./language/language.module";
 import { MessagesModule } from "./messages/messages.module";
+import { logRequestTime } from "./middlewares/log-request-time";
 import { PrismaModule } from "./prisma/prisma.module";
 import { ProfanityFilterModule } from "./profanity-filter/profanity-filter.module";
 import { SettingsModule } from "./settings/settings.module";
@@ -26,26 +27,17 @@ import { WarningsModule } from "./warnings/warnings.module";
     ScheduleModule.forRoot(),
     TelegrafModule.forRoot({
       launchOptions: {
-        webhook: process.env.TELEGRAM_WEBHOOK_DOMAIN
+        webhook: process.env.TG_WEBHOOK_DOMAIN
           ? {
-              domain: process.env.TELEGRAM_WEBHOOK_DOMAIN,
-              path: process.env.TELEGRAM_WEBHOOK_PATH,
-              port: process.env.TELEGRAM_WEBHOOK_PORT ? Number(process.env.TELEGRAM_WEBHOOK_PORT) : undefined,
-              secretToken: process.env.TELEGRAM_WEBHOOK_SECRET_TOKEN,
+              domain: process.env.TG_WEBHOOK_DOMAIN,
+              path: process.env.TG_WEBHOOK_PATH,
+              port: process.env.TG_WEBHOOK_PORT ? Number(process.env.TG_WEBHOOK_PORT) : undefined,
+              secretToken: process.env.TG_WEBHOOK_SECRET_TOKEN,
             }
           : undefined,
       },
-      middlewares: [
-        async (ctx, next): Promise<void> => {
-          const startTimestamp = Date.now();
-          await next();
-          new Logger().log(
-            { labels: { request_time: Date.now() - startTimestamp }, message: "Update processing completed" },
-            "TelegrafMiddleware",
-          );
-        },
-      ],
-      token: process.env.TELEGRAM_TOKEN ?? "",
+      middlewares: [logRequestTime],
+      token: process.env.TG_TOKEN ?? "",
     }),
     ProfanityFilterModule,
     AddingBotsModule,

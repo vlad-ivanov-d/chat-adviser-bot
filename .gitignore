@@ -39,3 +39,7 @@ lerna-debug.log*
 
 # Env files
 .env
+
+# Custom
+_td_database
+_td_files

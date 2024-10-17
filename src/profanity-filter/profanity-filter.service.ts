@@ -9,6 +9,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
 import { NextFunction } from "src/types/next-function";
 import { CallbackCtx, type EditedMessageCtx, type MessageCtx } from "src/types/telegraf-context";
+import { getMessageText } from "src/utils/message";
 import { Profanity } from "src/utils/profanity";
 import { buildCbData, getChatHtmlLink, getUserFullName, parseCbData } from "src/utils/telegraf";
 
@@ -29,7 +30,7 @@ export class ProfanityFilterService {
    * @param settingsService Settings service
    */
   public constructor(
-    @Inject(CACHE_MANAGER) private cacheManager: CacheManager,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: CacheManager,
     private readonly prismaService: PrismaService,
     private readonly settingsService: SettingsService,
   ) {}
@@ -154,32 +155,6 @@ export class ProfanityFilterService {
   }
 
   /**
-   * Gets message text from context
-   * @param message Message
-   * @returns Message text
-   */
-  private getMessageText(
-    message: EditedMessageCtx["update"]["edited_message"] | MessageCtx["update"]["message"],
-  ): string {
-    if ("caption" in message) {
-      return message.caption ?? "";
-    }
-    if ("left_chat_member" in message) {
-      return getUserFullName(message.left_chat_member);
-    }
-    if ("new_chat_members" in message) {
-      return message.new_chat_members.map(getUserFullName).join(", ");
-    }
-    if ("poll" in message) {
-      return [message.poll.question, ...message.poll.options.map((o) => o.text)].join("\n");
-    }
-    if ("text" in message) {
-      return message.text;
-    }
-    return "";
-  }
-
-  /**
    * Gets strings which should be checked by profanity filter
    * @param message Message
    * @returns Object with strings which should be checked by profanity filter
@@ -192,7 +167,7 @@ export class ProfanityFilterService {
       ...this.getForwardRelatedStringsToFilter(message),
       senderChatTitle: senderChat && "title" in senderChat ? senderChat.title : "",
       senderChatUsername: senderChat && "username" in senderChat ? (senderChat.username ?? "") : "",
-      text: this.getMessageText(message),
+      text: getMessageText(message),
       userFullName: getUserFullName(from),
       username: from.username ?? "",
     };
