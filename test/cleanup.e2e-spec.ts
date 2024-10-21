@@ -8,7 +8,7 @@ import { user } from "fixtures/users";
 import { AppModule } from "src/app.module";
 
 import { TEST_ASYNC_DELAY, TEST_TG_WEBHOOK_BASE_URL, TEST_TG_WEBHOOK_PATH } from "./utils/constants";
-import { createDbSupergroupChat, createDbUser, prisma } from "./utils/database";
+import { createDbSupergroupChat, prisma } from "./utils/database";
 import { sleep } from "./utils/sleep";
 
 describe("CleanupModule (e2e)", () => {
@@ -25,12 +25,22 @@ describe("CleanupModule (e2e)", () => {
   });
 
   it("cleanups unused users at midnight", async () => {
-    await createDbUser(user);
+    await prisma.user.create({
+      data: {
+        authorId: user.id,
+        editorId: user.id,
+        firstName: user.first_name,
+        id: user.id,
+        updatedAt: new Date(Date.now() - 48 * 60 * 60 * 1000),
+        username: user.username,
+      },
+      select: { id: true },
+    });
     jest.advanceTimersByTime(24 * 60 * 60 * 1000); // 24h to run the daily cron job
     await sleep(TEST_ASYNC_DELAY);
 
-    const users = await prisma.user.findMany({ select: { id: true } });
-    expect(users.length).toBe(0);
+    const { length } = await prisma.user.findMany({ select: { id: true } });
+    expect(length).toBe(0);
   });
 
   it("deletes the chat in database if the bot was kicked", async () => {

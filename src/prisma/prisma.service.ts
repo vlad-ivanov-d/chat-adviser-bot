@@ -9,7 +9,6 @@ import {
   type Prisma,
   PrismaClient,
   ProfanityFilterRule,
-  type User,
 } from "@prisma/client";
 import { Cache as CacheManager } from "cache-manager";
 import { InjectBot } from "nestjs-telegraf";
@@ -92,6 +91,7 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
    */
   public async upsertChatWithCache(chat: Chat, editor: TelegramUser): Promise<UpsertedChat> {
     const cacheKey = this.getChatCacheKey(chat.id);
+    await this.upsertUser(editor, editor);
     return this.cacheManager.wrap(cacheKey, () => this.upsertChat(chat, editor), CHAT_CACHE_TTL);
   }
 
@@ -121,44 +121,56 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
    * @param editor Telegram user who makes upsert
    * @returns Sender chat id
    */
-  public async upsertSenderChat(chat: Chat, editor: TelegramUser): Promise<number> {
-    const update = {
-      editorId: editor.id,
-      firstName: "first_name" in chat ? chat.first_name : null,
-      lastName: "last_name" in chat ? (chat.last_name ?? null) : null,
-      title: "title" in chat ? chat.title : null,
-      type: this.resolveChatType(chat.type),
-      username: "username" in chat ? (chat.username ?? null) : null,
-    };
-    const [, senderChat] = await this.$transaction([
-      this.upsertUser(editor, editor),
-      this.senderChat.upsert({
-        create: { ...update, authorId: editor.id, id: chat.id },
-        select: { id: true },
-        update,
-        where: { id: chat.id },
-      }),
-    ]);
-    return senderChat.id;
+  public upsertSenderChat(chat: Chat, editor: TelegramUser): Prisma.Prisma__SenderChatClient<{ id: number }> {
+    return this.senderChat.upsert({
+      create: {
+        authorId: editor.id,
+        editorId: editor.id,
+        firstName: "first_name" in chat ? chat.first_name : null,
+        id: chat.id,
+        lastName: "last_name" in chat ? (chat.last_name ?? null) : null,
+        title: "title" in chat ? chat.title : null,
+        type: this.resolveChatType(chat.type),
+        username: "username" in chat ? (chat.username ?? null) : null,
+      },
+      select: { id: true },
+      update: {
+        editorId: editor.id,
+        firstName: "first_name" in chat ? chat.first_name : null,
+        lastName: "last_name" in chat ? (chat.last_name ?? null) : null,
+        title: "title" in chat ? chat.title : null,
+        type: this.resolveChatType(chat.type),
+        username: "username" in chat ? (chat.username ?? null) : null,
+      },
+      where: { id: chat.id },
+    });
   }
 
   /**
    * Gets the user from database. The user will be created if it's not exists.
    * @param user Telegram user
    * @param editor Telegram user who makes upsert
-   * @returns User
+   * @returns User id
    */
-  public upsertUser(user: TelegramUser, editor: TelegramUser): Prisma.Prisma__UserClient<User> {
-    const update = {
-      editorId: editor.id,
-      firstName: user.first_name,
-      languageCode: user.language_code ?? null,
-      lastName: user.last_name ?? null,
-      username: user.username ?? null,
-    };
+  public upsertUser(user: TelegramUser, editor: TelegramUser): Prisma.Prisma__UserClient<{ id: number }> {
     return this.user.upsert({
-      create: { ...update, authorId: editor.id, id: user.id },
-      update,
+      create: {
+        authorId: editor.id,
+        editorId: editor.id,
+        firstName: user.first_name,
+        id: user.id,
+        languageCode: user.language_code ?? null,
+        lastName: user.last_name ?? null,
+        username: user.username ?? null,
+      },
+      select: { id: true },
+      update: {
+        editorId: editor.id,
+        firstName: user.first_name,
+        languageCode: user.language_code ?? null,
+        lastName: user.last_name ?? null,
+        username: user.username ?? null,
+      },
       where: { id: user.id },
     });
   }
@@ -215,6 +227,7 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
    */
   private async upsertChat(chat: Chat, editor: TelegramUser): Promise<UpsertedChat> {
     const { botInfo, telegram } = this.bot;
+
     const [admins, membersCount] =
       chat.type === "private"
         ? [[], 2]
@@ -241,8 +254,8 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
         .filter((u, i, arr) => arr.findIndex((au) => au.id === u.id) === i) // Trim duplicates
         .map((u) => this.upsertUser(u, editor)),
     );
+    const settings = await this.chatSettings.findUnique({ select: { id: true }, where: { id: chat.id } });
 
-    const isChatWithBot = !!botInfo && chat.id === editor.id;
     const update = {
       admins: { set: admins.map((a) => ({ id: a.user.id })) },
       displayTitle: getChatDisplayTitle(chat),
@@ -267,11 +280,11 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
       update,
       where: { id: chat.id },
     };
-
-    const settings = await this.chatSettings.findUnique({ select: { id: true }, where: { id: chat.id } });
     const [, upsertedChat] = settings
       ? await Promise.all([undefined, this.chat.upsert(upsertArgs)])
       : await this.$transaction([this.upsertChatSettings(chat, editor), this.chat.upsert(upsertArgs)]);
+
+    const isChatWithBot = !!botInfo && chat.id === editor.id;
     return {
       ...upsertedChat,
       // Patch display title and username for the chat with the bot
