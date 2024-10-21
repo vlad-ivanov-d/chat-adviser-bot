@@ -69,8 +69,9 @@ export class VotebanService {
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   public async cleanup(): Promise<void> {
-    const date = new Date(Date.now() - EXPIRED_VOTEBAN_TIMEOUT);
-    const { count } = await this.prismaService.voteban.deleteMany({ where: { createdAt: { lt: date } } });
+    const { count } = await this.prismaService.voteban.deleteMany({
+      where: { createdAt: { lt: new Date(Date.now() - EXPIRED_VOTEBAN_TIMEOUT) } },
+    });
     this.logger.log(`Number of deleted expired votebans: ${count.toString()}`);
   }
 
@@ -143,10 +144,6 @@ export class VotebanService {
           reply_parameters: { allow_sending_without_reply: true, message_id: replyToMessage.message_id },
         },
       ),
-      this.prismaService.upsertUser(from, from),
-    ]);
-
-    await Promise.all([
       candidateSenderChat && this.prismaService.upsertSenderChat(candidateSenderChat, from),
       senderChat && this.prismaService.upsertSenderChat(senderChat, from),
     ]);
@@ -189,7 +186,7 @@ export class VotebanService {
     const deleteIds = [messageId, ...mediaGroupMessages.map((m) => m.messageId)].filter(
       (id): id is number => typeof id === "number",
     );
-    const isDeleted = deleteIds.length > 0 ? await ctx.deleteMessages(deleteIds).catch(() => false) : false;
+    const isDeleted = deleteIds.length > 0 && (await ctx.deleteMessages(deleteIds).catch(() => false));
     if (isDeleted) {
       await this.prismaService.message.deleteMany({ where: { chatId: ctx.chat?.id, messageId: { in: deleteIds } } });
     }
@@ -507,7 +504,6 @@ export class VotebanService {
     }
     if (action === VotebanAction.BAN) {
       await this.prismaService.$transaction([
-        this.prismaService.upsertUser(from, from),
         this.prismaService.votebanBanVoter.create({
           data: { authorId: from.id, editorId: from.id, votebanId: id },
           select: { id: true },
@@ -517,7 +513,6 @@ export class VotebanService {
     }
     if (action === VotebanAction.NO_BAN) {
       await this.prismaService.$transaction([
-        this.prismaService.upsertUser(from, from),
         this.prismaService.votebanNoBanVoter.create({
           data: { authorId: from.id, editorId: from.id, votebanId: id },
           select: { id: true },

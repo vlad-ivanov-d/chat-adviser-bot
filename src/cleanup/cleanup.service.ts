@@ -6,6 +6,8 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { NextFunction } from "src/types/next-function";
 import { MyChatMemberCtx } from "src/types/telegraf-context";
 
+import { OUTDATED_ITEM_TIMEOUT } from "./cleanup.constants";
+
 @Update()
 @Injectable()
 export class CleanupService {
@@ -36,20 +38,30 @@ export class CleanupService {
   }
 
   /**
-   * Initiates cleanup cron job
+   * Deletes old sender chats which are not used
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  public async cleanup(): Promise<void> {
-    const deletedSenderChats = await this.prismaService.senderChat.deleteMany({
+  public async cleanupSenderChats(): Promise<void> {
+    const { count } = await this.prismaService.senderChat.deleteMany({
       where: {
         AND: [
+          { updatedAt: { lt: new Date(Date.now() - OUTDATED_ITEM_TIMEOUT) } },
           { votebanAuthorSenderChats: { none: {} } },
           { votebanCandidateSenderChats: { none: {} } },
           { warningSenderChats: { none: {} } },
         ],
       },
     });
-    const deletedUsers = await this.prismaService.user.deleteMany({
+    this.logger.log(`Number of deleted unused sender chats: ${count.toString()}`);
+  }
+
+  /**
+   * Deletes old users which are not used
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  public async cleanupUsers(): Promise<void> {
+    const outdatedDate = new Date(Date.now() - OUTDATED_ITEM_TIMEOUT);
+    const { count } = await this.prismaService.user.deleteMany({
       where: {
         AND: [
           { chatAdmins: { none: {} } },
@@ -65,6 +77,7 @@ export class CleanupService {
           { profaneWordEditors: { none: {} } },
           { senderChatAuthors: { none: {} } },
           { senderChatEditors: { none: {} } },
+          { updatedAt: { lt: outdatedDate } },
           { userAuthors: { none: {} } },
           { userEditors: { none: {} } },
           { votebanAuthors: { none: {} } },
@@ -80,15 +93,8 @@ export class CleanupService {
         ],
       },
     });
-    this.logger.log(`Number of deleted unused sender chats: ${deletedSenderChats.count.toString()}`);
-    this.logger.log(`Number of deleted unused users: ${deletedUsers.count.toString()}`);
-    await this.deleteUnusedUsers();
-  }
+    this.logger.log(`Number of deleted unused users: ${count.toString()}`);
 
-  /**
-   * Deletes users which are authors and editors only for themselves
-   */
-  private async deleteUnusedUsers(): Promise<void> {
     const usersToCheck = await this.prismaService.user.findMany({
       select: { id: true, userAuthors: { select: { id: true } }, userEditors: { select: { id: true } } },
       where: {
@@ -106,6 +112,7 @@ export class CleanupService {
           { profaneWordEditors: { none: {} } },
           { senderChatAuthors: { none: {} } },
           { senderChatEditors: { none: {} } },
+          { updatedAt: { lt: outdatedDate } },
           { OR: [{ NOT: { userAuthors: { none: {} } } }, { NOT: { userEditors: { none: {} } } }] },
           { votebanAuthors: { none: {} } },
           { votebanBanVoterAuthors: { none: {} } },

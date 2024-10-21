@@ -53,8 +53,9 @@ export class WarningsService {
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   public async cleanup(): Promise<void> {
-    const date = new Date(Date.now() - OUTDATED_WARNING_TIMEOUT);
-    await this.prismaService.warning.deleteMany({ where: { createdAt: { lt: date } } });
+    await this.prismaService.warning.deleteMany({
+      where: { createdAt: { lt: new Date(Date.now() - OUTDATED_WARNING_TIMEOUT) } },
+    });
   }
 
   /**

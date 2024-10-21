@@ -29,8 +29,9 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   public async cleanup(): Promise<void> {
-    const date = new Date(Date.now() - OUTDATED_MESSAGE_TIMEOUT);
-    const { count } = await this.prismaService.message.deleteMany({ where: { createdAt: { lt: date } } });
+    const { count } = await this.prismaService.message.deleteMany({
+      where: { createdAt: { lt: new Date(Date.now() - OUTDATED_MESSAGE_TIMEOUT) } },
+    });
     this.logger.log(`Number of deleted unused messages: ${count.toString()}`);
   }
 
@@ -50,11 +51,10 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    await Promise.all([
-      this.prismaService.upsertChatWithCache(message.chat, message.from),
-      message.sender_chat && this.prismaService.upsertSenderChat(message.sender_chat, message.from),
-    ]);
-
+    await this.prismaService.upsertChatWithCache(message.chat, message.from);
+    if (message.sender_chat) {
+      await this.prismaService.upsertSenderChat(message.sender_chat, message.from);
+    }
     // Save the message for summary and voteban features
     await this.prismaService.message.upsert({
       create: {
