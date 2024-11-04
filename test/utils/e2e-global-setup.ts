@@ -13,7 +13,8 @@ export default (): void => {
   if (isEnvRunning) {
     return;
   }
-  execSync("docker compose -p chat-adviser-bot-test up --remove-orphans --wait -d");
-  execSync("npx prisma migrate deploy");
+  // Use container up command for tests
+  // eslint-disable-next-line sonarjs/no-os-command-from-path
+  execSync("docker compose -p chat-adviser-bot-test up --remove-orphans --wait -d && npx prisma migrate deploy");
   isEnvRunning = true;
 };

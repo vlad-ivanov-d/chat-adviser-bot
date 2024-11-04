@@ -21,6 +21,8 @@ import { server } from "./server";
 const runTest = async (fileName: string): Promise<void> => {
   for (const distFileName of readdirSync("k6/dist")) {
     if (distFileName === fileName) {
+      // Use container run command to setup test agents
+      // eslint-disable-next-line sonarjs/no-os-command-from-path
       const testProcess = spawn("docker", [
         "run",
         "--add-host=host.docker.internal:host-gateway", // To fix issues in GitHub Actions
@@ -81,8 +83,9 @@ const setup = async (): Promise<void> => {
 
   // Start env
   server.listen({ onUnhandledRequest: "error" });
-  execSync("docker compose -p chat-adviser-bot-test up --remove-orphans --wait -d");
-  execSync("npx prisma migrate deploy");
+  // Use container up command for tests
+  // eslint-disable-next-line sonarjs/no-os-command-from-path
+  execSync("docker compose -p chat-adviser-bot-test up --remove-orphans --wait -d && npx prisma migrate deploy");
   const moduleFixture = await Test.createTestingModule({ imports: [AppModule] }).compile();
   const app = await moduleFixture.createNestApplication().init();
   const cache = await store();
@@ -97,6 +100,8 @@ const setup = async (): Promise<void> => {
 
   // Stop the env
   await app.close();
+  // Use container shutdown command for tests
+  // eslint-disable-next-line sonarjs/no-os-command-from-path
   execSync("docker compose -p chat-adviser-bot-test down -v");
 
   process.exit();

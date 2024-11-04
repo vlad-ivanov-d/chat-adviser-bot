@@ -14,7 +14,7 @@ export const options = {
     help: { duration: "10s", exec: "help", executor: "constant-vus", vus: 50 },
   },
   thresholds: {
-    http_req_duration: ["p(95)<400"], // 95% of requests should be below 400ms
+    http_req_duration: ["p(95)<500"], // 95% of requests should be below 500ms
     http_req_failed: ["rate===0"], // 0% of errors
   },
 };

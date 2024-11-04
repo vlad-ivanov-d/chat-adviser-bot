@@ -196,10 +196,7 @@ export const getUserDisplayName = (user: User | PrismaUser, format: "full" | "sh
   }
   const firstName = "firstName" in user ? user.firstName : user.first_name;
   const lastName = "lastName" in user ? user.lastName : user.last_name;
-  return [firstName, lastName]
-    .filter((p) => p)
-    .slice(0, format === "short" ? 1 : undefined)
-    .join(" ");
+  return format === "short" ? firstName : [firstName, lastName].filter((p) => p).join(" ");
 };
 
 /**
