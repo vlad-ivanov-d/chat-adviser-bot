@@ -1,4 +1,4 @@
-import { formatInTimeZone } from "date-fns-tz";
+import { format, formatInTimeZone } from "date-fns-tz";
 
 import { DATE_FORMAT } from "src/app.constants";
 import { SettingsAction } from "src/settings/interfaces/action.interface";
@@ -77,7 +77,7 @@ export const cbSaveSettingsEditMessageTextPayload = (): unknown => ({
     "<b>Time Zone</b>\n" +
     "I can work in different time zones and display dates in the appropriate format.\n\n- - -\n\n" +
     `Select a time zone for @${supergroup.username ?? ""} chat.\n\n` +
-    `Current time zone: <b>${formatInTimeZone(new Date(), "Europe/London", "zzz")} Europe/London</b>\n` +
+    `Current time zone: <b>${format(Date.now(), "O", { timeZone: "Europe/London" })} Europe/London</b>\n` +
     `Modified at ${formatInTimeZone(Date.now(), "UTC", DATE_FORMAT)} ` +
     `by <a href="tg:user?id=${adminUser.id.toString()}">@${adminUser.username ?? ""}</a>`,
 });
@@ -161,7 +161,7 @@ export const cbSettingsPageEditMessageTextPayload = {
   text:
     "<b>Time Zone</b>\nI can work in different time zones and display dates in the appropriate format.\n\n- - -\n\n" +
     `Select a time zone for @${supergroup.username ?? ""} chat.\n\nCurrent time zone: ` +
-    `<b>${formatInTimeZone(new Date(), "Europe/London", "zzz")} Europe/London</b>`,
+    `<b>${format(Date.now(), "O", { timeZone: "Europe/London" })} Europe/London</b>`,
 };
 
 /**

@@ -1,3 +1,4 @@
+import type { NextFunction } from "src/types/next-function";
 import type { MessageCtx } from "src/types/telegraf-context";
 
 /**
@@ -13,8 +14,10 @@ export const CommandWithoutPayload = (): MethodDecorator => {
      * Updates the original method to introduce additional logic
      * @param args Arguments for original method
      */
-    descriptor.value = async function (...args: [MessageCtx, unknown]) {
-      if ("payload" in args[0] && args[0].payload) {
+    descriptor.value = async function (...args: [MessageCtx | undefined, NextFunction | undefined]) {
+      const [ctx, next] = args;
+      if (ctx && "payload" in ctx && ctx.payload) {
+        await next?.();
         return;
       }
       await originalMethod.apply(this, args);

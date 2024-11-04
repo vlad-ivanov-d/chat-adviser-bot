@@ -69,39 +69,45 @@ export class WarningsService {
     const candidateSenderChat = replyToMessage?.sender_chat;
     const isCandidateAutomaticForward = !!replyToMessage && "is_automatic_forward" in replyToMessage;
 
-    if (ctx.message.chat.type === "private") {
-      await ctx.reply(t("common:commandNotForPrivateChats"));
-      return; // Private chat, return.
-    }
-
     const [candidateMember, chat] = await Promise.all([
       typeof candidate?.id === "number" && !candidateSenderChat
-        ? // An expected error may happen if the bot have no permissions to see the member list.
+        ? // An expected error may happen if the bot have no permissions to see the member list
           ctx.telegram.getChatMember(ctx.chat.id, candidate.id).catch(() => undefined)
         : undefined,
       this.prismaService.upsertChatWithCache(ctx.chat, from),
     ]);
     await changeLanguage(chat.settings.language);
 
-    if (!chat.settings.hasWarnings) {
-      return; // The feature is disabled, return.
+    // Check if it's a private chat
+    if (ctx.message.chat.type === "private") {
+      await ctx.reply(t("common:commandNotForPrivateChats"));
+      return;
     }
+    // Check if the feature is disabled
+    if (!chat.settings.hasWarnings) {
+      return;
+    }
+    // Check if the bot is not an admin
     if (!this.prismaService.isChatAdmin(chat, ctx.botInfo.id)) {
       await ctx.reply(t("common:needAdminPermissions"), { reply_parameters: { message_id: messageId } });
-      return; // Bot is not an admin, return.
+      return;
     }
+    // Check if the user is not an admin
     if (!this.prismaService.isChatAdmin(chat, from.id, senderChat?.id)) {
       await ctx.reply(t("common:commandForAdmins"), { reply_parameters: { message_id: messageId } });
-      return; // The user is not an admin, return.
+      return;
     }
+    // Check if there is no candidate
     if (!candidate) {
       await ctx.reply(t("warnings:replyToSomeonesMessage"), { reply_parameters: { message_id: messageId } });
-      return; // No candidate, return.
+      return;
     }
+    // Check if candidate is the bot itself
     if (candidate.id === ctx.botInfo.id) {
       await ctx.reply(t("warnings:cannotWarnMyself"), { reply_parameters: { message_id: messageId } });
-      return; // Candidate is the bot itself, return.
+      return;
     }
+    // Check if the candidate is an admin
     if (
       isCandidateAutomaticForward ||
       candidateMember?.status === "administrator" ||
@@ -109,7 +115,7 @@ export class WarningsService {
       candidateSenderChat?.id === ctx.chat.id
     ) {
       await ctx.reply(t("warnings:cannotWarnAdmin"), { reply_parameters: { message_id: messageId } });
-      return; // Candidate is an admin, return.
+      return;
     }
 
     const mediaGroup =

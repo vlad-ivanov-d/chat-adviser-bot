@@ -70,14 +70,14 @@ export class SettingsService {
   @Command("mychats")
   @CommandWithoutPayload()
   public async myChatsCommand(@Ctx() ctx: CommandCtx): Promise<void> {
-    if (ctx.chat.type === "private") {
-      await this.renderChats(ctx, 0);
+    if (ctx.chat.type !== "private") {
+      const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.message.from);
+      await changeLanguage(settings.language);
+      const msg = t("common:commandForPrivateChat", { BOT_LINK: `tg:user?id=${ctx.botInfo.id.toString()}` });
+      await ctx.reply(msg, { parse_mode: "HTML", reply_parameters: { message_id: ctx.message.message_id } });
       return;
     }
-    const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.message.from);
-    await changeLanguage(settings.language);
-    const msg = t("common:commandForPrivateChat", { BOT_LINK: `tg:user?id=${ctx.botInfo.id.toString()}` });
-    await ctx.reply(msg, { parse_mode: "HTML", reply_parameters: { message_id: ctx.message.message_id } });
+    await this.renderChats(ctx, 0);
   }
 
   /**
