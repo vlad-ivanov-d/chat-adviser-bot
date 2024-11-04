@@ -4,7 +4,7 @@ import { LanguageCode } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
 import { TelegrafModule } from "nestjs-telegraf";
 
-import { privateChat } from "fixtures/chats";
+import { privateChat, supergroup } from "fixtures/chats";
 import { bot } from "fixtures/users";
 import { PrismaModule } from "src/prisma/prisma.module";
 import { PrismaService } from "src/prisma/prisma.service";
@@ -64,5 +64,14 @@ describe("HelpService", () => {
     expect(t).toHaveBeenCalledWith(helpTranslationPath, { BOT_LINK: `tg:user?id=${bot.id.toString()}` });
     expect(replySpy).toHaveBeenCalledWith(helpTranslationPath, { parse_mode: "HTML" });
     expect(renderChatsSpy).toHaveBeenCalledWith(ctx);
+  });
+
+  it("ignores /start command in a supergroup chat", async () => {
+    prismaService.upsertChatWithCache = jest.fn().mockReturnValueOnce({ settings: { language: LanguageCode.EN } });
+    const ctx = mockCommandCtx({ chat: supergroup });
+
+    await service.startCommand(ctx);
+
+    expect(changeLanguage).toHaveBeenCalledTimes(0);
   });
 });

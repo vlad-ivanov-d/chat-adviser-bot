@@ -75,4 +75,21 @@ describe("HelpModule (e2e)", () => {
     expect(response.status).toBe(200);
     expect(sendMessagePayload).toBeUndefined();
   });
+
+  it("ignores /start command in a supergroup chat", async () => {
+    let sendMessagePayload;
+    server.use(
+      http.post(`${TEST_TG_API_BASE_URL}/sendMessage`, async (info) => {
+        sendMessagePayload = await info.request.json();
+        return HttpResponse.json({ ok: true });
+      }),
+    );
+
+    const response = await request(TEST_TG_WEBHOOK_BASE_URL)
+      .post(TEST_TG_WEBHOOK_PATH)
+      .send(fixtures.startCommandInSupergroup);
+
+    expect(response.status).toBe(200);
+    expect(sendMessagePayload).toBeUndefined();
+  });
 });

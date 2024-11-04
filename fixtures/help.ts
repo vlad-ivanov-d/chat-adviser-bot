@@ -72,6 +72,21 @@ export const privateStartWebhook = {
 };
 
 /**
+ * Webhook which contains /start command in a supergroup chat
+ */
+export const startCommandInSupergroup = {
+  message: {
+    chat: supergroup,
+    date: Date.now(),
+    entities: [{ length: 6, offset: 0, type: "bot_command" }],
+    from: adminUser,
+    message_id: 1,
+    text: "/start",
+  },
+  update_id: 1,
+};
+
+/**
  * Payload for send message request. It should be sent as a result of /help command processing in a supergroup chat.
  */
 export const supergroupHelpSendMessagePayload = {

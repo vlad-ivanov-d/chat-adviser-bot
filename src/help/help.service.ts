@@ -42,14 +42,13 @@ export class HelpService {
   @Start()
   @CommandWithoutPayload()
   public async startCommand(@Ctx() ctx: CommandCtx): Promise<void> {
+    // Ignore if the chat is not private
+    if (ctx.chat.type !== "private") {
+      return;
+    }
     const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.message.from);
     await changeLanguage(settings.language);
-    await ctx.reply(t("common:help", { BOT_LINK: `tg:user?id=${ctx.botInfo.id.toString()}` }), {
-      parse_mode: "HTML",
-      ...(ctx.chat.type !== "private" && { reply_parameters: { message_id: ctx.message.message_id } }),
-    });
-    if (ctx.chat.type === "private") {
-      await this.settingsService.renderChats(ctx);
-    }
+    await ctx.reply(t("common:help", { BOT_LINK: `tg:user?id=${ctx.botInfo.id.toString()}` }), { parse_mode: "HTML" });
+    await this.settingsService.renderChats(ctx);
   }
 }

@@ -95,33 +95,40 @@ export class VotebanService {
     ]);
     await changeLanguage(chat.settings.language);
 
+    // Check if it's a private chat
     if (ctx.message.chat.type === "private") {
       await ctx.reply(t("common:commandNotForPrivateChats"));
       return;
     }
+    // Check if the feature is disabled
     if (!chat.settings.votebanLimit) {
-      return; // The feature is disabled, return.
+      return;
     }
     this.logger.log("The /voteban command was used");
+    // Check if the bot is not an admin
     if (!this.prismaService.isChatAdmin(chat, ctx.botInfo.id)) {
       await ctx.reply(t("common:needAdminPermissions"), { reply_parameters: { message_id: messageId } });
-      return; // Bot is not an admin, return.
+      return;
     }
+    // Check if there is no candidate
     if (!candidate) {
       await ctx.reply(t("voteban:replyToSomeonesMessage"), { reply_parameters: { message_id: messageId } });
-      return; // No candidate, return.
+      return;
     }
+    // Check if candidate is the bot itself
     if (candidate.id === ctx.botInfo.id) {
       await ctx.reply(t("voteban:cannotVoteAgainstMyself"), { reply_parameters: { message_id: messageId } });
-      return; // Candidate is the bot itself, return.
+      return;
     }
+    // Check if the candidate is an admin
     if ("is_automatic_forward" in replyToMessage || isCandidateAdmin) {
       await ctx.reply(t("voteban:cannotVoteAgainstAdmin"), { reply_parameters: { message_id: messageId } });
-      return; // Candidate is an admin, return.
+      return;
     }
+    // Check if the voting has already started
     if (isVotingStarted) {
       await ctx.reply(t("voteban:alreadyStarted"), { reply_parameters: { message_id: messageId } });
-      return; // Voting has already started, return.
+      return;
     }
 
     const authorLink = getUserOrChatHtmlLink(from, senderChat);

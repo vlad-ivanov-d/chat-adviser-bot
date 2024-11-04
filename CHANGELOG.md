@@ -1,8 +1,8 @@
 # Changelog
 
-## 1.28.0 (xxxx-xx-xx)
+## 1.28.0 (2024-11-04)
 
--
+- Other: now the /start command is only available in private chats
 
 ## 1.27.0 (2024-10-17)
 

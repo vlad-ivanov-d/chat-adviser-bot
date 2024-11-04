@@ -49,7 +49,7 @@
     "winston-loki": "6.1.3"
   },
   "devDependencies": {
-    "@nestjs/cli": "10.4.6",
+    "@nestjs/cli": "10.4.7",
     "@nestjs/schematics": "10.2.3",
     "@nestjs/testing": "10.4.6",
     "@types/jest": "29.5.14",
@@ -57,8 +57,8 @@
     "@types/lodash.escaperegexp": "4.1.9",
     "@types/node": "22.8.7",
     "@types/supertest": "6.0.2",
-    "@typescript-eslint/eslint-plugin": "8.12.2",
-    "@typescript-eslint/parser": "8.12.2",
+    "@typescript-eslint/eslint-plugin": "8.13.0",
+    "@typescript-eslint/parser": "8.13.0",
     "esbuild": "0.24.0",
     "eslint": "8.57.0",
     "eslint-config-prettier": "9.1.0",
