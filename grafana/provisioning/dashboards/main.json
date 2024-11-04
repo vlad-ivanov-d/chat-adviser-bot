@@ -151,6 +151,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -165,6 +166,10 @@
     },
     {
       "datasource": "Loki",
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
       "gridPos": {
         "h": 7,
         "w": 12,
@@ -182,6 +187,7 @@
         "sortOrder": "Descending",
         "wrapLogMessage": false
       },
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -252,7 +258,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -310,7 +316,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -368,7 +374,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -430,7 +436,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -488,7 +494,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -546,7 +552,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -604,7 +610,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -676,7 +682,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.2.2",
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -807,6 +813,7 @@
           "sort": "none"
         }
       },
+      "pluginVersion": "11.3.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -831,14 +838,14 @@
       "type": "timeseries"
     }
   ],
+  "preload": false,
   "refresh": "5m",
-  "schemaVersion": 39,
+  "schemaVersion": 40,
   "tags": [],
   "templating": {
     "list": [
       {
         "current": {
-          "selected": true,
           "text": [
             "All"
           ],
@@ -848,7 +855,6 @@
         },
         "datasource": "Loki",
         "definition": "",
-        "hide": 0,
         "includeAll": true,
         "label": "Level",
         "multi": true,
@@ -862,29 +868,20 @@
         },
         "refresh": 2,
         "regex": "",
-        "skipUrlSync": false,
         "sort": 1,
         "type": "query"
       },
       {
         "allValue": "\"\"",
         "current": {
-          "selected": true,
           "text": "All",
           "value": "$__all"
         },
         "description": "Based on features",
-        "hide": 0,
         "includeAll": true,
         "label": "Type",
-        "multi": false,
         "name": "type",
         "options": [
-          {
-            "selected": true,
-            "text": "All",
-            "value": "$__all"
-          },
           {
             "selected": false,
             "text": "Filtered channel messages",
@@ -922,8 +919,6 @@
           }
         ],
         "query": "Filtered channel messages : \"Message on behalf of a channel was deleted\", New non-private chats : \"The bot was added to\", Profanity : \"A profanity was found\", Removed bots : \"A bot was removed from the chat\", Removed chats : \"The bot was kicked from\", Votebans : \"Voteban started\", Warnings : \"A warning was issued\"",
-        "queryValue": "",
-        "skipUrlSync": false,
         "type": "custom"
       }
     ]
@@ -935,6 +930,6 @@
   "timepicker": {},
   "timezone": "browser",
   "title": "Main",
-  "version": 102,
+  "version": 118,
   "weekStart": ""
 }
