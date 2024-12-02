@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { ChatSettingName, PlanType, SummaryRequestType, SummaryType } from "@prisma/client";
+import { ChatSettingName, Message, PlanType, SummaryRequestType, SummaryType, User } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
 import { Command, Ctx, On, Update } from "nestjs-telegraf";
 import OpenAI from "openai";
@@ -82,12 +82,8 @@ export class SummaryService {
       await ctx.reply(t("common:commandNotForPrivateChats"));
       return;
     }
-    // Check if the feature is disabled
-    if (!chat.settings.summary) {
-      return;
-    }
-    // Check the plan expiration
-    if (!plan || new Date(plan.expiredAt).getTime() < Date.now()) {
+    // Check the feature status and the plan for the chat
+    if (!chat.settings.summary || !plan || new Date(plan.expiredAt).getTime() < Date.now()) {
       return;
     }
     // Check payload
@@ -106,55 +102,56 @@ export class SummaryService {
 
     this.logger.log("The /summary command was used");
 
-    const summaryTimeout = await this.checkRequestTimeout(chat, plan.type, isAdmin);
-
-    const loadingText = t("summary:loading");
-    const loadingMessage = await ctx.reply(loadingText, { reply_parameters: { message_id: ctx.message.message_id } });
-
-    const hours =
+    const hoursCount =
       payload.hours ?? (chat.settings.summaryType === SummaryType.HOURS ? chat.settings.summary : MAX_HOURS_COUNT);
+    const messagesCount =
+      payload.messages ??
+      (chat.settings.summaryType === SummaryType.MESSAGES ? chat.settings.summary : MAX_MESSAGES_COUNT);
 
-    const [messages] = await Promise.all([
-      this.prismaService.message.findMany({
-        orderBy: { createdAt: "desc" },
-        select: { author: true, messageId: true, messageThreadId: true, text: true },
-        take:
-          payload.messages ??
-          (chat.settings.summaryType === SummaryType.MESSAGES ? chat.settings.summary : MAX_MESSAGES_COUNT),
-        where: {
-          chatId: ctx.chat.id,
-          createdAt: { gt: new Date(Date.now() - hours * 60 * 60 * 1000) },
-          text: { not: null },
-        },
-      }),
+    const messages = await this.prismaService.message.findMany({
+      include: { author: true },
+      orderBy: { createdAt: "desc" },
+      take: messagesCount,
+      where: {
+        chatId: ctx.chat.id,
+        createdAt: { gt: new Date(Date.now() - hoursCount * 60 * 60 * 1000) },
+        text: { not: null },
+      },
+    });
+
+    // Check if there is something to summarize
+    if (messages.length === 0) {
+      await ctx.reply(t("summary:noMessages"), { reply_parameters: { message_id: ctx.message.message_id } });
+      return;
+    }
+
+    const [summaryTimeout] = await Promise.all([
+      this.checkRequestTimeout(chat, plan.type, isAdmin),
       this.prismaService.upsertUser(ctx.message.from, ctx.message.from),
     ]);
 
     const conversation = messages
       .toReversed()
-      .map((message) =>
-        [
-          message.messageThreadId
-            ? `#${message.messageId.toString()}, thread #${message.messageThreadId.toString()}`
-            : `#${message.messageId.toString()}`,
-          `User: ${getUserFullName(message.author)}`,
-          message.author.username && `Username: @${message.author.username}`,
-          message.text,
-        ]
-          .filter((p) => p)
-          .join("\n"),
-      )
+      .map((m) => this.formatMessage(m))
       .join("\n\n");
 
-    const chatCompletion = await this.aiClient.chat.completions.create({
-      messages: [
-        { content: t("summary:systemContext"), role: "system" },
-        { content: conversation, role: "user" },
-      ],
-      model: process.env.OPENAI_API_MODEL ?? "gpt-4o-mini",
-    });
+    const [chatCompletion, loadingMessage] = await Promise.all([
+      this.aiClient.chat.completions
+        .create({
+          messages: [
+            { content: t("summary:systemContext"), role: "system" },
+            { content: conversation, role: "user" },
+          ],
+          model: process.env.OPENAI_API_MODEL ?? "gpt-4o-mini",
+        })
+        .catch((e: unknown) => {
+          this.logger.error(e);
+          return null;
+        }),
+      ctx.reply(t("summary:loading"), { reply_parameters: { message_id: ctx.message.message_id } }),
+    ]);
 
-    const summary = chatCompletion.choices[0].message.content ?? t("common:somethingWentWrong");
+    const summary = chatCompletion?.choices[0].message.content ?? t("common:somethingWentWrong");
     await Promise.all([
       this.prismaService.summaryRequest.create({
         data: {
@@ -197,6 +194,24 @@ export class SummaryService {
       (r) => r.type === SummaryRequestType.USER && r.createdAt.getTime() > Date.now() - SUMMARY_USER_TIMEOUT,
     );
     return { hasAdminTimeout, hasUserTimeout, minutes: 0 };
+  }
+
+  /**
+   * Formats message for summary
+   * @param message Message to format
+   * @returns Formatted message
+   */
+  private formatMessage(message: Message & { author: User }): string {
+    return [
+      message.messageThreadId
+        ? `#${message.messageId.toString()}, thread #${message.messageThreadId.toString()}`
+        : `#${message.messageId.toString()}`,
+      `User: ${getUserFullName(message.author)}`,
+      message.author.username && `Username: @${message.author.username}`,
+      message.text,
+    ]
+      .filter((p) => p)
+      .join("\n");
   }
 
   /**

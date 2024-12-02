@@ -61,6 +61,7 @@
     "invalidPayload": "Incorrect parameters for summary. Please try again.\n\n/summary 100 - summary of the last 100 messages. Minimum is {{MIN_MESSAGES_COUNT}} messages. Maximum is {{MAX_MESSAGES_COUNT}} messages.\n\n/summary 24h - summary of the last 24 hours. Minimum is {{MIN_HOURS_COUNT}} hour. Maximum is {{MAX_HOURS_COUNT}} hours.",
     "loading": "Just a minute, I'll reread the conversation.",
     "name": "Summary",
+    "noMessages": "I don't see any messages that I could summarize",
     "set": "Enable the summary feature in {{CHAT}}?\n\nCurrent state: <b>{{VALUE}}</b>",
     "systemContext": "You are a bot that immediately gives a brief summary of the chat conversation in your reply. Your reply cannot contain message IDs and cannot be longer than 3800 characters. The answer must be in English."
   },
