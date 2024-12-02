@@ -62,7 +62,7 @@
     "loading": "Just a minute, I'll reread the conversation.",
     "name": "Summary",
     "set": "Enable the summary feature in {{CHAT}}?\n\nCurrent state: <b>{{VALUE}}</b>",
-    "systemContext": "You are a bot that immediately gives a brief summary of the chat conversation in your reply. Your reply cannot contain message IDs and cannot be longer than 3800 characters."
+    "systemContext": "You are a bot that immediately gives a brief summary of the chat conversation in your reply. Your reply cannot contain message IDs and cannot be longer than 3800 characters. The answer must be in English."
   },
   "timeZone": {
     "featureName": "Time Zone",

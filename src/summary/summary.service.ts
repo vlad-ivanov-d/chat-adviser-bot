@@ -9,7 +9,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
 import { NextFunction } from "src/types/next-function";
 import { CallbackCtx, CommandCtx } from "src/types/telegraf-context";
-import { getUserDisplayName, parseCbData } from "src/utils/telegraf";
+import { getUserFullName, parseCbData } from "src/utils/telegraf";
 
 import { SummaryAction } from "./interfaces/action.interface";
 import { ParsedCommandPayload } from "./interfaces/payload.inteface";
@@ -131,14 +131,18 @@ export class SummaryService {
     ]);
 
     const conversation = messages
+      .toReversed()
       .map((message) =>
         [
           message.messageThreadId
             ? `#${message.messageId.toString()}, thread #${message.messageThreadId.toString()}`
             : `#${message.messageId.toString()}`,
-          getUserDisplayName(message.author, "full"),
+          `User: ${getUserFullName(message.author)}`,
+          message.author.username && `Username: @${message.author.username}`,
           message.text,
-        ].join("\n"),
+        ]
+          .filter((p) => p)
+          .join("\n"),
       )
       .join("\n\n");
 
