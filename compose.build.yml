@@ -9,6 +9,10 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       LOKI_URL: ${LOKI_URL}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_API_MODEL: ${OPENAI_API_MODEL}
+      OPENAI_API_VERSION: ${OPENAI_API_VERSION}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL}
       REDIS_HOST: ${REDIS_HOST:-cache}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_PORT: ${REDIS_PORT}
@@ -39,7 +43,7 @@ services:
     healthcheck:
       interval: 15s
       test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER}"]
-    image: postgres:17.0-alpine
+    image: postgres:17.1-alpine
     ports:
       - ${DATABASE_PORT:-5432}:5432
     restart: unless-stopped

@@ -311,6 +311,7 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
         id: chat.id,
         language: this.resolveLanguage(editor.language_code),
         profanityFilter: isGroupChat ? ProfanityFilterRule.FILTER : undefined,
+        summary: isGroupChat ? 24 : undefined,
         timeZone: this.resolveTimeZone(editor.language_code),
       },
       select: { id: true },

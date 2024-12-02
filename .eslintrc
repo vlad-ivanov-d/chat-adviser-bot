@@ -56,7 +56,8 @@
         "prefix": ["can", "did", "has", "is", "should", "will"],
         "selector": "variable",
         "types": ["boolean"]
-      }
+      },
+      { "format": null, "selector": "import" }
     ],
     // Disabled due to NestJS specifics
     "@typescript-eslint/no-extraneous-class": "off",

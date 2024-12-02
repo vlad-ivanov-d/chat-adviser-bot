@@ -23,6 +23,7 @@ enum ChatSettingName {
   HAS_WARNINGS           @map("has_warnings")
   LANGUAGE               @map("language")
   PROFANITY_FILTER       @map("profanity_filter")
+  SUMMARY                @map("summary")
   TIME_ZONE              @map("time_zone")
   VOTEBAN_LIMIT          @map("voteban_limit")
 }
@@ -40,8 +41,23 @@ enum LanguageCode {
   RU @map("ru")
 }
 
+enum PlanType {
+  MAX @map("max")
+  PRO @map("pro")
+}
+
 enum ProfanityFilterRule {
   FILTER @map("filter")
+}
+
+enum SummaryType {
+  HOURS    @map("hours")
+  MESSAGES @map("messages")
+}
+
+enum SummaryRequestType {
+  ADMIN @map("admin")
+  USER  @map("user")
 }
 
 model Chat {
@@ -73,6 +89,21 @@ model Chat {
   @@map("chats")
 }
 
+model ChatPlan {
+  id        Float    @id
+  authorId  Float    @map("author_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  editorId  Float    @map("editor_id")
+  expiredAt DateTime @map("expired_at")
+  type      PlanType
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  author User @relation("ChatPlanAuthor", fields: [authorId], references: [id])
+  editor User @relation("ChatPlanEditor", fields: [editorId], references: [id])
+
+  @@map("chat_plans")
+}
+
 model ChatSettings {
   id                   Float                     @id
   addingBots           AddingBotsRule?           @map("adding_bots")
@@ -83,6 +114,8 @@ model ChatSettings {
   hasWarnings          Boolean?                  @map("has_warnings")
   language             LanguageCode
   profanityFilter      ProfanityFilterRule?      @map("profanity_filter")
+  summary              Int?                      @map("summary")
+  summaryType          SummaryType               @default(HOURS) @map("summary_type")
   timeZone             String                    @map("time_zone")
   updatedAt            DateTime                  @updatedAt @map("updated_at")
   votebanLimit         Int?                      @map("voteban_limit")
@@ -112,14 +145,16 @@ model ChatSettingsHistory {
 }
 
 model Message {
-  id           String   @id @default(uuid())
-  authorId     Float    @map("author_id")
-  chatId       Float    @map("chat_id")
-  createdAt    DateTime @default(now()) @map("created_at")
-  editorId     Float    @map("editor_id")
-  mediaGroupId String?  @map("media_group_id")
-  messageId    Float    @map("message_id")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id              String   @id @default(uuid())
+  authorId        Float    @map("author_id")
+  chatId          Float    @map("chat_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  editorId        Float    @map("editor_id")
+  mediaGroupId    String?  @map("media_group_id")
+  messageId       Float    @map("message_id")
+  messageThreadId Float?   @map("message_thread_id")
+  text            String?
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   author User @relation("MessageAuthor", fields: [authorId], references: [id])
   chat   Chat @relation(fields: [chatId], onDelete: Cascade, references: [id])
@@ -169,6 +204,22 @@ model ProfaneWord {
   @@map("profane_words")
 }
 
+model SummaryRequest {
+  id        String             @id @default(uuid())
+  authorId  Float              @map("author_id")
+  chatId    Float              @map("chat_id")
+  createdAt DateTime           @default(now()) @map("created_at")
+  editorId  Float              @map("editor_id")
+  type      SummaryRequestType
+  updatedAt DateTime           @updatedAt @map("updated_at")
+
+  author User @relation("SummaryRequestAuthor", fields: [authorId], references: [id])
+  editor User @relation("SummaryRequestEditor", fields: [editorId], references: [id])
+
+  @@index([createdAt])
+  @@map("summary_requests")
+}
+
 model User {
   id           Float    @id
   authorId     Float    @map("author_id")
@@ -184,6 +235,8 @@ model User {
   chatAdmins                 Chat[]                @relation("ChatAdmins")
   chatAuthors                Chat[]                @relation("ChatAuthor")
   chatEditors                Chat[]                @relation("ChatEditor")
+  chatPlanAuthors            ChatPlan[]            @relation("ChatPlanAuthor")
+  chatPlanEditors            ChatPlan[]            @relation("ChatPlanEditor")
   chatSettingsAuthors        ChatSettings[]        @relation("ChatSettingsAuthor")
   chatSettingsEditors        ChatSettings[]        @relation("ChatSettingsEditor")
   chatSettingsHistoryAuthors ChatSettingsHistory[] @relation("ChatSettingsHistoryAuthor")
@@ -195,6 +248,8 @@ model User {
   profaneWordEditors         ProfaneWord[]         @relation("ProfaneWordEditor")
   senderChatAuthors          SenderChat[]          @relation("SenderChatAuthor")
   senderChatEditors          SenderChat[]          @relation("SenderChatEditor")
+  summaryRequestAuthors      SummaryRequest[]      @relation("SummaryRequestAuthor")
+  summaryRequestEditors      SummaryRequest[]      @relation("SummaryRequestEditor")
   userAuthors                User[]                @relation("UserAuthor")
   userEditors                User[]                @relation("UserEditor")
   votebanAuthors             Voteban[]             @relation("VotebanAuthor")

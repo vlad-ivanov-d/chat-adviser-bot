@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { ChatType } from "@prisma/client";
+import { ChatType, PlanType } from "@prisma/client";
 import { formatInTimeZone } from "date-fns-tz";
 import i18next, { changeLanguage, t } from "i18next";
 import { Command, Ctx, Next, On, Update } from "nestjs-telegraf";
@@ -13,10 +13,12 @@ import { LanguageAction } from "src/language/interfaces/action.interface";
 import type { UpsertedChat } from "src/prisma/interfaces/upserted-chat.interface";
 import { PrismaService } from "src/prisma/prisma.service";
 import { ProfanityFilterAction } from "src/profanity-filter/interfaces/action.interface";
+import { SummaryAction } from "src/summary/interfaces/action.interface";
 import { TimeZoneAction } from "src/time-zone/interfaces/action.interface";
 import { NextFunction } from "src/types/next-function";
 import { CallbackCtx, CommandCtx, MessageCtx } from "src/types/telegraf-context";
 import { getDateLocale } from "src/utils/dates";
+import { getFeatureName } from "src/utils/plans";
 import {
   buildCbData,
   getChatHtmlLink,
@@ -269,7 +271,7 @@ export class SettingsService {
     await changeLanguage(destDbChat.settings.language);
     const dbChat = await this.resolveChat(ctx, chatId);
     if (!dbChat) {
-      return; // The user is no longer an administrator, or the bot has been banned from the chat.
+      return; // The user is no longer an administrator, or the bot has been removed from the chat.
     }
 
     const addingBotsButton: InlineKeyboardButton[] = [
@@ -290,6 +292,12 @@ export class SettingsService {
         text: t("profanityFilter:featureName"),
       },
     ];
+    const summaryButton: InlineKeyboardButton[] = [
+      {
+        callback_data: buildCbData({ action: SummaryAction.SETTINGS, chatId }),
+        text: getFeatureName(t("summary:name"), PlanType.PRO),
+      },
+    ];
     const timeZoneButton: InlineKeyboardButton[] = [
       { callback_data: buildCbData({ action: TimeZoneAction.SETTINGS, chatId }), text: t("timeZone:featureName") },
     ];
@@ -306,6 +314,7 @@ export class SettingsService {
         channelMessageFilterButton,
         languageButton,
         profanityFilterButton,
+        summaryButton,
         timeZoneButton,
         votebanButton,
         warningsButton,
@@ -316,6 +325,7 @@ export class SettingsService {
         channelMessageFilterButton,
         languageButton,
         profanityFilterButton,
+        summaryButton,
         timeZoneButton,
         votebanButton,
         warningsButton,

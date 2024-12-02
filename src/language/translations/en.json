@@ -23,11 +23,20 @@
     "commandForPrivateChat": "Send this command to me in <a href=\"{{BOT_LINK}}\">private messages</a> and I'll help you to configure your chats.",
     "commandNotForPrivateChats": "This command is not for private chats.",
     "help": "Hello! I'm a bot that helps to moderate chats.\n\n<b>Getting started:</b>\n1. add me to chat\n2. give me administrator permissions\n3. send a <a href=\"{{BOT_LINK}}\">private message</a> command /mychats and I will help you set up your chat\n\n<b>Feature list:</b> ban voting, profanity filter, restriction on adding bots, support for different languages, etc.\nI'll tell about each feature in more detail during setup.\n\nYou can call this message again at any time using the /help command.",
-    "needAdminPermissions": "I need administrator permissions for this feature to work."
+    "needAdminPermissions": "I need administrator permissions for this feature to work.",
+    "somethingWentWrong": "Something went wrong. Please, try again later."
   },
   "language": {
     "featureName": "Language",
     "select": "<b>Language</b>\nI can communicate in different languages so that chat users can understand me.\n\n- - -\n\nSelect a language for {{CHAT}} chat.\n\nCurrent language: <b>{{VALUE}}</b>"
+  },
+  "profanityFilter": {
+    "disable": "Disable",
+    "disabled": "disabled",
+    "enable": "Enable",
+    "enabled": "enabled",
+    "featureName": "Profanity Filter",
+    "set": "<b>Profanity Filter</b>\nI can filter profanity in chat, including usernames. The filter won't be applied to messages from administrators.\n\n- - -\n\nEnable profanity filter in {{CHAT}} chat?\n\nCurrent value: <b>{{VALUE}}</b>"
   },
   "settings": {
     "backToChats": "Back to chats",
@@ -44,13 +53,16 @@
     "selectFeature": "Select the feature you want to configure for the {{CHAT}} chat. The list of features depends on the type of chat (channel, group, etc.).",
     "updateInfoHint": "If the list doesn't contain the chat you need, try clicking the <b>↻ Refresh the list</b> button (the last button in this message)."
   },
-  "profanityFilter": {
-    "disable": "Disable",
+  "summary": {
+    "description": "<b>Summary</b>\nI can give a summary of the chat conversation.\n\n/summary - summary with default settings\n/summary 100 - summary of the last 100 messages\n/summary 24h - summary for the last 24 hours",
     "disabled": "disabled",
-    "enable": "Enable",
     "enabled": "enabled",
-    "featureName": "Profanity Filter",
-    "set": "<b>Profanity Filter</b>\nI can filter profanity in chat, including usernames. The filter won't be applied to messages from administrators.\n\n- - -\n\nEnable profanity filter in {{CHAT}} chat?\n\nCurrent value: <b>{{VALUE}}</b>"
+    "expired": "The feature is currently in testing, but will be available soon. Stay tuned for updates in the technical support chat: @chat_adviser_bot_support",
+    "invalidPayload": "Incorrect parameters for summary. Please try again.\n\n/summary 100 - summary of the last 100 messages. Minimum is {{MIN_MESSAGES_COUNT}} messages. Maximum is {{MAX_MESSAGES_COUNT}} messages.\n\n/summary 24h - summary of the last 24 hours. Minimum is {{MIN_HOURS_COUNT}} hour. Maximum is {{MAX_HOURS_COUNT}} hours.",
+    "loading": "Just a minute, I'll reread the conversation.",
+    "name": "Summary",
+    "set": "Enable the summary feature in {{CHAT}}?\n\nCurrent state: <b>{{VALUE}}</b>",
+    "systemContext": "You are a bot that immediately gives a brief summary of the chat conversation in your reply. Your reply cannot contain message IDs and cannot be longer than 3800 characters."
   },
   "timeZone": {
     "featureName": "Time Zone",
