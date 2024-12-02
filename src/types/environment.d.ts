@@ -9,6 +9,22 @@ declare namespace NodeJS {
      */
     NODE_ENV?: "development" | "production" | "test";
     /**
+     * API key for AI
+     */
+    OPENAI_API_KEY?: string;
+    /**
+     * AI model
+     */
+    OPENAI_API_MODEL?: string;
+    /**
+     * AI API version
+     */
+    OPENAI_API_VERSION?: string;
+    /**
+     * URL for AI requests
+     */
+    OPENAI_BASE_URL?: string;
+    /**
      * Redis host
      */
     REDIS_HOST?: string;

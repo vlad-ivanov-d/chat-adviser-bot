@@ -7,6 +7,7 @@ import * as tdl from "tdl";
 import { PrismaService } from "src/prisma/prisma.service";
 import { NextFunction } from "src/types/next-function";
 import { EditedMessageCtx, MessageCtx } from "src/types/telegraf-context";
+import { getMessageText } from "src/utils/message";
 
 import { OUTDATED_MESSAGE_TIMEOUT } from "./messages.constants";
 
@@ -63,6 +64,8 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
         editorId: message.from.id,
         mediaGroupId,
         messageId: message.message_id,
+        messageThreadId: message.message_thread_id,
+        text: getMessageText(message) || null,
       },
       select: { id: true },
       update: { editorId: message.from.id, mediaGroupId },
@@ -96,9 +99,14 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
   private watchDeletedMessages(client: tdl.Client): void {
     client.on("update", (update: { _: string; chat_id: number; message_ids: number[] }) => {
       if (update._ === "updateDeleteMessages") {
-        void this.prismaService.message.deleteMany({
-          where: { chatId: update.chat_id, messageId: { in: update.message_ids } },
-        });
+        this.prismaService.message
+          .deleteMany({
+            // Fix: message_id from tdlib should be divided by 1048576 (2^20)
+            where: { chatId: update.chat_id, messageId: { in: update.message_ids.map((id) => id / 1048576) } },
+          })
+          .catch((e: unknown) => {
+            this.logger.error(e);
+          });
       }
     });
   }

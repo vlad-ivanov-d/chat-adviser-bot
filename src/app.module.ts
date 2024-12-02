@@ -15,6 +15,7 @@ import { logRequestTime } from "./middlewares/log-request-time";
 import { PrismaModule } from "./prisma/prisma.module";
 import { ProfanityFilterModule } from "./profanity-filter/profanity-filter.module";
 import { SettingsModule } from "./settings/settings.module";
+import { SummaryModule } from "./summary/summary.module";
 import { TimeZoneModule } from "./time-zone/time-zone.module";
 import { store } from "./utils/redis";
 import { VotebanModule } from "./voteban/voteban.module";
@@ -45,12 +46,13 @@ import { WarningsModule } from "./warnings/warnings.module";
     CleanupModule,
     HelpModule,
     LanguageModule,
-    MessagesModule,
     PrismaModule,
     SettingsModule,
+    SummaryModule,
     TimeZoneModule,
     VotebanModule,
     WarningsModule,
+    MessagesModule,
   ],
   providers: [AppService],
 })

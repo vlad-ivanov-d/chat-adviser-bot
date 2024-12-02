@@ -1,8 +1,8 @@
 # Changelog
 
-## 1.29.0 (xxxx-xx-xx)
+## 1.29.0 (2024-12-02)
 
-- TODO
+- Improvement: /summary feature (beta)
 
 ## 1.28.0 (2024-11-04)
 
