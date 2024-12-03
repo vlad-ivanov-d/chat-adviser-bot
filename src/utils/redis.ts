@@ -12,7 +12,7 @@ export const store = async (): Promise<RedisStore> => {
     (await redisStore({
       password: process.env.REDIS_PASSWORD,
       socket: {
-        host: process.env.REDIS_HOST,
+        host: process.env.REDIS_HOST ?? "localhost",
         port: process.env.REDIS_PORT ? Number(process.env.REDIS_PORT) : 6379,
       },
     }));

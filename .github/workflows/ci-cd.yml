@@ -96,7 +96,6 @@ jobs:
           OPENAI_API_MODEL: ${{ secrets.OPENAI_API_MODEL }}
           OPENAI_API_VERSION: ${{ secrets.OPENAI_API_VERSION }}
           OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
-          REDIS_HOST: ${{ secrets.REDIS_HOST }}
           REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
           REDIS_PORT: ${{ secrets.REDIS_PORT }}
           # Get this variable via command: ssh-keyscan -p [server_ssh_port] [server_ip]
