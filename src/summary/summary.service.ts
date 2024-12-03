@@ -1,5 +1,13 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { ChatSettingName, Message, PlanType, SummaryRequestType, SummaryType, User } from "@prisma/client";
+import {
+  ChatSettingName,
+  ChatSettings,
+  Message,
+  PlanType,
+  SummaryRequestType,
+  SummaryType,
+  User,
+} from "@prisma/client";
 import { changeLanguage, t } from "i18next";
 import { Command, Ctx, On, Update } from "nestjs-telegraf";
 import OpenAI from "openai";
@@ -12,7 +20,7 @@ import { CallbackCtx, CommandCtx } from "src/types/telegraf-context";
 import { getUserFullName, parseCbData } from "src/utils/telegraf";
 
 import { SummaryAction } from "./interfaces/action.interface";
-import { ParsedCommandPayload } from "./interfaces/payload.inteface";
+import { MessagesParams } from "./interfaces/messages-params.interface";
 import { SummaryTimeout } from "./interfaces/timeout.interface";
 import {
   MAX_HOURS_COUNT,
@@ -75,7 +83,7 @@ export class SummaryService {
     await changeLanguage(chat.settings.language);
 
     const isAdmin = this.prismaService.isChatAdmin(chat, ctx.message.from.id, ctx.message.sender_chat?.id);
-    const payload = this.parseCommandPayload(ctx.payload);
+    const params = this.getMessagesParams(ctx.payload, chat.settings);
 
     // Check chat type
     if (ctx.chat.type === "private") {
@@ -86,8 +94,8 @@ export class SummaryService {
     if (!chat.settings.summary || !plan || new Date(plan.expiredAt).getTime() < Date.now()) {
       return;
     }
-    // Check payload
-    if (!payload.isValid) {
+    // Check parameters
+    if (!params.isValid) {
       await ctx.reply(
         t("summary:invalidPayload", {
           MAX_HOURS_COUNT: MAX_HOURS_COUNT,
@@ -102,19 +110,13 @@ export class SummaryService {
 
     this.logger.log("The /summary command was used");
 
-    const hoursCount =
-      payload.hours ?? (chat.settings.summaryType === SummaryType.HOURS ? chat.settings.summary : MAX_HOURS_COUNT);
-    const messagesCount =
-      payload.messages ??
-      (chat.settings.summaryType === SummaryType.MESSAGES ? chat.settings.summary : MAX_MESSAGES_COUNT);
-
     const messages = await this.prismaService.message.findMany({
       include: { author: true },
       orderBy: { createdAt: "desc" },
-      take: messagesCount,
+      take: params.messages,
       where: {
         chatId: ctx.chat.id,
-        createdAt: { gt: new Date(Date.now() - hoursCount * 60 * 60 * 1000) },
+        createdAt: { gt: new Date(Date.now() - params.hours * 60 * 60 * 1000) },
         text: { not: null },
       },
     });
@@ -131,8 +133,8 @@ export class SummaryService {
     ]);
 
     const conversation = messages
-      .toReversed()
       .map((m) => this.formatMessage(m))
+      .reverse()
       .join("\n\n");
 
     const [chatCompletion, loadingMessage] = await Promise.all([
@@ -215,25 +217,36 @@ export class SummaryService {
   }
 
   /**
-   * Parses command payload
+   * Gets parameters to request messages
    * @param payload Command payload
-   * @returns Parsed command payload
+   * @param settings Chat settings
+   * @returns Parameters to request messages
    */
-  private parseCommandPayload(payload: string): ParsedCommandPayload {
-    if (!payload) {
-      return { isValid: true };
-    }
+  private getMessagesParams(payload: string, settings: ChatSettings): MessagesParams {
+    // /summary 100
     if (/^\d+$/.test(payload)) {
       const messages = Number(payload);
       return MIN_MESSAGES_COUNT <= messages && messages <= MAX_MESSAGES_COUNT
-        ? { isValid: true, messages }
-        : { isValid: false };
+        ? { hours: MAX_HOURS_COUNT, isValid: true, messages }
+        : { hours: 0, isValid: false, messages: 0 };
     }
+    // /summary 24h
     if (/^\d+h$/.test(payload)) {
       const hours = Number(payload.slice(0, -1));
-      return MIN_HOURS_COUNT <= hours && hours <= MAX_HOURS_COUNT ? { hours, isValid: true } : { isValid: false };
+      return MIN_HOURS_COUNT <= hours && hours <= MAX_HOURS_COUNT
+        ? { hours, isValid: true, messages: MAX_MESSAGES_COUNT }
+        : { hours: 0, isValid: false, messages: 0 };
     }
-    return { isValid: false };
+    // /summary
+    if (!payload && settings.summary) {
+      return {
+        hours: settings.summaryType === SummaryType.HOURS ? settings.summary : MAX_HOURS_COUNT,
+        isValid: true,
+        messages: settings.summaryType === SummaryType.MESSAGES ? settings.summary : MAX_MESSAGES_COUNT,
+      };
+    }
+    // /summary incorrect
+    return { hours: 0, isValid: false, messages: 0 };
   }
 
   /**
