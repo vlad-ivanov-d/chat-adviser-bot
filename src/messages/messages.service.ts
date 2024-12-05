@@ -97,8 +97,8 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
    * @param client Telegram client
    */
   private watchDeletedMessages(client: tdl.Client): void {
-    client.on("update", (update: { _: string; chat_id: number; message_ids: number[] }) => {
-      if (update._ === "updateDeleteMessages") {
+    client.on("update", (update: { _: string; chat_id: number; is_permanent: boolean; message_ids: number[] }) => {
+      if (update._ === "updateDeleteMessages" && update.is_permanent) {
         this.prismaService.message
           .deleteMany({
             // Fix: message_id from tdlib should be divided by 1048576 (2^20)
