@@ -43,7 +43,7 @@ services:
     healthcheck:
       interval: 15s
       test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER}"]
-    image: postgres:17.1-alpine
+    image: postgres:17.2-alpine
     ports:
       - ${DATABASE_PORT:-5432}:5432
     restart: unless-stopped
@@ -56,7 +56,7 @@ services:
       - loki
     environment:
       LOKI_PORT: ${LOKI_PORT:-3100}
-    image: grafana/grafana:11.3.0
+    image: grafana/grafana:11.3.2
     ports:
       - ${GRAFANA_PORT:-3000}:3000
     restart: unless-stopped
@@ -65,7 +65,7 @@ services:
       - grafanaprovisioning:/etc/grafana/provisioning
 
   loki:
-    image: grafana/loki:3.2.1
+    image: grafana/loki:3.3.1
     ports:
       - ${LOKI_PORT:-3100}:3100
     restart: unless-stopped

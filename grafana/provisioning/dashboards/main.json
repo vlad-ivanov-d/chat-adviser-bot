@@ -151,7 +151,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.3.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -187,7 +187,7 @@
         "sortOrder": "Descending",
         "wrapLogMessage": false
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.3.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -236,7 +236,7 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 4,
+        "w": 2,
         "x": 0,
         "y": 8
       },
@@ -258,7 +258,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.3.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -294,8 +294,8 @@
       },
       "gridPos": {
         "h": 3,
-        "w": 4,
-        "x": 4,
+        "w": 2,
+        "x": 2,
         "y": 8
       },
       "id": 4,
@@ -316,7 +316,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.3.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -353,7 +353,7 @@
       "gridPos": {
         "h": 3,
         "w": 3,
-        "x": 9,
+        "x": 6,
         "y": 8
       },
       "id": 8,
@@ -374,7 +374,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.3.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -415,7 +415,7 @@
       "gridPos": {
         "h": 3,
         "w": 3,
-        "x": 12,
+        "x": 9,
         "y": 8
       },
       "id": 7,
@@ -436,7 +436,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.3.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -473,7 +473,7 @@
       "gridPos": {
         "h": 3,
         "w": 3,
-        "x": 15,
+        "x": 12,
         "y": 8
       },
       "id": 10,
@@ -494,7 +494,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.3.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -505,6 +505,64 @@
         }
       ],
       "title": "Removed Bots",
+      "type": "stat"
+    },
+    {
+      "datasource": "Loki",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "purple",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 15,
+        "y": 8
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "11.3.2",
+      "targets": [
+        {
+          "datasource": "Loki",
+          "editorMode": "builder",
+          "expr": "sum by(service_name) (count_over_time({service_name=\"bot\"} |= `The /summary command was used` [$__auto]))",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Summary",
       "type": "stat"
     },
     {
@@ -552,7 +610,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.3.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -610,7 +668,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.3.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -682,7 +740,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.3.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -813,7 +871,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.0",
+      "pluginVersion": "11.3.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -930,6 +988,6 @@
   "timepicker": {},
   "timezone": "browser",
   "title": "Main",
-  "version": 118,
+  "version": 125,
   "weekStart": ""
 }

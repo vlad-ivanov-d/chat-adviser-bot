@@ -41,7 +41,7 @@
     "nest-winston": "1.9.7",
     "nestjs-telegraf": "2.8.1",
     "openai": "4.75.0",
-    "prebuilt-tdlib": "0.1008040.0",
+    "prebuilt-tdlib": "0.1008041.0",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.1",
     "tdl": "8.0.1",
@@ -79,7 +79,7 @@
     "k6": "0.0.0",
     "msw": "2.6.6",
     "nyc": "17.1.0",
-    "prettier": "3.4.1",
+    "prettier": "3.4.2",
     "prisma": "6.0.1",
     "source-map-support": "0.5.21",
     "supertest": "7.0.0",
@@ -93,7 +93,7 @@
     "url": "https://github.com/vlad-ivanov-d/chat-adviser-bot/issues"
   },
   "engines": {
-    "node": "22.11.0",
+    "node": "22.12.0",
     "npm": "10.9.0"
   },
   "homepage": "https://github.com/vlad-ivanov-d/chat-adviser-bot#readme",
@@ -113,7 +113,7 @@
     "url": "git+https://github.com:vlad-ivanov-d/chat-adviser-bot.git"
   },
   "volta": {
-    "node": "22.11.0",
+    "node": "22.12.0",
     "npm": "10.9.0"
   }
 }
