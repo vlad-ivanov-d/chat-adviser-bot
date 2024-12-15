@@ -9,13 +9,13 @@ const config: Config = {
   coverageThreshold: { global: { branches: 75, functions: 85, lines: 85, statements: 85 } },
   detectOpenHandles: true,
   forceExit: true,
-  globalSetup: "<rootDir>/test/utils/e2e-global-setup.ts",
-  globalTeardown: "<rootDir>/test/utils/e2e-global-teardown.ts",
+  globalSetup: "<rootDir>/test/lib/e2e-global-setup.ts",
+  globalTeardown: "<rootDir>/test/lib/e2e-global-teardown.ts",
   maxWorkers: 1, // Use sequential tests to prevent conflicts in cache and database
   modulePaths: ["<rootDir>"],
   preset: "ts-jest",
   restoreMocks: true,
-  setupFilesAfterEnv: ["<rootDir>/test/utils/e2e-setup.ts"],
+  setupFilesAfterEnv: ["<rootDir>/test/lib/e2e-setup.ts"],
   testMatch: ["<rootDir>/test/**/*.e2e-spec.ts"],
 };
 

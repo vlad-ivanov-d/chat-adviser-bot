@@ -9,7 +9,7 @@ const config: Config = {
   modulePaths: ["<rootDir>"],
   preset: "ts-jest",
   restoreMocks: true,
-  setupFilesAfterEnv: ["<rootDir>/test/utils/setup.ts"],
+  setupFilesAfterEnv: ["<rootDir>/test/lib/setup.ts"],
   testMatch: ["<rootDir>/src/**/*.spec.ts"],
 };
 

@@ -5,6 +5,8 @@ import type { Chat, InlineKeyboardButton, User } from "telegraf/typings/core/typ
 import { PAGE_SIZE } from "src/app.constants";
 import type { CallbackCtx } from "src/types/telegraf-context";
 
+import { getErrorCode } from "./error";
+
 export interface BuildCbDataParams {
   /**
    * Callback action
@@ -162,26 +164,6 @@ export const getChatHtmlLink = (chat: Chat | SenderChat): string => {
   }
   const displayTitle = getChatDisplayTitle(chat);
   return `<b>${encodeText(displayTitle)}</b>`;
-};
-
-/**
- * Tries to resolve Telegram error code from unknown error.
- * @param error Unknown error
- * @returns Telegram error code or undefined
- */
-export const getErrorCode = (error: unknown): number | undefined => {
-  if (
-    error &&
-    typeof error === "object" &&
-    "response" in error &&
-    error.response &&
-    typeof error.response === "object" &&
-    "error_code" in error.response &&
-    typeof error.response.error_code === "number"
-  ) {
-    return error.response.error_code;
-  }
-  return undefined;
 };
 
 /**

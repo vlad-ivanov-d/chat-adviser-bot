@@ -10,7 +10,7 @@ import { build } from "esbuild";
 
 import { AppModule } from "src/app.module";
 import { store } from "src/utils/redis";
-import { cleanupDb } from "test/utils/database";
+import { cleanupDb } from "test/lib/database";
 
 import { server } from "./server";
 

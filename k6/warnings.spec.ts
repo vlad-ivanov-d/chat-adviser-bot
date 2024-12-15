@@ -3,7 +3,7 @@ import http from "k6/http";
 
 import * as fixtures from "fixtures/warnings";
 
-import { K6_SLEEP_DURATION, K6_WEBHOOK_URL } from "./utils/constants";
+import { K6_SLEEP_DURATION, K6_WEBHOOK_URL } from "./constants/common";
 
 /**
  * Test options

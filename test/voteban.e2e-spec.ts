@@ -16,10 +16,10 @@ import {
   TEST_TG_API_BASE_URL,
   TEST_TG_WEBHOOK_BASE_URL,
   TEST_TG_WEBHOOK_PATH,
-} from "./utils/constants";
-import { createDbSupergroupChat, createDbUser, prisma } from "./utils/database";
-import { server } from "./utils/server";
-import { sleep } from "./utils/sleep";
+} from "./constants/common";
+import { createDbSupergroupChat, createDbUser, prisma } from "./lib/database";
+import { server } from "./lib/server";
+import { sleep } from "./lib/sleep";
 
 describe("VotebanModule (e2e)", () => {
   let app: INestApplication<App>;

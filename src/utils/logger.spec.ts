@@ -1,8 +1,8 @@
 import { format } from "fecha";
 import LokiTransport from "winston-loki";
 
-import { TEST_ASYNC_DELAY } from "test/utils/constants";
-import { sleep } from "test/utils/sleep";
+import { TEST_ASYNC_DELAY } from "test/constants/common";
+import { sleep } from "test/lib/sleep";
 
 import { createLogger, templateFunction } from "./logger";
 

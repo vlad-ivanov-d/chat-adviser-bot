@@ -6,9 +6,9 @@ import type { App } from "supertest/types";
 import * as fixtures from "fixtures/messages";
 import { AppModule } from "src/app.module";
 
-import { TEST_ASYNC_DELAY, TEST_TG_WEBHOOK_BASE_URL, TEST_TG_WEBHOOK_PATH } from "./utils/constants";
-import { createDbSupergroupChat, prisma } from "./utils/database";
-import { sleep } from "./utils/sleep";
+import { TEST_ASYNC_DELAY, TEST_TG_WEBHOOK_BASE_URL, TEST_TG_WEBHOOK_PATH } from "./constants/common";
+import { createDbSupergroupChat, prisma } from "./lib/database";
+import { sleep } from "./lib/sleep";
 
 describe("MessagesModule (e2e)", () => {
   let app: INestApplication<App>;

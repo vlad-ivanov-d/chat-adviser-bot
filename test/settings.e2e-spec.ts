@@ -7,9 +7,9 @@ import type { App } from "supertest/types";
 import * as fixtures from "fixtures/settings";
 import { AppModule } from "src/app.module";
 
-import { TEST_TG_API_BASE_URL, TEST_TG_WEBHOOK_BASE_URL, TEST_TG_WEBHOOK_PATH } from "./utils/constants";
-import { createDbPrivateChat } from "./utils/database";
-import { server } from "./utils/server";
+import { TEST_TG_API_BASE_URL, TEST_TG_WEBHOOK_BASE_URL, TEST_TG_WEBHOOK_PATH } from "./constants/common";
+import { createDbPrivateChat } from "./lib/database";
+import { server } from "./lib/server";
 
 describe("SettingsModule (e2e)", () => {
   let app: INestApplication<App>;
