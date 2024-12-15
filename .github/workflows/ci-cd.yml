@@ -3,9 +3,15 @@
 name: CI/CD
 
 on:
-  push:
-    branches: [dev, main]
   workflow_dispatch:
+    inputs:
+      environment:
+        default: "production"
+        description: "Deployment environment"
+        options:
+          - production
+        required: true
+        type: choice
 
 concurrency:
   cancel-in-progress: true
@@ -64,11 +70,7 @@ jobs:
     timeout-minutes: 15
 
   deploy:
-    environment: |-
-      ${{
-        github.ref_name == 'main' && 'production'
-      }}
-    if: github.ref_name == 'main'
+    environment: ${{ github.event.inputs.environment }}
     needs: [build, test]
     runs-on: ubuntu-latest
     steps:
