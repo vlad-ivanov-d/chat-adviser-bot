@@ -146,12 +146,13 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "maxHeight": 600,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.2",
+      "pluginVersion": "11.5.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -179,6 +180,7 @@
       "id": 2,
       "options": {
         "dedupStrategy": "none",
+        "enableInfiniteScrolling": false,
         "enableLogDetails": true,
         "prettifyLogMessage": true,
         "showCommonLabels": false,
@@ -187,7 +189,7 @@
         "sortOrder": "Descending",
         "wrapLogMessage": false
       },
-      "pluginVersion": "11.3.2",
+      "pluginVersion": "11.5.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -258,7 +260,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.2",
+      "pluginVersion": "11.5.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -316,7 +318,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.2",
+      "pluginVersion": "11.5.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -374,7 +376,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.2",
+      "pluginVersion": "11.5.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -436,7 +438,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.2",
+      "pluginVersion": "11.5.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -494,7 +496,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.2",
+      "pluginVersion": "11.5.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -552,7 +554,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.2",
+      "pluginVersion": "11.5.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -610,7 +612,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.2",
+      "pluginVersion": "11.5.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -668,7 +670,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.2",
+      "pluginVersion": "11.5.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -740,7 +742,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.3.2",
+      "pluginVersion": "11.5.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -866,12 +868,13 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "maxHeight": 600,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.3.2",
+      "pluginVersion": "11.5.0",
       "targets": [
         {
           "datasource": "Loki",
@@ -904,9 +907,7 @@
     "list": [
       {
         "current": {
-          "text": [
-            "All"
-          ],
+          "text": "All",
           "value": [
             "$__all"
           ]
@@ -932,7 +933,7 @@
       {
         "allValue": "\"\"",
         "current": {
-          "text": "All",
+          "text": "$__all",
           "value": "$__all"
         },
         "description": "Based on features",
@@ -988,6 +989,6 @@
   "timepicker": {},
   "timezone": "browser",
   "title": "Main",
-  "version": 125,
+  "version": 129,
   "weekStart": ""
 }

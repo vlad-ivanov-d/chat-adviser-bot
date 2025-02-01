@@ -29,7 +29,7 @@ services:
 
   cache:
     command: --requirepass ${REDIS_PASSWORD}
-    image: redis:7.4.1-alpine
+    image: redis:7.4.2-alpine
     ports:
       - ${REDIS_PORT:-6379}:6379
     restart: unless-stopped
@@ -56,7 +56,7 @@ services:
       - loki
     environment:
       LOKI_PORT: ${LOKI_PORT:-3100}
-    image: grafana/grafana:11.3.2
+    image: grafana/grafana:11.5.0
     ports:
       - ${GRAFANA_PORT:-3000}:3000
     restart: unless-stopped
@@ -65,7 +65,7 @@ services:
       - grafanaprovisioning:/etc/grafana/provisioning
 
   loki:
-    image: grafana/loki:3.3.1
+    image: grafana/loki:3.3.2
     ports:
       - ${LOKI_PORT:-3100}:3100
     restart: unless-stopped
