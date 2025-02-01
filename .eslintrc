@@ -48,7 +48,7 @@
     "@typescript-eslint/naming-convention": [
       "error",
       { "format": ["StrictPascalCase", "UPPER_CASE", "strictCamelCase"], "selector": "default" },
-      { "format": ["UPPER_CASE"], "selector": "enumMember" },
+      { "format": ["StrictPascalCase", "UPPER_CASE"], "selector": "enumMember" },
       { "format": null, "selector": "property" },
       { "format": ["StrictPascalCase"], "selector": "typeLike" },
       {
