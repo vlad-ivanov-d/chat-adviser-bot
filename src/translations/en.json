@@ -24,6 +24,7 @@
     "commandNotForPrivateChats": "This command is not for private chats.",
     "help": "Hello! I'm a bot that helps to moderate chats.\n\n<b>Getting started:</b>\n1. add me to chat\n2. give me administrator permissions\n3. send a <a href=\"{{BOT_LINK}}\">private message</a> command /mychats and I will help you set up your chat\n\n<b>Feature list:</b> ban voting, profanity filter, restriction on adding bots, support for different languages, etc.\nI'll tell about each feature in more detail during setup.\n\nYou can call this message again at any time using the /help command.",
     "needAdminPermissions": "I need administrator permissions for this feature to work.",
+    "planExpired": "This feature requires PRO subscription. We currently provide a free PRO subscription upon request in the technical support chat: @chat_adviser_bot_support",
     "somethingWentWrong": "Something went wrong. Please, try again later."
   },
   "language": {
@@ -54,16 +55,20 @@
     "updateInfoHint": "If the list doesn't contain the chat you need, try clicking the <b>↻ Refresh the list</b> button (the last button in this message)."
   },
   "summary": {
-    "description": "<b>Summary</b>\nI can give a summary of the chat conversation.\n\n/summary - summary with default settings\n/summary 100 - summary of the last 100 messages\n/summary 24h - summary for the last 24 hours",
+    "description": "<b>Summary</b>\nI can give a summary of the chat conversation.\n\n/summary - summary with default settings (last 400 messages)\n/summary 100 - summary of the last 100 messages\n/summary 24h - summary for the last 24 hours\n\nPlease note that I will not be able to provide a summary of the messages that were in the chat before I joined.",
+    "disable": "Disable",
     "disabled": "disabled",
+    "enable": "Enable",
     "enabled": "enabled",
-    "expired": "The feature is currently in testing, but will be available soon. Stay tuned for updates in the technical support chat: @chat_adviser_bot_support",
+    "featureName": "Summary",
     "invalidPayload": "Incorrect parameters for summary. Please try again.\n\n/summary 100 - summary of the last 100 messages. Minimum is {{MIN_MESSAGES_COUNT}} messages. Maximum is {{MAX_MESSAGES_COUNT}} messages.\n\n/summary 24h - summary of the last 24 hours. Minimum is {{MIN_HOURS_COUNT}} hour. Maximum is {{MAX_HOURS_COUNT}} hours.",
     "loading": "Just a minute, I'll reread the conversation.",
-    "name": "Summary",
     "noMessages": "I don't see any messages that I could summarize",
     "set": "Enable the summary feature in {{CHAT}}?\n\nCurrent state: <b>{{VALUE}}</b>",
-    "systemContext": "You are a bot that immediately provides a summary of the chat conversation in the response. The response should not contain message identifiers and should not exceed 3800 characters. If possible, it is better not to write the user's Usename in the response. The response should be in English."
+    "somethingWentWrong": "Something went wrong. Please, try again later. Also note that if the messages contain signs of cruelty, hatred, etc., the request may be rejected.",
+    "summarizedMessages": "Summary of the last {{count}} messages:",
+    "systemContext": "You are a bot that immediately provides a summary of the chat conversation in the response. The response should not contain message identifiers and should not exceed 3800 characters. If possible, it is better not to write the user's username in the response. The response should be in English.",
+    "timeout": "Too many requests for summary. Please wait 15 minutes before the next request."
   },
   "timeZone": {
     "featureName": "Time Zone",

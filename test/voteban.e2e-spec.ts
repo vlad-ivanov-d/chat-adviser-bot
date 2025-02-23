@@ -1,6 +1,6 @@
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
-import { ChatType, type Prisma } from "@prisma/client";
+import { ChatType, MessageType, type Prisma } from "@prisma/client";
 import { http, HttpResponse } from "msw";
 import request from "supertest";
 import type { App } from "supertest/types";
@@ -134,6 +134,7 @@ describe("VotebanModule (e2e)", () => {
           editorId: systemChannelBot.id,
           mediaGroupId: "100",
           messageId: i + 1,
+          type: MessageType.PHOTO,
         }),
       ),
     });

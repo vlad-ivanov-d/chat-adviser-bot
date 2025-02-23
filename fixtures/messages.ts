@@ -1,3 +1,5 @@
+import { MessageType } from "@prisma/client";
+
 import { supergroup } from "./chats";
 import { adminUser } from "./users";
 
@@ -11,6 +13,7 @@ export const oldSavedMessage = {
   editorId: adminUser.id,
   mediaGroupId: "100",
   messageId: 1,
+  type: MessageType.PHOTO,
 };
 
 /**

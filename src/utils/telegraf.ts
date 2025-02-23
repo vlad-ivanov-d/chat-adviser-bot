@@ -1,9 +1,9 @@
-import { ChatType, type SenderChat, type User as PrismaUser } from "@prisma/client";
+import { ChatType, MessageType, type SenderChat, type User as PrismaUser } from "@prisma/client";
 import type { Telegram } from "telegraf";
 import type { Chat, InlineKeyboardButton, User } from "telegraf/typings/core/types/typegram";
 
 import { PAGE_SIZE } from "src/app.constants";
-import type { CallbackCtx } from "src/types/telegraf-context";
+import type { CallbackCtx, EditedMessageCtx, MessageCtx } from "src/types/telegraf-context";
 
 import { getErrorCode } from "./error";
 
@@ -164,6 +164,100 @@ export const getChatHtmlLink = (chat: Chat | SenderChat): string => {
   }
   const displayTitle = getChatDisplayTitle(chat);
   return `<b>${encodeText(displayTitle)}</b>`;
+};
+
+/**
+ * Gets forwarded from name.
+ * @param message Message
+ * @returns Forwarded from name
+ */
+export const getForwardedFrom = (
+  message: EditedMessageCtx["update"]["edited_message"] | MessageCtx["update"]["message"],
+): string | undefined => {
+  const forwardedOrigin = "forward_origin" in message ? message.forward_origin : undefined;
+  if (!forwardedOrigin) {
+    return undefined;
+  }
+  if (forwardedOrigin.type === "channel") {
+    // Do not use username
+    return getChatDisplayTitle(
+      "username" in forwardedOrigin.chat ? { ...forwardedOrigin.chat, username: undefined } : forwardedOrigin.chat,
+    );
+  }
+  if (forwardedOrigin.type === "chat") {
+    // Do not use username
+    return getChatDisplayTitle(
+      "username" in forwardedOrigin.sender_chat
+        ? { ...forwardedOrigin.sender_chat, username: undefined }
+        : forwardedOrigin.sender_chat,
+    );
+  }
+  if (forwardedOrigin.type === "hidden_user") {
+    return forwardedOrigin.sender_user_name;
+  }
+  // Do not use username
+  return getUserFullName({ ...forwardedOrigin.sender_user, username: undefined });
+};
+
+/**
+ * Gets the text from message.
+ * @param message Message
+ * @returns Text
+ */
+export const getMessageText = (
+  message: EditedMessageCtx["update"]["edited_message"] | MessageCtx["update"]["message"],
+): string => {
+  if ("document" in message && message.document.file_name) {
+    return [message.document.file_name, message.caption].filter(Boolean).join("\n");
+  }
+  if ("caption" in message) {
+    return message.caption ?? "";
+  }
+  if ("left_chat_member" in message) {
+    return getUserFullName(message.left_chat_member);
+  }
+  if ("new_chat_members" in message) {
+    return message.new_chat_members.map(getUserFullName).join(", ");
+  }
+  if ("poll" in message) {
+    return [message.poll.question, ...message.poll.options.map((o) => o.text)].join("\n");
+  }
+  if ("sticker" in message && message.sticker.emoji) {
+    return message.sticker.emoji;
+  }
+  if ("text" in message) {
+    return message.text;
+  }
+  return "";
+};
+
+/**
+ * Gets message type.
+ * @param message Message
+ * @returns Message type
+ */
+export const getMessageType = (
+  message: EditedMessageCtx["update"]["edited_message"] | MessageCtx["update"]["message"],
+): MessageType => {
+  if ("document" in message && message.document.file_name) {
+    return MessageType.FILE;
+  }
+  if ("left_chat_member" in message || "new_chat_members" in message || "pinned_message" in message) {
+    return MessageType.SYSTEM;
+  }
+  if ("location" in message) {
+    return MessageType.LOCATION;
+  }
+  if ("photo" in message) {
+    return MessageType.PHOTO;
+  }
+  if ("poll" in message) {
+    return MessageType.POLL;
+  }
+  if ("video" in message) {
+    return MessageType.VIDEO;
+  }
+  return MessageType.TEXT;
 };
 
 /**

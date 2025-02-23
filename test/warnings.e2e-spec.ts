@@ -1,6 +1,6 @@
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
-import { ChatType } from "@prisma/client";
+import { ChatType, MessageType } from "@prisma/client";
 import { http, HttpResponse } from "msw";
 import request from "supertest";
 import type { App } from "supertest/types";
@@ -38,7 +38,16 @@ describe("WarningsModule (e2e)", () => {
     await createDbSupergroupChat(undefined, { hasWarnings: true });
     await createDbUser(user);
     await prisma.message.createMany({
-      data: [{ authorId: user.id, chatId: supergroup.id, editorId: user.id, mediaGroupId: "100", messageId: 2 }],
+      data: [
+        {
+          authorId: user.id,
+          chatId: supergroup.id,
+          editorId: user.id,
+          mediaGroupId: "100",
+          messageId: 2,
+          type: MessageType.PHOTO,
+        },
+      ],
     });
     await prisma.warning.createMany({
       data: [

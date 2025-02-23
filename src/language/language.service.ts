@@ -6,14 +6,14 @@ import type { InlineKeyboardButton } from "telegraf/typings/core/types/typegram"
 
 import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
+import en from "src/translations/en.json";
+import ru from "src/translations/ru.json";
 import { NextFunction } from "src/types/next-function";
 import { CallbackCtx } from "src/types/telegraf-context";
 import { buildCbData, getChatHtmlLink, parseCbData } from "src/utils/telegraf";
 
 import { LanguageAction } from "./interfaces/action.interface";
 import { DEFAULT_NS } from "./language.constants";
-import en from "./translations/en.json";
-import ru from "./translations/ru.json";
 
 @Update()
 @Injectable()

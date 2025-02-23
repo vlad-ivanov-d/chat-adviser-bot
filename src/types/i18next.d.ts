@@ -1,7 +1,7 @@
 import "i18next";
 
 import type { DEFAULT_NS } from "src/language/language.constants";
-import type en from "src/language/translations/en.json";
+import type en from "src/translations/en.json";
 
 declare module "i18next" {
   interface CustomTypeOptions {

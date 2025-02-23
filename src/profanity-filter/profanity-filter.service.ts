@@ -9,9 +9,8 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
 import { NextFunction } from "src/types/next-function";
 import { CallbackCtx, type EditedMessageCtx, type MessageCtx } from "src/types/telegraf-context";
-import { getMessageText } from "src/utils/message";
 import { Profanity } from "src/utils/profanity";
-import { buildCbData, getChatHtmlLink, getUserFullName, parseCbData } from "src/utils/telegraf";
+import { buildCbData, getChatHtmlLink, getMessageText, getUserFullName, parseCbData } from "src/utils/telegraf";
 
 import { ProfanityFilterAction } from "./interfaces/action.interface";
 import type { FilterStrings, ForwardFilterStrings } from "./interfaces/filter-strings.interface";

@@ -41,6 +41,16 @@ enum LanguageCode {
   RU @map("ru")
 }
 
+enum MessageType {
+  FILE     @map("file")
+  LOCATION @map("location")
+  PHOTO    @map("photo")
+  POLL     @map("poll")
+  SYSTEM   @map("system")
+  TEXT     @map("text")
+  VIDEO    @map("video")
+}
+
 enum PlanType {
   MAX @map("max")
   PRO @map("pro")
@@ -112,10 +122,9 @@ model ChatSettings {
   createdAt            DateTime                  @default(now()) @map("created_at")
   editorId             Float                     @map("editor_id")
   hasWarnings          Boolean?                  @map("has_warnings")
+  isSummaryEnabled     Boolean?                  @map("is_summary_enabled")
   language             LanguageCode
   profanityFilter      ProfanityFilterRule?      @map("profanity_filter")
-  summary              Int?                      @map("summary")
-  summaryType          SummaryType               @default(HOURS) @map("summary_type")
   timeZone             String                    @map("time_zone")
   updatedAt            DateTime                  @updatedAt @map("updated_at")
   votebanLimit         Int?                      @map("voteban_limit")
@@ -145,16 +154,18 @@ model ChatSettingsHistory {
 }
 
 model Message {
-  id              String   @id @default(uuid())
-  authorId        Float    @map("author_id")
-  chatId          Float    @map("chat_id")
-  createdAt       DateTime @default(now()) @map("created_at")
-  editorId        Float    @map("editor_id")
-  mediaGroupId    String?  @map("media_group_id")
-  messageId       Float    @map("message_id")
-  messageThreadId Float?   @map("message_thread_id")
+  id              String      @id @default(uuid())
+  authorId        Float       @map("author_id")
+  chatId          Float       @map("chat_id")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  editorId        Float       @map("editor_id")
+  forwardedFrom   String?     @map("forwarded_from")
+  mediaGroupId    String?     @map("media_group_id")
+  messageId       Float       @map("message_id")
+  messageThreadId Float?      @map("message_thread_id")
   text            String?
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  type            MessageType
+  updatedAt       DateTime    @updatedAt @map("updated_at")
 
   author User @relation("MessageAuthor", fields: [authorId], references: [id])
   chat   Chat @relation(fields: [chatId], onDelete: Cascade, references: [id])

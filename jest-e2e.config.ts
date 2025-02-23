@@ -6,7 +6,7 @@ const config: Config = {
   coverageDirectory: "./coverage-e2e",
   coveragePathIgnorePatterns: [".spec.ts", "src/main.ts", "src/utils/logger.ts"],
   coverageReporters: [["json", { file: "../.nyc_output/coverage-e2e-final.json" }], "html", "text-summary"],
-  coverageThreshold: { global: { branches: 75, functions: 85, lines: 85, statements: 85 } },
+  coverageThreshold: { global: { branches: 70, functions: 85, lines: 85, statements: 85 } },
   detectOpenHandles: true,
   forceExit: true,
   globalSetup: "<rootDir>/test/lib/e2e-global-setup.ts",

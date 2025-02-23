@@ -23,14 +23,14 @@ describe("MessagesModule (e2e)", () => {
     await app.init();
   });
 
-  it("cleanups old saved messages at midnight", async () => {
+  it("cleanups old saved messages at midnight only if there are more than min number of messages", async () => {
     await createDbSupergroupChat();
     await prisma.message.create({ data: fixtures.oldSavedMessage, select: { id: true } });
     jest.advanceTimersByTime(24 * 60 * 60 * 1000); // 24h to run the daily cron job
     await sleep(TEST_ASYNC_DELAY);
 
     const { length } = await prisma.message.findMany();
-    expect(length).toBe(0);
+    expect(length).toBe(1);
   });
 
   it("saves messages with media group id", async () => {

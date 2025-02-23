@@ -289,7 +289,7 @@ export class SettingsService {
     const summaryButton: InlineKeyboardButton[] = [
       {
         callback_data: buildCbData({ action: SummaryAction.SETTINGS, chatId }),
-        text: getFeatureName(t("summary:name"), PlanType.PRO),
+        text: getFeatureName(t("summary:featureName"), PlanType.PRO),
       },
     ];
     const timeZoneButton: InlineKeyboardButton[] = [

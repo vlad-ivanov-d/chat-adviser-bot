@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from "@nestjs/common";
 import { Cron, CronExpression } from "@nestjs/schedule";
+import { MessageType } from "@prisma/client";
 import { Ctx, Next, On, Update } from "nestjs-telegraf";
 import { getTdjson } from "prebuilt-tdlib";
 import * as tdl from "tdl";
@@ -7,9 +8,9 @@ import * as tdl from "tdl";
 import { PrismaService } from "src/prisma/prisma.service";
 import { NextFunction } from "src/types/next-function";
 import { EditedMessageCtx, MessageCtx } from "src/types/telegraf-context";
-import { getMessageText } from "src/utils/message";
+import { getForwardedFrom, getMessageText, getMessageType } from "src/utils/telegraf";
 
-import { OUTDATED_MESSAGE_TIMEOUT } from "./messages.constants";
+import { MIN_MESSAGES_COUNT, OUTDATED_MESSAGE_TIMEOUT } from "./messages.constants";
 
 tdl.configure({ tdjson: getTdjson(), useOldTdjsonInterface: true });
 
@@ -26,12 +27,21 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
   public constructor(private readonly prismaService: PrismaService) {}
 
   /**
-   * Cleanups old messages
+   * Cleanups outdated messages only if there are more than min number of messages
    */
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   public async cleanup(): Promise<void> {
+    const groupedMessageCount = await this.prismaService.message.groupBy({
+      _count: true,
+      by: "chatId",
+      where: { createdAt: { gte: new Date(Date.now() - OUTDATED_MESSAGE_TIMEOUT) } },
+    });
+    const chatIdsToCleanup = groupedMessageCount.reduce<number[]>(
+      (result, group) => (group._count > MIN_MESSAGES_COUNT ? [...result, group.chatId] : result),
+      [],
+    );
     const { count } = await this.prismaService.message.deleteMany({
-      where: { createdAt: { lt: new Date(Date.now() - OUTDATED_MESSAGE_TIMEOUT) } },
+      where: { chatId: { in: chatIdsToCleanup }, createdAt: { lt: new Date(Date.now() - OUTDATED_MESSAGE_TIMEOUT) } },
     });
     this.logger.log(`Number of deleted unused messages: ${count.toString()}`);
   }
@@ -46,8 +56,8 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
     const message = "message" in ctx.update ? ctx.update.message : ctx.update.edited_message;
     const mediaGroupId = "media_group_id" in message ? message.media_group_id : null;
 
-    // Do not save messages for private chats or if it's about new/left chat member
-    if (ctx.chat.type === "private" || "left_chat_member" in message || "new_chat_members" in message) {
+    // Do not save messages for private chats or system messages
+    if (ctx.chat.type === "private" || getMessageType(message) === MessageType.SYSTEM) {
       await next();
       return;
     }
@@ -62,10 +72,12 @@ export class MessagesService implements OnModuleInit, OnModuleDestroy {
         authorId: message.from.id,
         chatId: message.chat.id,
         editorId: message.from.id,
+        forwardedFrom: getForwardedFrom(message) ?? null,
         mediaGroupId,
         messageId: message.message_id,
         messageThreadId: message.message_thread_id,
         text: getMessageText(message) || null,
+        type: getMessageType(message),
       },
       select: { id: true },
       update: { editorId: message.from.id, mediaGroupId },

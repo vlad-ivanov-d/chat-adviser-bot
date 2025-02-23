@@ -1,8 +1,8 @@
 # Changelog
 
-## 1.29.0 (2024-12-02)
+## 1.29.0 (2025-02-23)
 
-- Improvement: /summary feature (beta)
+- Improvement: /summary feature
 
 ## 1.28.0 (2024-11-04)
 

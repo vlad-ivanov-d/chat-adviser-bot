@@ -6,6 +6,7 @@ import {
   type ChatSettingName,
   ChatType,
   LanguageCode,
+  PlanType,
   type Prisma,
   PrismaClient,
   ProfanityFilterRule,
@@ -43,6 +44,19 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
   public async deleteChatCache(chatId: number): Promise<void> {
     const cacheKey = this.getChatCacheKey(chatId);
     await this.cacheManager.del(cacheKey);
+  }
+
+  /**
+   * Gets chat plan
+   * @param chatId Chat id
+   * @returns Chat plan
+   */
+  public async getChatPlan(chatId: number): Promise<PlanType | null> {
+    const plan = await this.chatPlan.findUnique({
+      select: { type: true },
+      where: { expiredAt: { gt: new Date() }, id: chatId },
+    });
+    return plan?.type ?? null;
   }
 
   /**
@@ -309,9 +323,9 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
         editorId: editor.id,
         hasWarnings: isGroupChat || undefined,
         id: chat.id,
+        isSummaryEnabled: isGroupChat || undefined,
         language: this.resolveLanguage(editor.language_code),
         profanityFilter: isGroupChat ? ProfanityFilterRule.FILTER : undefined,
-        summary: isGroupChat ? 24 : undefined,
         timeZone: this.resolveTimeZone(editor.language_code),
       },
       select: { id: true },

@@ -1,13 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
-import {
-  ChatSettingName,
-  ChatSettings,
-  Message,
-  PlanType,
-  SummaryRequestType,
-  SummaryType,
-  User,
-} from "@prisma/client";
+import { ChatSettingName, Message, PlanType, SummaryRequestType, User } from "@prisma/client";
 import { changeLanguage, t } from "i18next";
 import { Command, Ctx, On, Update } from "nestjs-telegraf";
 import OpenAI from "openai";
@@ -17,7 +9,7 @@ import { PrismaService } from "src/prisma/prisma.service";
 import { SettingsService } from "src/settings/settings.service";
 import { NextFunction } from "src/types/next-function";
 import { CallbackCtx, CommandCtx } from "src/types/telegraf-context";
-import { getUserFullName, parseCbData } from "src/utils/telegraf";
+import { buildCbData, getChatHtmlLink, getUserFullName, parseCbData } from "src/utils/telegraf";
 
 import { SummaryAction } from "./interfaces/action.interface";
 import { MessagesParams } from "./interfaces/messages-params.interface";
@@ -27,8 +19,7 @@ import {
   MAX_MESSAGES_COUNT,
   MIN_HOURS_COUNT,
   MIN_MESSAGES_COUNT,
-  SUMMARY_ADMIN_REQUESTS_MAX_COUNT,
-  SUMMARY_USER_TIMEOUT,
+  SUMMARY_TIMEOUT,
 } from "./summary.constants";
 
 @Update()
@@ -58,9 +49,10 @@ export class SummaryService {
    */
   @On("callback_query")
   public async callbackQuery(ctx: CallbackCtx, next: NextFunction): Promise<void> {
-    const { action, chatId } = parseCbData(ctx);
+    const { action, chatId, value } = parseCbData(ctx);
     switch (action) {
       case SummaryAction.SAVE:
+        await this.saveSettings(ctx, chatId, value);
         break;
       case SummaryAction.SETTINGS:
         await this.renderSettings(ctx, chatId, true);
@@ -78,31 +70,26 @@ export class SummaryService {
   public async summaryCommand(@Ctx() ctx: CommandCtx): Promise<void> {
     const [chat, plan] = await Promise.all([
       this.prismaService.upsertChatWithCache(ctx.chat, ctx.message.from),
-      this.prismaService.chatPlan.findUnique({ where: { id: ctx.chat.id } }),
+      this.prismaService.getChatPlan(ctx.chat.id),
     ]);
     await changeLanguage(chat.settings.language);
 
     const isAdmin = this.prismaService.isChatAdmin(chat, ctx.message.from.id, ctx.message.sender_chat?.id);
-    const params = this.getMessagesParams(ctx.payload, chat.settings);
+    const params = this.getMessagesParams(ctx.payload);
 
     // Check chat type
     if (ctx.chat.type === "private") {
       await ctx.reply(t("common:commandNotForPrivateChats"));
       return;
     }
-    // Check the feature status and the plan for the chat
-    if (!chat.settings.summary || !plan || new Date(plan.expiredAt).getTime() < Date.now()) {
+    // Check the feature status and the plan
+    if (!chat.settings.isSummaryEnabled || !plan) {
       return;
     }
     // Check parameters
-    if (!params.isValid) {
+    if (!params.hoursCount && !params.messagesCount) {
       await ctx.reply(
-        t("summary:invalidPayload", {
-          MAX_HOURS_COUNT: MAX_HOURS_COUNT,
-          MAX_MESSAGES_COUNT,
-          MIN_HOURS_COUNT,
-          MIN_MESSAGES_COUNT,
-        }),
+        t("summary:invalidPayload", { MAX_HOURS_COUNT, MAX_MESSAGES_COUNT, MIN_HOURS_COUNT, MIN_MESSAGES_COUNT }),
         { reply_parameters: { message_id: ctx.message.message_id } },
       );
       return;
@@ -110,27 +97,37 @@ export class SummaryService {
 
     this.logger.log("The /summary command was used");
 
-    const messages = await this.prismaService.message.findMany({
-      include: { author: true },
-      orderBy: { createdAt: "desc" },
-      take: params.messages,
-      where: {
-        chatId: ctx.chat.id,
-        createdAt: { gt: new Date(Date.now() - params.hours * 60 * 60 * 1000) },
-        text: { not: null },
-      },
-    });
+    const [messages, timeout] = await Promise.all([
+      params.hoursCount
+        ? this.prismaService.message.findMany({
+            include: { author: true },
+            orderBy: { createdAt: "desc" },
+            take: params.messagesCount,
+            where: {
+              chatId: ctx.chat.id,
+              createdAt: { gt: new Date(Date.now() - params.hoursCount * 60 * 60 * 1000) },
+            },
+          })
+        : this.prismaService.message.findMany({
+            include: { author: true },
+            orderBy: { createdAt: "desc" },
+            take: params.messagesCount,
+            where: { chatId: ctx.chat.id },
+          }),
+      this.checkRequestTimeout(chat, plan),
+      this.prismaService.upsertUser(ctx.message.from, ctx.message.from),
+    ]);
 
     // Check if there is something to summarize
     if (messages.length === 0) {
       await ctx.reply(t("summary:noMessages"), { reply_parameters: { message_id: ctx.message.message_id } });
       return;
     }
-
-    const [summaryTimeout] = await Promise.all([
-      this.checkRequestTimeout(chat, plan.type, isAdmin),
-      this.prismaService.upsertUser(ctx.message.from, ctx.message.from),
-    ]);
+    // Check if there is no timeout
+    if (isAdmin ? timeout.hasAdminTimeout : timeout.hasUserTimeout) {
+      await ctx.reply(t("summary:timeout"), { reply_parameters: { message_id: ctx.message.message_id } });
+      return;
+    }
 
     const conversation = messages
       .map((m) => this.formatMessage(m))
@@ -153,19 +150,21 @@ export class SummaryService {
       ctx.reply(t("summary:loading"), { reply_parameters: { message_id: ctx.message.message_id } }),
     ]);
 
-    const summary = chatCompletion?.choices[0].message.content ?? t("common:somethingWentWrong");
+    const replyText = chatCompletion?.choices[0].message.content
+      ? `${t("summary:summarizedMessages", { count: messages.length })}\n\n${chatCompletion.choices[0].message.content}`
+      : t("summary:somethingWentWrong");
     await Promise.all([
       this.prismaService.summaryRequest.create({
         data: {
           authorId: ctx.message.from.id,
           chatId: ctx.chat.id,
           editorId: ctx.message.from.id,
-          type: summaryTimeout?.hasUserTimeout && isAdmin ? SummaryRequestType.ADMIN : SummaryRequestType.USER,
+          type: isAdmin && timeout.hasUserTimeout ? SummaryRequestType.ADMIN : SummaryRequestType.USER,
         },
         select: { id: true },
       }),
       ctx.deleteMessage(loadingMessage.message_id),
-      ctx.reply(summary, { reply_parameters: { message_id: ctx.message.message_id } }),
+      ctx.reply(replyText, { reply_parameters: { message_id: ctx.message.message_id } }),
     ]);
   }
 
@@ -173,29 +172,20 @@ export class SummaryService {
    * Checks timeout for the summary request
    * @param chat Chat to check
    * @param planType Plan type
-   * @param isAuthorAdmin Indicates that the request is from an admin
    * @returns Summary limit if exists
    */
-  private async checkRequestTimeout(
-    chat: UpsertedChat,
-    planType: PlanType,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    isAuthorAdmin: boolean,
-  ): Promise<SummaryTimeout | null> {
+  private async checkRequestTimeout(chat: UpsertedChat, planType: PlanType): Promise<SummaryTimeout> {
     if (planType === "MAX") {
-      return { hasAdminTimeout: false, hasUserTimeout: false, minutes: 0 };
+      return { hasAdminTimeout: false, hasUserTimeout: false };
     }
     const requests = await this.prismaService.summaryRequest.findMany({
       orderBy: { createdAt: "desc" },
       select: { createdAt: true, type: true },
-      where: { chatId: chat.id, createdAt: { gt: new Date(Date.now() - 24 * 60 * 60 * 1000) } },
+      where: { chatId: chat.id, createdAt: { gt: new Date(Date.now() - SUMMARY_TIMEOUT) } },
     });
-    const hasAdminTimeout =
-      requests.filter((r) => r.type === SummaryRequestType.ADMIN).length >= SUMMARY_ADMIN_REQUESTS_MAX_COUNT;
-    const hasUserTimeout = requests.some(
-      (r) => r.type === SummaryRequestType.USER && r.createdAt.getTime() > Date.now() - SUMMARY_USER_TIMEOUT,
-    );
-    return { hasAdminTimeout, hasUserTimeout, minutes: 0 };
+    const hasAdminTimeout = requests.some((r) => r.type === SummaryRequestType.ADMIN);
+    const hasUserTimeout = hasAdminTimeout || requests.some((r) => r.type === SummaryRequestType.USER);
+    return { hasAdminTimeout, hasUserTimeout };
   }
 
   /**
@@ -205,48 +195,42 @@ export class SummaryService {
    */
   private formatMessage(message: Message & { author: User }): string {
     return [
-      message.messageThreadId
-        ? `#${message.messageId.toString()}, thread #${message.messageThreadId.toString()}`
-        : `#${message.messageId.toString()}`,
-      `User: ${getUserFullName(message.author)}`,
-      message.author.username && `Username: @${message.author.username}`,
-      message.text,
+      `#${message.messageId.toString()}`,
+      message.messageThreadId?.toString() && `thread: #${message.messageThreadId.toString()}`,
+      `user: ${getUserFullName(message.author)}`,
+      message.author.username && `username: @${message.author.username}`,
+      message.forwardedFrom ? `messageType: forwarded-${message.type}` : `messageType: ${message.type}`,
+      message.forwardedFrom && `forwardedFrom: ${message.forwardedFrom}`,
+      message.text && (message.forwardedFrom ? `forwardedText: ${message.text}` : `text: ${message.text}`),
     ]
-      .filter((p) => p)
+      .filter(Boolean)
       .join("\n");
   }
 
   /**
    * Gets parameters to request messages
    * @param payload Command payload
-   * @param settings Chat settings
    * @returns Parameters to request messages
    */
-  private getMessagesParams(payload: string, settings: ChatSettings): MessagesParams {
+  private getMessagesParams(payload: string): MessagesParams {
     // /summary 100
     if (/^\d+$/.test(payload)) {
-      const messages = Number(payload);
-      return MIN_MESSAGES_COUNT <= messages && messages <= MAX_MESSAGES_COUNT
-        ? { hours: MAX_HOURS_COUNT, isValid: true, messages }
-        : { hours: 0, isValid: false, messages: 0 };
+      const messagesCount = Number(payload);
+      return MIN_MESSAGES_COUNT <= messagesCount && messagesCount <= MAX_MESSAGES_COUNT ? { messagesCount } : {};
     }
     // /summary 24h
     if (/^\d+h$/.test(payload)) {
       const hours = Number(payload.slice(0, -1));
       return MIN_HOURS_COUNT <= hours && hours <= MAX_HOURS_COUNT
-        ? { hours, isValid: true, messages: MAX_MESSAGES_COUNT }
-        : { hours: 0, isValid: false, messages: 0 };
+        ? { hoursCount: hours, messagesCount: MAX_MESSAGES_COUNT }
+        : {};
     }
     // /summary
-    if (!payload && settings.summary) {
-      return {
-        hours: settings.summaryType === SummaryType.HOURS ? settings.summary : MAX_HOURS_COUNT,
-        isValid: true,
-        messages: settings.summaryType === SummaryType.MESSAGES ? settings.summary : MAX_MESSAGES_COUNT,
-      };
+    if (!payload) {
+      return { messagesCount: MAX_MESSAGES_COUNT };
     }
     // /summary incorrect
-    return { hours: 0, isValid: false, messages: 0 };
+    return {};
   }
 
   /**
@@ -261,14 +245,24 @@ export class SummaryService {
       return;
     }
 
-    const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    const [plan, { settings }] = await Promise.all([
+      this.prismaService.getChatPlan(chatId),
+      this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from),
+    ]);
     await changeLanguage(settings.language);
     const chat = await this.settingsService.resolveChat(ctx, chatId);
     if (!chat) {
       return; // The user is no longer an administrator, or the bot has been banned from the chat.
     }
 
-    const msg = [t("summary:description"), t("summary:expired")].join("\n\n- - -\n\n");
+    const chatLink = getChatHtmlLink(chat);
+    const disableCbData = buildCbData({ action: SummaryAction.SAVE, chatId });
+    const enableCbData = buildCbData({ action: SummaryAction.SAVE, chatId, value: true });
+    const value = chat.settings.isSummaryEnabled ? t("summary:enabled") : t("summary:disabled");
+    const msg = [
+      t("summary:description"),
+      plan ? t("summary:set", { CHAT: chatLink, VALUE: value }) : t("common:planExpired"),
+    ].join("\n\n- - -\n\n");
     const msgWithModifiedInfo = this.settingsService.withModifiedInfo(msg, {
       chat,
       settingName: ChatSettingName.SUMMARY,
@@ -277,10 +271,51 @@ export class SummaryService {
 
     await Promise.all([
       shouldAnswerCallback && ctx.answerCbQuery(),
-      ctx.editMessageText(msgWithModifiedInfo, {
+      ctx.editMessageText(plan ? msgWithModifiedInfo : msg, {
         parse_mode: "HTML",
-        reply_markup: { inline_keyboard: [this.settingsService.getBackToFeaturesButton(chatId)] },
+        reply_markup: {
+          inline_keyboard: [
+            ...(plan
+              ? [
+                  [{ callback_data: enableCbData, text: t("summary:enable") }],
+                  [{ callback_data: disableCbData, text: t("summary:disable") }],
+                ]
+              : []),
+            this.settingsService.getBackToFeaturesButton(chatId),
+          ],
+        },
       }),
     ]).catch(() => undefined); // An expected error may happen if the message won't change during edit
+  }
+
+  /**
+   * Saves settings
+   * @param ctx Callback context
+   * @param chatId Id of the chat which is edited
+   * @param value Summary state
+   */
+  private async saveSettings(ctx: CallbackCtx, chatId: number, value: string | null): Promise<void> {
+    if (!ctx.chat || isNaN(chatId)) {
+      this.logger.error("Chat is not defined to save summary settings");
+      return;
+    }
+
+    const { settings } = await this.prismaService.upsertChatWithCache(ctx.chat, ctx.callbackQuery.from);
+    await changeLanguage(settings.language);
+    const dbChat = await this.settingsService.resolveChat(ctx, chatId);
+    if (!dbChat) {
+      return; // The user is no longer an administrator, or the bot has been banned from the chat.
+    }
+
+    await this.prismaService.$transaction([
+      this.prismaService.chatSettings.update({
+        data: { isSummaryEnabled: value?.toLowerCase() === "true" ? true : null },
+        select: { id: true },
+        where: { id: chatId },
+      }),
+      this.prismaService.upsertChatSettingsHistory(chatId, ctx.callbackQuery.from.id, ChatSettingName.SUMMARY),
+    ]);
+    await this.prismaService.deleteChatCache(chatId);
+    await Promise.all([this.settingsService.notifyChangesSaved(ctx), this.renderSettings(ctx, chatId)]);
   }
 }
