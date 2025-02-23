@@ -30,6 +30,16 @@ The bot can filter profanity in chat, including usernames. The filter won't be a
 
 The bot can prevent users from adding bots to chat. This will help avoid spam or, for example, collecting chat statistics without the approval of administrators. Additionally, the ban of the violator can be configured. The user who tried to add the bot will be banned.
 
+### Summary
+
+The bot can give a summary of the chat conversation.
+
+`/summary` - summary with default settings (last 400 messages)
+`/summary 100` - summary of the last 100 messages
+`/summary 24h` - summary for the last 24 hours
+
+Please note that it will not be able to provide a summary of the messages that were in the chat before the bot joined.
+
 ### Time Zone
 
 The bot can work in different time zones and display dates in the appropriate format.
