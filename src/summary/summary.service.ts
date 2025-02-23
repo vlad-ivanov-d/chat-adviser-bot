@@ -199,7 +199,7 @@ export class SummaryService {
       message.messageThreadId?.toString() && `thread: #${message.messageThreadId.toString()}`,
       `user: ${getUserFullName(message.author)}`,
       message.author.username && `username: @${message.author.username}`,
-      message.forwardedFrom ? `messageType: forwarded-${message.type}` : `messageType: ${message.type}`,
+      `messageType: ${message.type}`,
       message.forwardedFrom && `forwardedFrom: ${message.forwardedFrom}`,
       message.text && (message.forwardedFrom ? `forwardedText: ${message.text}` : `text: ${message.text}`),
     ]

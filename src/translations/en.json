@@ -55,7 +55,7 @@
     "updateInfoHint": "If the list doesn't contain the chat you need, try clicking the <b>↻ Refresh the list</b> button (the last button in this message)."
   },
   "summary": {
-    "description": "<b>Summary</b>\nI can give a summary of the chat conversation.\n\n/summary - summary with default settings (last 400 messages)\n/summary 100 - summary of the last 100 messages\n/summary 24h - summary for the last 24 hours\n\nPlease note that I will not be able to provide a summary of the messages that were in the chat before I joined.",
+    "description": "<b>Summary</b>\nI can give a summary of the chat conversation.\n\n/summary - summary with default settings (last 300 messages)\n/summary 100 - summary of the last 100 messages\n/summary 24h - summary for the last 24 hours\n\nPlease note that I will not be able to provide a summary of the messages that were in the chat before I joined.",
     "disable": "Disable",
     "disabled": "disabled",
     "enable": "Enable",

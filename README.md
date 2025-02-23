@@ -34,7 +34,7 @@ The bot can prevent users from adding bots to chat. This will help avoid spam or
 
 The bot can give a summary of the chat conversation.
 
-`/summary` - summary with default settings (last 400 messages)  
+`/summary` - summary with default settings (last 300 messages)  
 `/summary 100` - summary of the last 100 messages  
 `/summary 24h` - summary for the last 24 hours  
 
