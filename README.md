@@ -36,7 +36,7 @@ The bot can give a summary of the chat conversation.
 
 `/summary` - summary with default settings (last 300 messages)  
 `/summary 100` - summary of the last 100 messages  
-`/summary 24h` - summary for the last 24 hours  
+`/summary 24h` - summary for the last 24 hours (but no more than 300 messages)  
 
 Please note that it will not be able to provide a summary of the messages that were in the chat before the bot joined.
 
