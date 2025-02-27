@@ -55,13 +55,13 @@
     "updateInfoHint": "If the list doesn't contain the chat you need, try clicking the <b>↻ Refresh the list</b> button (the last button in this message)."
   },
   "summary": {
-    "description": "<b>Summary</b>\nI can give a summary of the chat conversation.\n\n/summary - summary with default settings (last 300 messages)\n/summary 100 - summary of the last 100 messages\n/summary 24h - summary for the last 24 hours (but no more than 300 messages)\n\nPlease note that I will not be able to provide a summary of the messages that were in the chat before I joined.",
+    "description": "<b>Summary</b>\nI can give a summary of the chat conversation.\n\n/summary - summary with default settings (last 250 messages)\n/summary 100 - summary of the last 100 messages\n/summary 24h - summary for the last 24 hours (but no more than 250 messages)\n\nPlease note that I will not be able to provide a summary of the messages that were in the chat before I joined.",
     "disable": "Disable",
     "disabled": "disabled",
     "enable": "Enable",
     "enabled": "enabled",
     "featureName": "Summary",
-    "invalidPayload": "Incorrect parameters for summary. Please try again.\n\n/summary 100 - summary of the last 100 messages. Minimum is {{MIN_MESSAGES_COUNT}} messages. Maximum is {{MAX_MESSAGES_COUNT}} messages.\n\n/summary 24h - summary of the last 24 hours (but no more than 300 messages). Minimum is {{MIN_HOURS_COUNT}} hour. Maximum is {{MAX_HOURS_COUNT}} hours.",
+    "invalidPayload": "Incorrect parameters for summary. Please try again.\n\n/summary 100 - summary of the last 100 messages. Minimum is {{MIN_MESSAGES_COUNT}} messages. Maximum is {{MAX_MESSAGES_COUNT}} messages.\n\n/summary 24h - summary of the last 24 hours (but no more than 250 messages). Minimum is {{MIN_HOURS_COUNT}} hour. Maximum is {{MAX_HOURS_COUNT}} hours.",
     "loading": "Just a minute, I'll reread the conversation.",
     "noMessages": "I don't see any messages that I could summarize",
     "set": "Enable the summary feature in {{CHAT}}?\n\nCurrent state: <b>{{VALUE}}</b>",
