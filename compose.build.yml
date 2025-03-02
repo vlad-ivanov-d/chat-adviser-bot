@@ -56,7 +56,7 @@ services:
       - loki
     environment:
       LOKI_PORT: ${LOKI_PORT:-3100}
-    image: grafana/grafana:11.5.0
+    image: grafana/grafana:11.5.2
     ports:
       - ${GRAFANA_PORT:-3000}:3000
     restart: unless-stopped
@@ -65,7 +65,7 @@ services:
       - grafanaprovisioning:/etc/grafana/provisioning
 
   loki:
-    image: grafana/loki:3.3.2
+    image: grafana/loki:3.4.2
     ports:
       - ${LOKI_PORT:-3100}:3100
     restart: unless-stopped

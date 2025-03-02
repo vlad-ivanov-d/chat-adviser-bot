@@ -152,7 +152,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.5.0",
+      "pluginVersion": "11.5.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -189,7 +189,7 @@
         "sortOrder": "Descending",
         "wrapLogMessage": false
       },
-      "pluginVersion": "11.5.0",
+      "pluginVersion": "11.5.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -260,7 +260,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.5.0",
+      "pluginVersion": "11.5.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -318,7 +318,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.5.0",
+      "pluginVersion": "11.5.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -376,7 +376,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.5.0",
+      "pluginVersion": "11.5.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -438,7 +438,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.5.0",
+      "pluginVersion": "11.5.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -496,7 +496,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.5.0",
+      "pluginVersion": "11.5.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -554,7 +554,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.5.0",
+      "pluginVersion": "11.5.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -612,7 +612,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.5.0",
+      "pluginVersion": "11.5.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -670,7 +670,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.5.0",
+      "pluginVersion": "11.5.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -742,7 +742,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.5.0",
+      "pluginVersion": "11.5.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -874,7 +874,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "11.5.0",
+      "pluginVersion": "11.5.2",
       "targets": [
         {
           "datasource": "Loki",
@@ -977,7 +977,7 @@
             "value": "\"A warning was issued\""
           }
         ],
-        "query": "Filtered channel messages : \"Message on behalf of a channel was deleted\", New non-private chats : \"The bot was added to\", Profanity : \"A profanity was found\", Removed bots : \"A bot was removed from the chat\", Removed chats : \"The bot was kicked from\", Votebans : \"Voteban started\", Warnings : \"A warning was issued\"",
+        "query": "Filtered channel messages : \"Message on behalf of a channel was deleted\", New non-private chats : \"The bot was added to\", Profanity : \"A profanity was found\", Removed bots : \"A bot was removed from the chat\", Removed chats : \"The bot was kicked from\", Summary : \"The /summary command was used\", Votebans : \"Voteban started\", Warnings : \"A warning was issued\"",
         "type": "custom"
       }
     ]
@@ -989,6 +989,6 @@
   "timepicker": {},
   "timezone": "browser",
   "title": "Main",
-  "version": 129,
+  "version": 131,
   "weekStart": ""
 }
