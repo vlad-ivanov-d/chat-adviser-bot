@@ -6,7 +6,7 @@ export const MAX_HOURS_COUNT = 48;
 /**
  * Maximum number of messages to summarize
  */
-export const MAX_MESSAGES_COUNT = 250;
+export const MAX_MESSAGES_COUNT = 200;
 
 /**
  * Minimum number of hours to summarize

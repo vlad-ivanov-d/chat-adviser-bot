@@ -1,7 +1,7 @@
 /**
  * Minimum number of messages to store (for features like summary)
  */
-export const MIN_MESSAGES_COUNT = 250;
+export const MIN_MESSAGES_COUNT = 200;
 
 /**
  * The message is considered stale after this number of milliseconds have passed (48 hours).
