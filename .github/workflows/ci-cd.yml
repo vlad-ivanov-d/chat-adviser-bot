@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 
 name: CI/CD
 
@@ -37,13 +37,13 @@ jobs:
         with:
           name: app
           path: |
-            Dockerfile
-            compose.build.yml
             dist
             grafana
+            prisma
+            compose.build.yml
+            Dockerfile
             package-lock.json
             package.json
-            prisma
 
   test:
     runs-on: ubuntu-latest
